@@ -20,7 +20,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
 
-include_directories(include)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 macro(appBuilder name)
 	set(CMAKE_AUTOUIC ON)
