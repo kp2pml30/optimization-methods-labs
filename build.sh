@@ -1,6 +1,8 @@
 #!/bin/bash
 BUILDDIR="/tmp/build/methopts"
 
+mkdir -p "$BUILDDIR"
+
 if [[ ! -z "$1" ]]
 then
 	BTYPE=$1

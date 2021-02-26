@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 
 #include "opt-methods/approximators/Dichotomy.hpp"
+#include "opt-methods/solvers/IterationalSolver.hpp"
+#include "opt-methods/solvers/ErasedApproximator.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -14,16 +16,18 @@ int main(int argc, char* argv[])
 	auto func = [](double x) { return std::pow(x, 4) - 1.5 * atan(x); };
 
 	auto approximators = IterationalSolverBuilder<double, double,
-				DichotomyApproximtor<double, double>
+				DichotomyApproximtor<double, double>,
+				ErasedApproximator<double, double>
 			>
 		(
-			std::tuple<double>{1e-5}
+			std::make_tuple(1e-5),
+			std::make_tuple(typeTag<DichotomyApproximtor<double, double>>, 1e-2)
 		);
 
 	auto walker =  [&](auto& approx, RangeBounds<double> const& r) {
 		auto result = approx.solveIteration(func, 20, r);
 		std::cout
-			<< approx.approximator.name << "\n"
+			<< approx.approximator.name() << "\n"
 			<< "\tl\t" << result.l.p << "\t" << result.l.v << "\n"
 			<< "\tr\t" << result.r.p << "\t" << result.r.v
 			<< std::endl

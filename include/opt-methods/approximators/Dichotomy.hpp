@@ -1,13 +1,14 @@
 #pragma once
 
-#include "opt-methods/solvers/Solver.hpp"
+#include "opt-methods/solvers/Approximator.hpp"
 
 template<typename From, typename To>
 class DichotomyApproximtor
 {
 private:
 public:
-	static constexpr char name[] = "dichotomy";
+	static char const* name() noexcept { return "dichotomy"; }
+
 	using P = From;
 	using V = To;
 
@@ -34,3 +35,4 @@ public:
 			return {{nl, lv}, r.r};
 	}
 };
+
