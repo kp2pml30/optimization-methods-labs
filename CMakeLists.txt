@@ -11,14 +11,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(CheckCXXCompilerFlag)
-# unset(supports_fast_math CACHE)
-check_cxx_compiler_flag(-ffast-math supports_fast_math)
-if (supports_fast_math)
-	add_compile_options(-ffast-math)
+if (MSVC)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /permissive-")
+else()
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
 endif()
-
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 

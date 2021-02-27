@@ -29,8 +29,7 @@ namespace impl
 	{
 	private:
 		Approx approx;
-		constexpr auto hasNameHelper()
-		{}
+
 	public:
 		template<typename ...Args>
 		ErasedApproximatorImplementation(Args&&... a)
