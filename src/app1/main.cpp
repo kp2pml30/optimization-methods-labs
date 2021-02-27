@@ -2,6 +2,7 @@
 
 #include "opt-methods/approximators/Dichotomy.hpp"
 #include "opt-methods/approximators/GoldenSection.hpp"
+#include "opt-methods/approximators/Fibonacci.hpp"
 #include "opt-methods/solvers/IterationalSolver.hpp"
 #include "opt-methods/solvers/ErasedApproximator.hpp"
 
@@ -16,15 +17,13 @@ int main(int argc, char* argv[])
 
 	auto func = [](double x) { return std::pow(x, 4) - 1.5 * atan(x); };
 
-	auto approximators = IterationalSolverBuilder<double, double,
-				DichotomyApproximtor<double, double>,
-				ErasedApproximator<double, double>,
-				ErasedApproximator<double, double>
-			>
+	auto approximators = IterationalSolverBuilder<double, double, 4>
 		(
-			std::make_tuple(1e-5),
+			// std::make_tuple(1e-5),
+			std::make_tuple(typeTag<DichotomyApproximtor<double, double>>, 1e-5),
 			std::make_tuple(typeTag<DichotomyApproximtor<double, double>>, 1e-2),
-			std::make_tuple(typeTag<GoldenSectionApproximtor<double, double>>, 1e-5)
+			std::make_tuple(typeTag<GoldenSectionApproximtor<double, double>>),
+			std::make_tuple(typeTag<FibonacciApproximtor<double, double, std::uint64_t>>, 1e-2)
 		);
 
 	auto walker =  [&](auto& approx, RangeBounds<double> const& r) {

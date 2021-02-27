@@ -13,7 +13,7 @@ namespace impl
 	class ErasedApproximator
 	{
 	public:
-		virtual BoundsWithValues<P, V> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) = 0;
+		virtual Generator<BoundsWithValues<P, V>> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) = 0;
 		virtual ~ErasedApproximator() {}
 		virtual const char* name() const noexcept = 0;
 	};
@@ -35,7 +35,7 @@ namespace impl
 		ErasedApproximatorImplementation(Args&&... a)
 		: approx(std::forward<Args>(a)...)
 		{}
-		BoundsWithValues<P, V> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) override
+		Generator<BoundsWithValues<P, V>> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) override
 		{
 			return approx(func, bounds);
 		}
@@ -63,17 +63,25 @@ public:
 private:
 	using BaseT = impl::ErasedApproximator<P, V>;
 	std::unique_ptr<BaseT> holder;
-public:
+	Generator<BoundsWithValues<P, V>> gen;
+ public:
 
 	template<Approximator<P, V> Approx, typename ...Args>
 	ErasedApproximator(TypeTag<Approx>, Args&&... a)
 	: holder(new impl::ErasedApproximatorImplementation<P, V, Approx>(std::forward<Args>(a)...))
 	{}
 
-	BoundsWithValues<P, V> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds)
-	{
+	void init(std::function<V(P const&)> func,
+						BoundsWithValues<P, V> const& bounds) {
 		assert(holder != nullptr);
-		return (*holder)(func, bounds);
+		gen = (*holder)(func, bounds);
+	}
+
+	BoundsWithValues<P, V> operator()()
+	{
+		assert(gen);
+		gen.next();
+		return gen.get_value();
 	}
 
 	char const* name() const noexcept

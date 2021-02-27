@@ -6,6 +6,8 @@
 #include <complex>
 #include <tuple>
 
+#include "../coroutines/Generator.hpp"
+
 template<typename Point, typename Value>
 struct PointAndValue
 {
@@ -74,6 +76,6 @@ concept Approximator = requires(T& t, DummyFunc<P, V> func, BoundsWithValues<P, 
 	requires Function<decltype(func), P, V>;
 	std::is_same_v<typename T::P, P>;
 	std::is_same_v<typename T::V, V>;
-	{ t(func, bounds) } -> std::same_as<BoundsWithValues<P, V>>;
+	{ t(func, bounds) } -> std::same_as<Generator<BoundsWithValues<P, V>>>;
 };
 
