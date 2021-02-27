@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include "opt-methods/approximators/Dichotomy.hpp"
+#include "opt-methods/approximators/GoldenSection.hpp"
 #include "opt-methods/solvers/IterationalSolver.hpp"
 #include "opt-methods/solvers/ErasedApproximator.hpp"
 
@@ -17,11 +18,13 @@ int main(int argc, char* argv[])
 
 	auto approximators = IterationalSolverBuilder<double, double,
 				DichotomyApproximtor<double, double>,
+				ErasedApproximator<double, double>,
 				ErasedApproximator<double, double>
 			>
 		(
 			std::make_tuple(1e-5),
-			std::make_tuple(typeTag<DichotomyApproximtor<double, double>>, 1e-2)
+			std::make_tuple(typeTag<DichotomyApproximtor<double, double>>, 1e-2),
+			std::make_tuple(typeTag<GoldenSectionApproximtor<double, double>>, 1e-5)
 		);
 
 	auto walker =  [&](auto& approx, RangeBounds<double> const& r) {
