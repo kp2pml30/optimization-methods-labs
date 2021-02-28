@@ -60,22 +60,26 @@ struct Generator
 		reset();
 	}
 
-	void reset() {
+	void reset()
+	{
 		if (handle)
 			handle.destroy();
 	}
 
-	bool next() {
+	bool next()
+	{
 		assert(!handle.done());
 		handle.resume();
 		return !handle.done();
 	}
 
-	operator bool() const {
+	operator bool() const
+	{
 		return static_cast<bool>(handle);
 	}
 
-	const T &getValue() {
+	const T &getValue()
+	{
 		return *std::get<0>(handle.promise().value);
 	}
 };

@@ -6,7 +6,7 @@
 #include "opt-methods/solvers/Approximator.hpp"
 
 template<std::floating_point From, typename To>
-class GoldenSectionApproximtor
+class GoldenSectionApproximator
 {
 private:
 public:
@@ -28,12 +28,16 @@ public:
 		P x1 = a + (1 - tau) * (b - a), x2 = a + tau * (b - a);
 		V f1 = func(x1), f2 = func(x2);
 
-		while (true) {
-			if (f1 < f2) {
+		while (true)
+		{
+			if (f1 < f2)
+			{
 				b = x2, fb = f2;
 				x2 = x1, f2 = f1;
 				x1 = a + (1 - tau) * (b - a), f1 = func(x1);
-			} else {
+			}
+			else
+			{
 				a = x1, fa = f1;
 				x1 = x2, f1 = f2;
 				x2 = a + tau * (b - a), f2 = func(x2);

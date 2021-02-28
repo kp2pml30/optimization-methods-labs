@@ -3,7 +3,7 @@
 #include "opt-methods/solvers/Approximator.hpp"
 
 template<typename From, typename To>
-class DichotomyApproximtor
+class DichotomyApproximator
 {
 private:
 public:
@@ -14,7 +14,7 @@ public:
 
 	P epsilon;
 
-	DichotomyApproximtor(P epsilon)
+	DichotomyApproximator(P epsilon)
 	: epsilon(std::move(epsilon))
 	{}
 
@@ -23,8 +23,10 @@ public:
 	{
 		assert(r.l.p < r.r.p);
 
-		while (true) {
-			if (r.r.p - r.l.p < epsilon) {
+		while (true)
+		{
+			if (r.r.p - r.l.p < epsilon)
+			{
 				co_yield r;
 				break;
 			}
