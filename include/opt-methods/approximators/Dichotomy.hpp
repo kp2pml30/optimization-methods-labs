@@ -21,10 +21,13 @@ public:
 	template<Function<P, V> F>
 	Generator<BoundsWithValues<P, V>> operator()(F func, BoundsWithValues<P, V> r)
 	{
+		assert(r.l.p < r.r.p);
+
 		while (true) {
-			assert(r.l.p < r.r.p);
-			if (r.r.p - r.l.p < epsilon)
+			if (r.r.p - r.l.p < epsilon) {
 				co_yield r;
+				break;
+			}
 			auto x = (r.l.p + r.r.p) / 2;
 			auto nl = x - epsilon;
 			auto nr = x + epsilon;

@@ -49,6 +49,7 @@ struct Generator
 	{
 		if (this != &other)
 		{
+			reset();
 			handle = other.handle;
 			other.handle = nullptr;
 		}
@@ -56,13 +57,17 @@ struct Generator
 	}
 	~Generator()
 	{
+		reset();
+	}
+
+	void reset() {
 		if (handle)
 			handle.destroy();
 	}
 
 	bool next() {
-		if (!handle.done())
-			handle.resume(); /// TODO: properly handle different precisions on solver level
+		assert(!handle.done());
+		handle.resume();
 		return !handle.done();
 	}
 
@@ -70,7 +75,7 @@ struct Generator
 		return static_cast<bool>(handle);
 	}
 
-	const T &get_value() {
+	const T &getValue() {
 		return *std::get<0>(handle.promise().value);
 	}
 };

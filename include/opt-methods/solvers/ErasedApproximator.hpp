@@ -37,7 +37,7 @@ namespace impl
 		{}
 		Generator<BoundsWithValues<P, V>> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) override
 		{
-			return approx(func, bounds);
+			return approx(std::move(func), bounds);
 		}
 		const char* name() const noexcept override
 		{
@@ -63,7 +63,6 @@ public:
 private:
 	using BaseT = impl::ErasedApproximator<P, V>;
 	std::unique_ptr<BaseT> holder;
-	Generator<BoundsWithValues<P, V>> gen;
  public:
 
 	template<Approximator<P, V> Approx, typename ...Args>
@@ -71,17 +70,10 @@ private:
 	: holder(new impl::ErasedApproximatorImplementation<P, V, Approx>(std::forward<Args>(a)...))
 	{}
 
-	void init(std::function<V(P const&)> func,
-						BoundsWithValues<P, V> const& bounds) {
-		assert(holder != nullptr);
-		gen = (*holder)(func, bounds);
-	}
-
-	BoundsWithValues<P, V> operator()()
+	Generator<BoundsWithValues<P, V>> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds)
 	{
-		assert(gen);
-		gen.next();
-		return gen.get_value();
+		assert(holder != nullptr);
+		return (*holder)(std::move(func), bounds);
 	}
 
 	char const* name() const noexcept

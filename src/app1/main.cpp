@@ -17,7 +17,12 @@ int main(int argc, char* argv[])
 
 	auto func = [](double x) { return std::pow(x, 4) - 1.5 * atan(x); };
 
-	auto approximators = IterationalSolverBuilder<double, double, 4>
+	auto approximators = IterationalSolverBuilder<double, double,
+				ErasedApproximator<double, double>,
+				ErasedApproximator<double, double>,
+				ErasedApproximator<double, double>,
+				ErasedApproximator<double, double>
+			>
 		(
 			// std::make_tuple(1e-5),
 			std::make_tuple(typeTag<DichotomyApproximtor<double, double>>, 1e-5),
