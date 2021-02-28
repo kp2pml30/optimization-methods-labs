@@ -3,6 +3,7 @@
 #include "opt-methods/approximators/Dichotomy.hpp"
 #include "opt-methods/approximators/GoldenSection.hpp"
 #include "opt-methods/approximators/Fibonacci.hpp"
+#include "opt-methods/approximators/Parabolic.hpp"
 #include "opt-methods/solvers/IterationalSolver.hpp"
 #include "opt-methods/solvers/ErasedApproximator.hpp"
 
@@ -21,6 +22,7 @@ int main(int argc, char* argv[])
 				ErasedApproximator<double, double>,
 				ErasedApproximator<double, double>,
 				ErasedApproximator<double, double>,
+				ErasedApproximator<double, double>,
 				ErasedApproximator<double, double>
 			>
 		(
@@ -28,7 +30,8 @@ int main(int argc, char* argv[])
 			std::make_tuple(typeTag<DichotomyApproximtor<double, double>>, 1e-5),
 			std::make_tuple(typeTag<DichotomyApproximtor<double, double>>, 1e-2),
 			std::make_tuple(typeTag<GoldenSectionApproximtor<double, double>>),
-			std::make_tuple(typeTag<FibonacciApproximtor<double, double, std::uint64_t>>, 1e-2)
+			std::make_tuple(typeTag<FibonacciApproximtor<double, double, std::uint64_t>>, 1e-2),
+			std::make_tuple(typeTag<ParabolicApproximtor<double, double>>, 1e-2)
 		);
 
 	auto walker =  [&](auto& approx, RangeBounds<double> const& r) {
