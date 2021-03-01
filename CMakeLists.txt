@@ -37,5 +37,15 @@ macro(appBuilder name)
 	target_link_libraries(${name} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 endmacro()
 
+macro(helperBuilder name)
+	file(GLOB_RECURSE SRC "*.cpp")
+
+	add_executable(${name}
+		${SRC}
+	)
+
+	target_link_libraries(${name} PRIVATE opt-methods)
+endmacro()
+
 add_subdirectory(src)
 
