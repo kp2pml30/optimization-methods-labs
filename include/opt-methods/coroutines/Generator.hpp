@@ -10,6 +10,7 @@ struct Generator
 	struct promise_type
 	{
 		std::variant<T const*, std::exception_ptr> value;
+
 		promise_type& get_return_object() { return *this; }
 		std::suspend_always initial_suspend() noexcept { return {}; }
 		std::suspend_always final_suspend() noexcept { return {}; }

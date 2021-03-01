@@ -6,10 +6,12 @@
 #include "opt-methods/solvers/Approximator.hpp"
 
 template<std::floating_point From, typename To, typename FibT>
-class FibonacciApproximator
+class FibonacciApproximator : public BaseApproximator<From, To, FibonacciApproximator<From, To, FibT>>
 {
+	using BaseT = BaseApproximator<From, To, FibonacciApproximator>;
 private:
 public:
+	using IterationData = typename BaseT::IterationData;
 	static char const* name() noexcept { return "fibonacci"; }
 
 	using P = From;
@@ -43,7 +45,7 @@ public:
 	FibonacciApproximator(P l) : l(l) {}
 
 	template<Function<P, V> F>
-	Generator<BoundsWithValues<P, V>> operator()(F func, BoundsWithValues<P, V> const& r)
+	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData &)
 	{
 		assert(r.l.p < r.r.p);
 
@@ -51,7 +53,7 @@ public:
 		auto a = r.l.p, b = r.r.p;
 		auto fa = r.l.v, fb = r.r.v;
 		auto tau = Fnk1 * 1.0 / Fnk;
-		auto x1 = a + (1 - tau) * (b - a), x2 = a + tau * (b - a);
+		auto x1 = std::lerp(a, b, 1 - tau), x2 = std::lerp(a, b, tau);
 		auto f1 = func(x1), f2 = func(x2);
 
 		for (int k = 1; k < n; k++)
@@ -62,13 +64,13 @@ public:
 			{
 				b = x2, fb = f2;
 				x2 = x1, f2 = f1;
-				x1 = a + (1 - tau) * (b - a), f1 = func(x1);
+				x1 = std::lerp(a, b, 1 - tau), f1 = func(x1);
 			}
 			else
 			{
 				a = x1, fa = f1;
 				x1 = x2, f1 = f2;
-				x2 = a + tau * (b - a), f2 = func(x2);
+				x2 = std::lerp(a, b, tau), f2 = func(x2);
 			}
 
 			co_yield {{a, fa}, {b, fb}};

@@ -13,7 +13,8 @@ namespace impl
 	class ErasedApproximator
 	{
 	public:
-		virtual Generator<BoundsWithValues<P, V>> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) = 0;
+		virtual ApproxGenerator<P, V> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) = 0;
+		virtual void draw(BoundsWithValues<P, V> const& bounds, BaseIterationData<P, V> const& data, QtCharts::QChart& chart) = 0;
 		virtual ~ErasedApproximator() {}
 		virtual const char* name() const noexcept = 0;
 	};
@@ -35,9 +36,13 @@ namespace impl
 		ErasedApproximatorImplementation(Args&&... a)
 		: approx(std::forward<Args>(a)...)
 		{}
-		Generator<BoundsWithValues<P, V>> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) override
+		ApproxGenerator<P, V> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds) override
 		{
 			return approx(std::move(func), bounds);
+		}
+		void draw(BoundsWithValues<P, V> const& bounds, BaseIterationData<P, V> const& data, QtCharts::QChart& chart) override
+		{
+			return approx.draw(bounds, data, chart);
 		}
 		const char* name() const noexcept override
 		{
@@ -70,10 +75,16 @@ private:
 	: holder(new impl::ErasedApproximatorImplementation<P, V, Approx>(std::forward<Args>(a)...))
 	{}
 
-	Generator<BoundsWithValues<P, V>> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> const& bounds)
+	ApproxGenerator<P, V> operator()(std::function<V(P const&)> func, BoundsWithValues<P, V> bounds)
 	{
 		assert(holder != nullptr);
-		return (*holder)(std::move(func), bounds);
+		return (*holder)(std::move(func), std::move(bounds));
+	}
+
+	void draw(BoundsWithValues<P, V> bounds, BaseIterationData<P, V> const& data, QtCharts::QChart& chart)
+	{
+		assert(holder != nullptr);
+		return holder->draw(std::move(bounds), data, chart);
 	}
 
 	char const* name() const noexcept

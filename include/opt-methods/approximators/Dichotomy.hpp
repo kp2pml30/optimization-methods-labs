@@ -3,10 +3,13 @@
 #include "opt-methods/solvers/Approximator.hpp"
 
 template<typename From, typename To>
-class DichotomyApproximator
+class DichotomyApproximator : public BaseApproximator<From, To, DichotomyApproximator<From, To>>
 {
+	using BaseT = BaseApproximator<From, To, DichotomyApproximator>;
 private:
 public:
+	using IterationData = typename BaseT::IterationData;
+
 	static char const* name() noexcept { return "dichotomy"; }
 
 	using P = From;
@@ -19,7 +22,7 @@ public:
 	{}
 
 	template<Function<P, V> F>
-	Generator<BoundsWithValues<P, V>> operator()(F func, BoundsWithValues<P, V> r)
+	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData &)
 	{
 		assert(r.l.p < r.r.p);
 
@@ -42,4 +45,3 @@ public:
 		}
 	}
 };
-
