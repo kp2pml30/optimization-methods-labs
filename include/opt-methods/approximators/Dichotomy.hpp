@@ -3,10 +3,13 @@
 #include "opt-methods/solvers/Approximator.hpp"
 
 template<typename From, typename To>
-class DichotomyApproximtor
+class DichotomyApproximator : public BaseApproximator<From, To, DichotomyApproximator<From, To>>
 {
+	using BaseT = BaseApproximator<From, To, DichotomyApproximator>;
 private:
 public:
+	using IterationData = typename BaseT::IterationData;
+
 	static char const* name() noexcept { return "dichotomy"; }
 
 	using P = From;
@@ -14,25 +17,31 @@ public:
 
 	P epsilon;
 
-	DichotomyApproximtor(P epsilon)
+	DichotomyApproximator(P epsilon)
 	: epsilon(std::move(epsilon))
 	{}
 
 	template<Function<P, V> F>
-	BoundsWithValues<P, V> operator()(F& func, BoundsWithValues<P, V> const& r)
+	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData &)
 	{
 		assert(r.l.p < r.r.p);
-		if (r.r.p - r.l.p < epsilon)
-			return r;
-		auto x = (r.l.p + r.r.p) / 2;
-		auto nl = x - epsilon;
-		auto nr = x + epsilon;
-		auto lv = func(nl);
-		auto rv = func(nr);
-		if (lv < rv)
-			return {r.l, {nr, rv}};
-		else
-			return {{nl, lv}, r.r};
+
+		while (true)
+		{
+			if (r.r.p - r.l.p < epsilon)
+			{
+				co_yield r;
+				break;
+			}
+			auto x = (r.l.p + r.r.p) / 2;
+			auto nl = x - epsilon;
+			auto nr = x + epsilon;
+			auto lv = func(nl);
+			auto rv = func(nr);
+			if (lv < rv)
+				co_yield r = {r.l, {nr, rv}};
+			else
+				co_yield r = {{nl, lv}, r.r};
+		}
 	}
 };
-

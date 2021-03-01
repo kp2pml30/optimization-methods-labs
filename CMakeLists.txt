@@ -23,8 +23,8 @@ macro(appBuilder name)
 	set(CMAKE_AUTOUIC ON)
 	set(CMAKE_AUTOMOC ON)
 	set(CMAKE_AUTORCC ON)
-	find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
-	find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+	find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Charts REQUIRED)
+	find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
 
 	file(GLOB_RECURSE SRC "*.cpp")
 
@@ -34,7 +34,7 @@ macro(appBuilder name)
 	)
 
 	target_link_libraries(${name} PRIVATE opt-methods)
-	target_link_libraries(${name} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+	target_link_libraries(${name} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts)
 endmacro()
 
 macro(helperBuilder name)

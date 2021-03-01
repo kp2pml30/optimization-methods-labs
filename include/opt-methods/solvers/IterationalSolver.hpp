@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./Approximator.hpp"
+#include "./ErasedApproximator.hpp"
 
 template<typename P, typename V, Approximator<P, V> Approx>
 class IterationalSolver
@@ -8,6 +8,8 @@ class IterationalSolver
 public:
 	using Bounds = RangeBounds<P>;
 	using BoundsEval = BoundsWithValues<P, V>;
+
+	using SolveData = std::vector<std::pair<std::unique_ptr<BaseIterationData<P, V>>, BoundsWithValues<P, V>>>;
 
 	Approx approximator;
 
@@ -21,24 +23,28 @@ public:
 	= default;
 
 	template<Function<P, V> F>
-	BoundsEval solveIteration(F& func, std::size_t iterations, Bounds bounds)
+	BoundsEval solveIteration(F&& func, std::size_t iterations, Bounds bounds, SolveData &data)
 	{
 		BoundsEval b = {{bounds.l, func(bounds.l)}, {bounds.r, func(bounds.r)}};
-		while (iterations-- > 0)
-			b = approximator(func, b);
+		auto gen = approximator(std::forward<F>(func), b);
+		while (iterations-- > 0 && gen.next()) {
+			b = gen.getValue();
+			data.push_back({gen.getCopy(), b});
+		}
 		return b;
 	}
 	template<Function<P, V> F>
-	BoundsEval solveDiff(F& func, double diff, Bounds bounds)
+	BoundsEval solveDiff(F&& func, double diff, Bounds bounds)
 	{
 		using std::norm; // use ADL
 		BoundsEval b = {{bounds.l, func(bounds.l)}, {bounds.r, func(bounds.r)}};
+		auto gen = approximator(std::forward<F>(func), b);
 		diff *= diff;
-		while (true)
+		while (gen.next())
 			if (auto d1 = b.r.p - b.l.p; norm(d1) < diff)
 				break;
 			else
-				b = approximator(func, b);
+				b = gen.getValue();
 		return b;
 	}
 };
