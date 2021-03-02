@@ -1,52 +1,52 @@
-\documentclass{article}
+\documentclass[russian, english]{article}
+
+\usepackage[T2A]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english,russian]{babel}
 \usepackage{amsmath}
 \usepackage{pgfplots}
 \usepackage{graphicx}
+\usepackage{csvsimple}
+\usepackage{hyperref}
+
+\inputencoding{utf8}
+\def\code#1{\texttt{#1}}
 
 \begin{document}
 
 \begin{titlepage}
 \centering
-    {\scshape\LARGE Методы оптимизации \par}
+	{\scshape\LARGE РњРµС‚РѕРґС‹ РѕРїС‚РёРјРёР·Р°С†РёРё \par}
 	\vspace{1cm}
-	{\scshape\Large Лабораторная работа №1\par}
-    \vspace{2cm}
-	{\Large\itshape     Дмитрий Проценко M3234 \par
-    Кирилл Прокопенко M3236 \par
-    Николай Холявин M3238\par}
+	{\scshape\Large Р›Р°Р±РѕСЂР°С‚РѕСЂРЅР°СЏ СЂР°Р±РѕС‚Р° в„–1\par}
+	\vspace{2cm}
+	{\Large\itshape Р”РјРёС‚СЂРёР№ РџСЂРѕС†РµРЅРєРѕ M3234 \par
+	РљРёСЂРёР»Р» РџСЂРѕРєРѕРїРµРЅРєРѕ M3236 \par
+	РќРёРєРѕР»Р°Р№ РҐРѕР»СЏРІРёРЅ M3238 \par}
 	\vfill
-	ИТМО y2019
-
+	РРўРњРћ y2019
 	\vfill
-
-% Bottom of the page
 	{\large \today\par}
 \end{titlepage}
-
-\author{
-}
-\date{February 2021}
 
 \tableofcontents
 \newpage
 
-\section{Задание}
-Найти минимумы данной функции при помощи методов оптимизации:
+\section{Р—Р°РґР°РЅРёРµ}
+РќР°Р№С‚Рё РјРёРЅРёРјСѓРјС‹ РґР°РЅРЅРѕР№ С„СѓРЅРєС†РёРё РїСЂРё РїРѕРјРѕС‰Рё РјРµС‚РѕРґРѕРІ РѕРїС‚РёРјРёР·Р°С†РёРё:
 \begin{itemize}
-\item дихотомии
-\item золотого сечения
-\item Фиббоначи
-\item парабол
-\item комбинированный метод Брента
+\item РґРёС…РѕС‚РѕРјРёРё
+\item Р·РѕР»РѕС‚РѕРіРѕ СЃРµС‡РµРЅРёСЏ
+\item Р¤РёР±РѕРЅР°С‡С‡Рё
+\item РїР°СЂР°Р±РѕР»
+\item РєРѕРјР±РёРЅРёСЂРѕРІР°РЅРЅС‹Р№ РјРµС‚РѕРґ Р‘СЂРµРЅС‚Р°
 \end{itemize}
 
-\section{Функция}
+\section{Р¤СѓРЅРєС†РёСЏ}
 \subsection{f}
-$f(x)=x^4-\frac{3}{2}arctan(x)$
+$f(x)=x^4-\frac{3}{2}\arctan{x}$
 
-\subsection{график}
+\subsection{РіСЂР°С„РёРє}
 \par
 \begin{tikzpicture}
 \begin{axis}[
@@ -58,43 +58,85 @@ $f(x)=x^4-\frac{3}{2}arctan(x)$
 \end{axis}
 \end{tikzpicture}
 
-\subsection{аналитическое решение}
+\subsection{Р°РЅР°Р»РёС‚РёС‡РµСЃРєРѕРµ СЂРµС€РµРЅРёРµ}
 
 \begin{gather*}
 f'(x) = 4x^3 - \frac{3}{2(1+x^2)} \\
 f' = 0 \Leftrightarrow 8x^3(1+x^2)-3 = 0 \Leftrightarrow 8x^5+8x^3-3=0 \\
 f'' = 40x^4 + 24x^2 = x^2(40x^2 + 24) \ge 0 \\
-f'(0.642636) \approx 0 \\
+f'(0.642636) \approx 0
 \end{gather*}
-Производная монотонно возрастает, значит этот корень является минимумом.
-Данное уравнение не решается аналитически.
+РџСЂРѕРёР·РІРѕРґРЅР°СЏ РјРѕРЅРѕС‚РѕРЅРЅРѕ РІРѕР·СЂР°СЃС‚Р°РµС‚, Р·РЅР°С‡РёС‚ СЌС‚РѕС‚ РєРѕСЂРµРЅСЊ СЏРІР»СЏРµС‚СЃСЏ РјРёРЅРёРјСѓРјРѕРј.
+Р”Р°РЅРЅРѕРµ СѓСЂР°РІРЅРµРЅРёРµ РЅРµ СЂРµС€Р°РµС‚СЃСЏ Р°РЅР°Р»РёС‚РёС‡РµСЃРєРё.
 
-\section{Таблицы}
+\section{РўР°Р±Р»РёС†С‹}
 
-\section{Графики}
-\subsection{Количество вычислений от $\varepsilon$}
-{\color{red} TODO это тест графика по точкам} \par
+\begin{itemize}
+\item Р”РёС…РѕС‚РѕРјРёСЏ\par
+	\csvautotabular[separator=tab]{dichotomyRange.csv}
+\item Р—РѕР»РѕС‚РѕРµ СЃРµС‡РµРЅРёРµ\par
+	\csvautotabular[separator=tab]{golden-sectionRange.csv}
+\item Р¤РёР±РѕРЅР°С‡С‡Рё\par
+	\csvautotabular[separator=tab]{fibonacciRange.csv}
+\item РџР°СЂР°Р±РѕР»\par
+	\csvautotabular[separator=tab]{parabolicRange.csv}
+	\par
+	РњРµС‚РѕРґ РїР°СЂР°Р±РѕР» РІС‹РґРµР»РёР»СЃСЏ: РѕРЅ РЅРµ РјРµРЅСЏРµС‚ РїСЂР°РІСѓСЋ РіСЂР°РЅРёС†Сѓ, РёР·-Р·Р° С‡РµРіРѕ РІС‹РіР»СЏРґРёС‚ РєР°Рє С…СѓРґС€РёР№ СЂРµР·СѓР»СЊС‚Р°С‚, С…РѕС‚СЏ СЌС‚Рѕ РЅРµ С‚Р°Рє.
+\end{itemize}
 
-\pgfplotstableread{epsilonToComplexity.dat}{\epsPlot}
-\begin{tikzpicture}
+\pgfplotstableread{ratios.csv}{\ratiosCsv}
+\begin{tikzpicture}[trim axis left]
 	\begin{axis}[
-	    legend style={at={(0.5,-0.1)},anchor=north},
-    	xlabel = {$\varepsilon$},
-    	ylabel = {$C$},
+		scale only axis,
+		width=\textwidth,
+		legend style={at={(0.5,-0.2)},anchor=north},
+		xlabel = {РёС‚РµСЂР°С†РёСЏ},
+		ylabel = {$\log ratio$},
 	]
-	\addplot table [x={e}, y={dihotomy}] {\epsPlot};
-	\addlegendentry{Дихотомия}
-	\addplot table [x={e}, y={golden_ratio}] {\epsPlot};
-	\addlegendentry{Золотое сечение}
+	\addplot table [x={i}, y={dichotomy}] {\ratiosCsv};
+	\addlegendentry{Р”РёС…РѕС‚РѕРјРёСЏ}
+	\addplot table [x={i}, y={golden-section}] {\ratiosCsv};
+	\addlegendentry{Р—РѕР»РѕС‚РѕРµ СЃРµС‡РµРЅРёРµ}
+	\addplot table [x={i}, y={fibonacci}] {\ratiosCsv};
+	\addlegendentry{Р¤РёР±РѕРЅР°С‡С‡Рё}
+	\addplot table [x={i}, y={parabolic}] {\ratiosCsv};
+	\addlegendentry{РџР°СЂР°Р±РѕР»}
 	\end{axis}
 \end{tikzpicture}
 
-\section{Вывод}
 
-\section{Многомодальные функции}
-Для функций, имеющих несколько минимумов, есть шанс что метод найдет локальный минимум а не глобальный.\par
+\section{Р“СЂР°С„РёРєРё}
+\subsection{РљРѕР»РёС‡РµСЃС‚РІРѕ РІС‹С‡РёСЃР»РµРЅРёР№ РѕС‚ $\varepsilon$}
 
-\def\FunctionF(#1){(#1)^4/2520*403-(#1)^3/60*181+(#1)^2/360*6287-(#1)/28*921+5}
+\pgfplotstableread{epsilonToComplexity.csv}{\epsPlot}
+\begin{tikzpicture}[trim axis left]
+	\begin{axis}[
+		scale only axis,
+		width=\textwidth,
+		legend style={at={(0.5,-0.2)},anchor=north},
+		xlabel = {$\log \varepsilon$},
+		ylabel = {$C$},
+	]
+	\addplot table [x={epsilon}, y={dichotomy}] {\epsPlot};
+	\addlegendentry{Р”РёС…РѕС‚РѕРјРёСЏ}
+	\addplot table [x={epsilon}, y={golden_section}] {\epsPlot};
+	\addlegendentry{Р—РѕР»РѕС‚РѕРµ СЃРµС‡РµРЅРёРµ}
+	\addplot table [x={epsilon}, y={fibonacci}] {\epsPlot};
+	\addlegendentry{Р¤РёР±РѕРЅР°С‡С‡Рё}
+	\addplot table [x={epsilon}, y={parabolic}] {\epsPlot};
+	\addlegendentry{РџР°СЂР°Р±РѕР»}
+	\end{axis}
+\end{tikzpicture}
+\par
+РњРѕР¶РЅРѕ Р·Р°РјРµС‚РёС‚СЊ, С‡С‚Рѕ РіСЂР°С„РёРєРё \textbf{РІРёР·СѓР°Р»СЊРЅРѕ} С…РѕСЂРѕС€Рѕ Р°РїРїСЂРѕРєСЃРёРјРёСЂСѓСЋС‚СЃСЏ Р»РёРЅРµР№РЅС‹Рј.
+РџРѕРјРёРјРѕ СЌС‚РѕРіРѕ РјРµС‚РѕРґ РїР°СЂР°Р±РѕР» С…РѕСЂРѕС€Рѕ Р°РїРїСЂРѕРєСЃРёРјРёСЂСѓРµС‚ РґСѓРЅРЅСѓСЋ С„СѓРЅРєС†РёСЋ Р·Р° РјР°Р»РѕРµ С‡РёСЃР»Рѕ РёС‚РµСЂР°С†РёР№, РёР·-Р·Р° С‡РµРіРѕ РјРѕР¶РЅРѕ РІРёРґРµС‚СЊ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅСѓСЋ Р»РёРЅРёСЋ.
+
+\section{Р’С‹РІРѕРґ}
+
+\section{РњРЅРѕРіРѕРјРѕРґР°Р»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё}
+Р”Р»СЏ С„СѓРЅРєС†РёР№, РёРјРµСЋС‰РёС… РЅРµСЃРєРѕР»СЊРєРѕ РјРёРЅРёРјСѓРјРѕРІ, РµСЃС‚СЊ С€Р°РЅСЃ С‡С‚Рѕ РјРµС‚РѕРґ РЅР°Р№РґРµС‚ Р»РѕРєР°Р»СЊРЅС‹Р№ РјРёРЅРёРјСѓРј Р° РЅРµ РіР»РѕР±Р°Р»СЊРЅС‹Р№.\par
+
+\def\FunctionF(#1){(#1)^4/2520*403 - (#1)^3/60*181 + (#1)^2/360*6287 - (#1)/28*921 + 5}
 
 \begin{tikzpicture}
 \begin{axis}[
@@ -102,30 +144,33 @@ f'(0.642636) \approx 0 \\
 	ylabel = {$f$},
 	minor tick num = 1,
 ]
-    \addplot[blue, domain=0:10] {\FunctionF(x)};
-    
-    \newcommand*{\SpecialX}{4.0}
-    \pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
-    \addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{$1$}]{} ;
-    
-    \renewcommand*{\SpecialX}{5.0}
-    \pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
-    \addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{$2$}]{} ;
+	\addplot[blue, domain=0:10] {\FunctionF(x)};
+	
+	\newcommand*{\SpecialX}{4.0}
+	\pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
+	\addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{$1$}]{} ;
+	
+	\renewcommand*{\SpecialX}{5.0}
+	\pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
+	\addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{$2$}]{} ;
 
 \end{axis}
 \end{tikzpicture}
 \par
 
-Дихотомия могла посмотреть на точки вблизи $1$ и сузить интервал до $[0;4]$, пропустив глобальный максимум.
+Р”РёС…РѕС‚РѕРјРёСЏ РјРѕРіР»Р° РїРѕСЃРјРѕС‚СЂРµС‚СЊ РЅР° С‚РѕС‡РєРё РІР±Р»РёР·Рё $1$ Рё СЃСѓР·РёС‚СЊ РёРЅС‚РµСЂРІР°Р» РґРѕ $[0;4]$, РїСЂРѕРїСѓСЃС‚РёРІ РіР»РѕР±Р°Р»СЊРЅС‹Р№ РјР°РєСЃРёРјСѓРј.
 \par
 {\color{red} TODO} 
-Или, методы опирающиеся на несколько точек, могут посмотреть в $1$ и $2$ и получить неверное представление: функция на этом участке не монотонна, и результат не дает никакой информации.
+РР»Рё, РјРµС‚РѕРґС‹ РѕРїРёСЂР°СЋС‰РёРµСЃСЏ РЅР° РЅРµСЃРєРѕР»СЊРєРѕ С‚РѕС‡РµРє, РјРѕРіСѓС‚ РїРѕСЃРјРѕС‚СЂРµС‚СЊ РІ $1$ Рё $2$ Рё РїРѕР»СѓС‡РёС‚СЊ РЅРµРІРµСЂРЅРѕРµ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёРµ: С„СѓРЅРєС†РёСЏ РЅР° СЌС‚РѕРј СѓС‡Р°СЃС‚РєРµ РЅРµ РјРѕРЅРѕС‚РѕРЅРЅР° Рё РЅРµ РёРјРµРµС‚ РјРёРЅРёРјСѓРјР°, Р·РЅР°С‡РёС‚ СЂРµР·СѓР»СЊС‚Р°С‚ РЅРµ РґР°РµС‚ РЅРёРєР°РєРѕР№ РёРЅС„РѕСЂРјР°С†РёРё.
 
+\newpage
+\appendix
+\section{РєРѕРґ}
+\subsection{Р°СЂС…РёС‚РµРєС‚СѓСЂР°}
+Р•СЃС‚СЊ \code{Approximator}, РєРѕС‚РѕСЂС‹Р№ РІРѕР·РІСЂР°С‰Р°РµС‚ РєРѕСЂСѓС‚РёРЅСѓ, РєРѕС‚РѕСЂР°СЏ Р°РїРїСЂРѕРєСЃРёРјРёСЂСѓРµС‚ РґР°РЅРЅСѓСЋ С„СѓРЅРєС†РёСЋ, РЅР° РєР°Р¶РґРѕР№ РёС‚РµСЂР°С†РёРё СЃС‚СЏРіРёРІР°СЏ РѕС‚СЂРµР·РѕРє РїРѕРёСЃРєР°. Р”Р°РЅРЅС‹Р№ РїРѕРґС…РѕРґ РїРѕР·РІРѕР»СЏРµС‚ РёРјРµС‚СЊ СЃРєРѕСЂРѕСЃС‚СЊ РІС‹РїРѕР»РЅРµРЅРёСЏ РєР°Рє Сѓ РЅР°С‚РёРІРЅРѕРіРѕ РєРѕРґР°, СЃРѕС…СЂР°РЅСЏРµС‚ РіР°СЂР°РЅС‚РёРё С‚РёРїРѕРІ Р·Р° СЃС‡РµС‚ c++ РєРѕРЅС†РµРїС‚РѕРІ, РїРѕР·РІРѕР»СЏРµС‚ РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ type-erasure Рё РїРѕР»СѓС‡РёС‚СЊ РіРёР±РєРѕСЃС‚СЊ РЅР°СЃР»РµРґРѕРІР°РЅРёСЏ, РїРѕР¶РµСЂС‚РІРѕРІР°РІ РїСЂРѕРёР·РІРѕРґРёС‚РµР»СЊРЅРѕСЃС‚СЊСЋ.
 
-\section{Код}
-\subsection{архитектура}
-Есть \code{Approximator}, который возвращает корутину, которая аппроксимирует данную функцию, на каждой итерации стягивая отрезок поиска. Данный подход позволяет иметь скорость выполнения как у нативного кода, сохраняет гарантии типов за счет c++ концептов, позволяет при необходимости использовать type-erasure и получить гибкость наследования, пожертвовав производительностью.
-\subsection{ссылка}
+\subsection{СЃСЃС‹Р»РєР°}
 \url{https://github.com/kp2pml30/optimization-methods-labs}
 
 \end{document}
+

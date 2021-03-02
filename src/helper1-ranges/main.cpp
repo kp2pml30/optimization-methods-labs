@@ -25,12 +25,7 @@ int main(int argc, char* argv[])
 
 	std::cout << std::setprecision(std::numeric_limits<double>::digits10 + 1);
 
-	int calculationsCount;
-
-	auto func = [&calculationsCount](double x) {
-		calculationsCount++;
-		return std::pow(x, 4) - 1.5 * atan(x);
-	};
+	auto func = [](double x) { return std::pow(x, 4) - 1.5 * atan(x); };
 
 	constexpr double EPSILON = 1e-7;
 
@@ -55,40 +50,56 @@ int main(int argc, char* argv[])
 	};
 
 	std::map<double, std::map<std::string, IterationInfo>> iterations;
-	std::set<std::string> names;
-	double epsilon = 0.5;
-
-	auto walker =  [&](auto& approx, RangeBounds<double> const& r) {
-		calculationsCount = 0;
-		typename std::decay_t<decltype(approx)>::SolveData dummy;
-		auto result = approx.solveDiff(func, epsilon, r, dummy);
-		std::string name = approx.approximator.name();
-		std::replace(name.begin(), name.end(), ' ', '_');
-		auto& info = iterations[epsilon][name];
-		info.iterationsCount = calculationsCount;
-		info.range = result.r.p - result.l.p;
-		names.emplace(name);
-	};
-
-	for (epsilon = 0.5; epsilon > EPSILON * 2.2; epsilon /= 2)
-		approximators.each(walker, RangeBounds<double>(-1, 1));
 
 	std::ofstream cout;
-
 	auto printHeader = [&](std::ostream& cout) {
-		cout << "epsilon";
-		for (auto const& it : names)
-			cout << '\t' << it;
-		cout << '\n';
+		cout << "i\tleft\tright\tlog(ratio)\n";
 	};
 
-	cout = std::ofstream(prefix + "/epsilonToComplexity.csv");
-	printHeader(cout);
-	for (auto const& it : iterations)
+	std::map<int, std::map<std::string, double>> ratios;
+
+	std::set<std::string> names;
+
+	auto walker =  [&](auto& approx, RangeBounds<double> const& r) {
+		typename std::decay_t<decltype(approx)>::SolveData info;
+		approx.solveDiff(func, EPSILON * 2.2, r, info);
+		std::string name = approx.approximator.name();
+		std::replace(name.begin(), name.end(), ' ', '-');
+		names.emplace(name);
+
+		cout = std::ofstream(prefix + "/" + name +"Range.csv");
+		printHeader(cout);
+		int c = 0;
+		for (auto const& i : info)
+		{
+			double ratio = std::log((i.second.r.p - i.second.l.p) / (r.r - r.l));
+			ratios[c][name] = ratio;
+			cout << c++ << '\t';
+			cout << i.second.l.p << '\t' << i.second.r.p << '\t';
+			cout << ratio << '\n';
+		}
+	};
+
+	approximators.each(walker, RangeBounds<double>(-1, 1));
+
+
+	cout = std::ofstream(prefix + "/ratios.csv");
+	cout << 'i';
+	for (auto const& i : names)
+		cout << '\t' << i;
+	cout << '\n';
+	for (auto const& i : ratios)
 	{
-		cout << std::log(it.first);
-		for (auto const& b : it.second)
-			cout << '\t' << b.second.iterationsCount;
+		cout << i.first;
+		for (auto const& n : names)
+		{
+			cout << '\t';
+			auto iter = i.second.find(n);
+			if (iter != i.second.end())
+				cout << iter->second;
+			else
+				cout << "nan";
+		}
 		cout << '\n';
 	}
 
