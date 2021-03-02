@@ -1,7 +1,8 @@
-#include <cassert>
-
 #include "opt-methods/approximators/Dichotomy.hpp"
 #include "opt-methods/approximators/GoldenSection.hpp"
+#include "opt-methods/approximators/Fibonacci.hpp"
+#include "opt-methods/approximators/Parabolic.hpp"
+
 #include "opt-methods/solvers/IterationalSolver.hpp"
 #include "opt-methods/solvers/ErasedApproximator.hpp"
 
@@ -31,13 +32,17 @@ int main(int argc, char* argv[])
 		return std::pow(x, 4) - 1.5 * atan(x);
 	};
 
-	constexpr double EPSILON = 1e-5;
+	constexpr double EPSILON = 1e-7;
 
 	auto approximators = IterationalSolverBuilder<double, double,
-				DichotomyApproximtor<double, double>,
-				GoldenSectionApproximtor<double, double>
+				DichotomyApproximator<double, double>,
+				GoldenSectionApproximator<double, double>,
+				FibonacciApproximator<double, double>,
+				ParabolicApproximator<double, double>
 			>
 		(
+			std::make_tuple(EPSILON),
+			std::make_tuple(EPSILON),
 			std::make_tuple(EPSILON),
 			std::make_tuple(EPSILON)
 		);
@@ -55,7 +60,8 @@ int main(int argc, char* argv[])
 
 	auto walker =  [&](auto& approx, RangeBounds<double> const& r) {
 		calculationsCount = 0;
-		auto result = approx.solveDiff(func, epsilon, r);
+		typename std::decay_t<decltype(approx)>::SolveData dummy;
+		auto result = approx.solveDiff(func, epsilon, r, dummy);
 		std::string name = approx.approximator.name();
 		std::replace(name.begin(), name.end(), ' ', '_');
 		auto& info = iterations[epsilon][name];
@@ -63,7 +69,6 @@ int main(int argc, char* argv[])
 		info.range = result.r.p - result.l.p;
 		names.emplace(name);
 	};
-
 
 	for (epsilon = 0.5; epsilon > EPSILON * 2.2; epsilon /= 2)
 		approximators.each(walker, RangeBounds<double>(-1, 1));
@@ -77,7 +82,7 @@ int main(int argc, char* argv[])
 		cout << '\n';
 	};
 
-	cout = std::ofstream(prefix + "/epsilonToComplexity.dat");
+	cout = std::ofstream(prefix + "/epsilonToComplexity.csv");
 	printHeader(cout);
 	for (auto const& it : iterations)
 	{

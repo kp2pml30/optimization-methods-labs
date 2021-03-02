@@ -5,6 +5,7 @@
 #include <utility>
 #include <complex>
 #include <tuple>
+#include <cassert>
 
 #include <QtCharts/QChart>
 #include <QtCharts/QScatterSeries>
@@ -79,15 +80,20 @@ struct BaseIterationData
 template<typename P, typename V>
 class ApproxGenerator : public Generator<BoundsWithValues<P, V>>
 {
+private:
+	using Super = Generator<BoundsWithValues<P, V>>;
+
 public:
-	using promise_type = typename Generator<BoundsWithValues<P, V>>::promise_type;
+	using promise_type = typename Super::promise_type;
 
 private:
 	std::unique_ptr<BaseIterationData<P, V>> data;
 	std::function<std::unique_ptr<BaseIterationData<P, V>>(BaseIterationData<P, V> *)> copier;
 
 public:
-	using Generator<BoundsWithValues<P, V>>::Generator;
+	ApproxGenerator(Super&& s)
+	: Super(std::move(s))
+	{}
 
 	template<typename IterationData>
 	void setData(std::unique_ptr<IterationData> data) requires std::is_base_of_v<BaseIterationData<P, V>, IterationData>
@@ -155,7 +161,8 @@ public:
 	using V = To;
 	using IterationData = BaseIterationData<P, V>;
 
-	ApproximatorImpl<P, V> auto& impl()
+	/// TODO
+	/*ApproximatorImpl<P, V>*/ auto& impl()
 	{
 		return static_cast<CRTP_Child&>(*this);
 	}
@@ -176,7 +183,7 @@ public:
 	template<Function<P, V> F>
 	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
 	{
-		auto holder = std::make_unique<CRTP_Child::IterationData>();
+		auto holder = std::make_unique<typename CRTP_Child::IterationData>();
 		auto gen = impl().begin_impl(std::move(func), std::move(r), *holder);
 		gen.setData(std::move(holder));
 		return gen;
