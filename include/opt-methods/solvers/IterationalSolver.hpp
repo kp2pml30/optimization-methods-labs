@@ -22,35 +22,54 @@ public:
 		requires std::is_default_constructible_v<Approx>
 	= default;
 
-	template<Function<P, V> F>
-	BoundsEval solveIteration(F&& func, std::size_t iterations, Bounds bounds, SolveData &data)
+private:
+	template<Function<P, V> F, typename Checker>
+	BoundsEval solveWhile(F&& func, Bounds bounds, Checker &&checker, SolveData &data) requires
+		requires(BoundsEval b, std::size_t iter) {
+			{ checker(b, iter) } -> std::convertible_to<bool>;
+		}
 	{
 		BoundsEval b = {{bounds.l, func(bounds.l)}, {bounds.r, func(bounds.r)}};
 		auto gen = approximator(std::forward<F>(func), b);
-		while (iterations-- > 0 && gen.next()) {
-			b = gen.getValue();
+		for (std::size_t iterations = 0; gen.next(); iterations++)
+		{
 			data.push_back({gen.getCopy(), b});
+			if (!checker(b, iterations)) break;
+			b = gen.getValue();
 		}
 		return b;
 	}
+
+public:
 	template<Function<P, V> F>
-	BoundsEval solveDiff(F&& func, double diff, Bounds bounds)
+	BoundsEval solveIteration(F&& func, std::size_t iterations, Bounds bounds, SolveData &data)
 	{
-		using std::norm; // use ADL
-		BoundsEval b = {{bounds.l, func(bounds.l)}, {bounds.r, func(bounds.r)}};
-		auto gen = approximator(std::forward<F>(func), b);
-		diff *= diff;
-		while (gen.next())
-			if (auto d1 = b.r.p - b.l.p; norm(d1) < diff)
-				break;
-			else
-				b = gen.getValue();
-		return b;
+		return solveWhile(
+				std::forward<F>(func), std::move(bounds), [&](auto&&, std::size_t iter) { return iter < iterations; }, data);
+	}
+	template<Function<P, V> F>
+	BoundsEval solveDiff(F&& func, double diff, Bounds bounds, SolveData &data)
+	{
+		return solveWhile(
+				std::forward<F>(func),
+				std::move(bounds),
+				[&, d2 = diff * diff](const BoundsEval& b, std::size_t iter) {
+					using std::norm;
+					return norm(b.r.p - b.l.p) >= d2;
+				},
+				data);
+	}
+	template<Function<P, V> F>
+	BoundsEval solveUntilEnd(F&& func, Bounds bounds, SolveData& data) {
+		return solveWhile(
+				std::forward<F>(func),
+				std::move(bounds), [](...) { return true; },
+				data);
 	}
 };
 
-template<typename T, typename Tuple, size_t... Is>
-T ConstructFromTuple(Tuple&& tuple, std::index_sequence<Is...> )
+template<typename T, typename Tuple, size_t ... Is>
+T ConstructFromTuple(Tuple&& tuple, std::index_sequence<Is...>)
 {
 	return T{std::get<Is>(std::forward<Tuple>(tuple))...};
 }

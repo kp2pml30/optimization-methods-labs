@@ -9,6 +9,7 @@ template<std::floating_point From, typename To>
 class GoldenSectionApproximator : public BaseApproximator<From, To, GoldenSectionApproximator<From, To>>
 {
 	using BaseT = BaseApproximator<From, To, GoldenSectionApproximator>;
+
 private:
 public:
 	using IterationData = typename BaseT::IterationData;
@@ -18,6 +19,12 @@ public:
 	using V = To;
 
 	static constexpr P tau = std::numbers::phi_v<P> - 1;
+
+	P epsilon;
+
+	GoldenSectionApproximator(P epsilon)
+	: epsilon(epsilon)
+	{}
 
 	template<Function<P, V> F>
 	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData &)
@@ -30,7 +37,7 @@ public:
 		P x1 = std::lerp(a, b, 1 - tau), x2 = std::lerp(a, b, tau);
 		V f1 = func(x1), f2 = func(x2);
 
-		while (true)
+		while (b - a >= epsilon)
 		{
 			if (f1 < f2)
 			{
