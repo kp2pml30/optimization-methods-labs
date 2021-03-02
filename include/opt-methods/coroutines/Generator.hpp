@@ -40,8 +40,7 @@ struct Generator
 
 	Generator(promise_type& promise) :
 		handle(handle_type::from_promise(promise))
-	{
-	}
+	{}
 	Generator() = default;
 	Generator(Generator const&) = delete;
 	Generator &operator=(Generator const&) = delete;

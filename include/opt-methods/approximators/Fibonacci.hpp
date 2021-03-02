@@ -5,11 +5,11 @@
 
 #include "opt-methods/solvers/BaseApproximator.hpp"
 
-template<std::floating_point From, typename To, typename FibT>
+template<std::floating_point From, typename To, typename FibT = std::size_t>
 class FibonacciApproximator : public BaseApproximator<From, To, FibonacciApproximator<From, To, FibT>>
 {
-	using BaseT = BaseApproximator<From, To, FibonacciApproximator>;
 private:
+	using BaseT = BaseApproximator<From, To, FibonacciApproximator>;
 public:
 	using IterationData = typename BaseT::IterationData;
 	static char const* name() noexcept { return "fibonacci"; }

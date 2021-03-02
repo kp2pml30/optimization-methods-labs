@@ -5,6 +5,7 @@
 #include <utility>
 #include <complex>
 #include <tuple>
+#include <cassert>
 
 #include <QtCharts/QChart>
 #include <QtCharts/QScatterSeries>
@@ -79,8 +80,11 @@ struct BaseIterationData
 template<typename P, typename V>
 class ApproxGenerator : public Generator<BoundsWithValues<P, V>>
 {
+private:
+	using Super = Generator<BoundsWithValues<P, V>>;
+
 public:
-	using promise_type = typename Generator<BoundsWithValues<P, V>>::promise_type;
+	using promise_type = typename Super::promise_type;
 
 private:
 	using base_t = Generator<BoundsWithValues<P, V>>;
@@ -88,8 +92,8 @@ private:
 	std::function<std::unique_ptr<BaseIterationData<P, V>>(BaseIterationData<P, V> *)> copier;
 
 public:
-	ApproxGenerator(base_t&& gen)
-	: base_t(std::move(gen))
+	ApproxGenerator(Super&& s)
+	: Super(std::move(s))
 	{}
 
 	template<typename IterationData>

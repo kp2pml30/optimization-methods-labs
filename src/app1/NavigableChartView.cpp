@@ -1,11 +1,15 @@
 #include "NavigableChartView.h"
 
+#include <cmath>
+
 #include <QtGui/QMouseEvent>
 #include <QtCharts/QValueAxis>
 
 #include "opt-methods/util/Charting.hpp"
 
 QT_CHARTS_USE_NAMESPACE
+
+using std::pow;
 
 NavigableChartView::NavigableChartView(QWidget *parent)
 		: QChartView(parent), left_bt_pressed(false)

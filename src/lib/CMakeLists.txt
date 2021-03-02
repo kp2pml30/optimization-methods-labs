@@ -9,3 +9,5 @@ if (PThread)
 	target_link_libraries(opt-methods PUBLIC  ${PThread})
 endif()
 
+target_link_libraries(opt-methods PUBLIC Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts)
+
