@@ -3,7 +3,7 @@
 #include <numbers>
 #include <cassert>
 
-#include "opt-methods/solvers/Approximator.hpp"
+#include "opt-methods/solvers/BaseApproximator.hpp"
 
 template<std::floating_point From, typename To, typename FibT>
 class FibonacciApproximator : public BaseApproximator<From, To, FibonacciApproximator<From, To, FibT>>

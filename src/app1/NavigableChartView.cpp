@@ -3,6 +3,8 @@
 #include <QtGui/QMouseEvent>
 #include <QtCharts/QValueAxis>
 
+#include "opt-methods/util/Charting.hpp"
+
 QT_CHARTS_USE_NAMESPACE
 
 NavigableChartView::NavigableChartView(QWidget *parent)
@@ -26,9 +28,10 @@ void NavigableChartView::wheelEvent(QWheelEvent *event)
 	QSizeF size = screen.size();
 
 	{
-		auto* x = static_cast<QValueAxis*>(chart()->axisX());
-		auto* y = static_cast<QValueAxis*>(chart()->axisY());
-		if (qreal s = std::min(x->max() - x->min(), y->max() - y->min()) * fac; s < MIN_SCALE) fac = MIN_SCALE / s;
+		using namespace Charting;
+		if (qreal s = std::min(getAxisRange(axisX<QValueAxis>(chart())), getAxisRange(axisY<QValueAxis>(chart()))) * fac;
+				s < MIN_SCALE)
+			fac = MIN_SCALE / s;
 		if (fac == 1) return;
 	}
 
@@ -78,4 +81,18 @@ void NavigableChartView::mouseReleaseEvent(QMouseEvent *event)
 	}
 	else
 		event->ignore();
+}
+
+void NavigableChartView::setChart(QtCharts::QChart *chart, double tickInterval)
+{
+	using namespace QtCharts;
+	QChartView::setChart(chart);
+	auto *x = Charting::axisX<QValueAxis>(chart);
+	auto *y = Charting::axisY<QValueAxis>(chart);
+	x->setTickAnchor(0);
+	x->setTickInterval(tickInterval);
+	x->setTickType(QtCharts::QValueAxis::TicksDynamic);
+	y->setTickAnchor(0);
+	y->setTickInterval(tickInterval);
+	y->setTickType(QtCharts::QValueAxis::TicksDynamic);
 }

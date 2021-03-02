@@ -9,7 +9,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QScatterSeries>
 
-#include "../coroutines/Generator.hpp"
+#include "opt-methods/coroutines/Generator.hpp"
 
 template<typename Point, typename Value>
 struct PointAndValue
@@ -83,11 +83,14 @@ public:
 	using promise_type = typename Generator<BoundsWithValues<P, V>>::promise_type;
 
 private:
+	using base_t = Generator<BoundsWithValues<P, V>>;
 	std::unique_ptr<BaseIterationData<P, V>> data;
 	std::function<std::unique_ptr<BaseIterationData<P, V>>(BaseIterationData<P, V> *)> copier;
 
 public:
-	using Generator<BoundsWithValues<P, V>>::Generator;
+	ApproxGenerator(base_t&& gen)
+	: base_t(std::move(gen))
+	{}
 
 	template<typename IterationData>
 	void setData(std::unique_ptr<IterationData> data) requires std::is_base_of_v<BaseIterationData<P, V>, IterationData>
@@ -98,9 +101,9 @@ public:
 		};
 	}
 
-	BaseIterationData<P, V> const& get() { return *data; }
+	BaseIterationData<P, V> const& getIterationData() { return *data; }
 
-	std::unique_ptr<BaseIterationData<P, V>> getCopy() { return copier(data.get()); }
+	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() { return copier(data.get()); }
 };
 
 template<typename T, typename P, typename V>
@@ -121,7 +124,7 @@ concept HasIterationData = requires(T& t) {
 template<typename T, typename P, typename V>
 concept HasDrawImpl = requires(T& t, BoundsWithValues<P, V> bounds, QtCharts::QChart& chart) {
 	requires HasIterationData<T, P, V>;
-	{ t.draw_impl(bounds, std::declval<typename T::IterationData>(), chart) };
+	{ T::draw_impl(bounds, std::declval<typename T::IterationData>(), chart) };
 };
 
 template<typename T, typename P, typename V>
@@ -146,39 +149,3 @@ concept Approximator = requires(T& t, DummyFunc<P, V> func, BoundsWithValues<P, 
 	{ t(func, bounds) } -> std::same_as<ApproxGenerator<P, V>>;
 };
 
-template<typename From, typename To, typename CRTP_Child>
-class BaseApproximator
-{
-private:
-public:
-	using P = From;
-	using V = To;
-	using IterationData = BaseIterationData<P, V>;
-
-	ApproximatorImpl<P, V> auto& impl()
-	{
-		return static_cast<CRTP_Child&>(*this);
-	}
-
-	void draw(BoundsWithValues<P, V> r, IterationData const& data, QtCharts::QChart& chart)
-	{
-		using namespace QtCharts;
-		auto s = new QtCharts::QScatterSeries();
-		s->append(QPointF{r.l.p, r.l.v});
-		s->append(QPointF{r.r.p, r.r.v});
-		chart.addSeries(s);
-		s->attachAxis(chart.axisX());
-		s->attachAxis(chart.axisY());
-		if constexpr (HasDrawImpl<CRTP_Child, P, V>)
-			impl().draw_impl(r, static_cast<typename CRTP_Child::IterationData const&>(data), chart);
-	}
-
-	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
-	{
-		auto holder = std::make_unique<CRTP_Child::IterationData>();
-		auto gen = impl().begin_impl(std::move(func), std::move(r), *holder);
-		gen.setData(std::move(holder));
-		return gen;
-	}
-};

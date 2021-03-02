@@ -26,7 +26,7 @@
          <set>Qt::AlignCenter</set>
         </property>
         <item row="1" column="1">
-         <widget class="QSlider" name="horizontalSlider">
+         <widget class="QSlider" name="iterSelector">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -36,24 +36,24 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QComboBox" name="comboBox"/>
+         <widget class="QComboBox" name="methodSelector"/>
         </item>
         <item row="0" column="0">
-         <widget class="QLabel" name="label_2">
+         <widget class="QLabel" name="methodSelectorLabel">
           <property name="text">
            <string>Choose minimization method:</string>
           </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="iterSelectorLabel">
           <property name="text">
            <string>Iteration slider:</string>
           </property>
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="doubleSpinBox">
+         <widget class="QDoubleSpinBox" name="epsSelector">
           <property name="decimals">
            <number>10</number>
           </property>
@@ -72,7 +72,7 @@
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="epsSelectorLabel">
           <property name="text">
            <string>Desired accuracy:</string>
           </property>
@@ -81,7 +81,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="SoftwareButton">
         <property name="text">
          <string/>
         </property>
@@ -98,12 +98,12 @@
        </widget>
       </item>
       <item>
-       <widget class="QtCharts::QChartView" name="graphicsView_2"/>
+       <widget class="QtCharts::QChartView" name="boundsChartView"/>
       </item>
      </layout>
     </item>
     <item>
-     <widget class="NavigableChartView" name="graphicsView">
+     <widget class="NavigableChartView" name="visualChartView">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
@@ -146,14 +146,14 @@
  </resources>
  <connections>
   <connection>
-   <sender>comboBox</sender>
+   <sender>methodSelector</sender>
    <signal>currentIndexChanged(int)</signal>
    <receiver>MainWindow</receiver>
    <slot>methodChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>269</x>
-     <y>546</y>
+     <x>383</x>
+     <y>72</y>
     </hint>
     <hint type="destinationlabel">
      <x>276</x>
@@ -162,14 +162,14 @@
    </hints>
   </connection>
   <connection>
-   <sender>doubleSpinBox</sender>
+   <sender>epsSelector</sender>
    <signal>valueChanged(double)</signal>
    <receiver>MainWindow</receiver>
    <slot>epsChanged(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>342</x>
-     <y>605</y>
+     <x>383</x>
+     <y>132</y>
     </hint>
     <hint type="destinationlabel">
      <x>261</x>
@@ -178,18 +178,34 @@
    </hints>
   </connection>
   <connection>
-   <sender>horizontalSlider</sender>
+   <sender>iterSelector</sender>
    <signal>valueChanged(int)</signal>
    <receiver>MainWindow</receiver>
    <slot>iterationNChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>245</x>
-     <y>572</y>
+     <x>383</x>
+     <y>101</y>
     </hint>
     <hint type="destinationlabel">
      <x>164</x>
      <y>-17</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>epsSelector</sender>
+   <signal>editingFinished()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>epsEditingFinished()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>273</x>
+     <y>122</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>313</x>
+     <y>-4</y>
     </hint>
    </hints>
   </connection>
@@ -198,5 +214,6 @@
   <slot>iterationNChanged(int)</slot>
   <slot>methodChanged(int)</slot>
   <slot>epsChanged(double)</slot>
+  <slot>epsEditingFinished()</slot>
  </slots>
 </ui>

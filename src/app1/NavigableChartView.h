@@ -9,6 +9,7 @@ class NavigableChartView : public QtCharts::QChartView
 	Q_OBJECT
 public:
 	NavigableChartView(QWidget *parent = nullptr);
+  void setChart(QtCharts::QChart *chart, double tickInterval);
 
 protected:
 	void mousePressEvent(QMouseEvent *event) override;

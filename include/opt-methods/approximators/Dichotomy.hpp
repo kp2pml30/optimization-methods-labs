@@ -1,6 +1,6 @@
 #pragma once
 
-#include "opt-methods/solvers/Approximator.hpp"
+#include "opt-methods/solvers/BaseApproximator.hpp"
 
 template<typename From, typename To>
 class DichotomyApproximator : public BaseApproximator<From, To, DichotomyApproximator<From, To>>

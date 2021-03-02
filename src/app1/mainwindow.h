@@ -13,6 +13,7 @@
 #include "opt-methods/approximators/GoldenSection.hpp"
 #include "opt-methods/approximators/Fibonacci.hpp"
 #include "opt-methods/approximators/Parabolic.hpp"
+#include "opt-methods/approximators/Brent.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -34,6 +35,7 @@ public slots:
 	void iterationNChanged(int);
 	void methodChanged(int);
 	void epsChanged(double);
+	void epsEditingFinished();
 
 private:
 	using Approx = ErasedApproximator<double, double>;
@@ -45,6 +47,7 @@ private:
 	RangeBounds<double> r = RangeBounds<double>(-1, 1);
 	Solver::SolveData data;
 	QtCharts::QLineSeries* plot = nullptr;
+	double lastEps              = 0;
 
 	using SolverConstructorT = std::function<Solver(double)>;
 
@@ -57,12 +60,16 @@ private:
 						Approximator::name()};
 	}
 
-	static inline std::vector<FactoryT> factories = {
-		getFactory<DichotomyApproximator<double, double>>(),
-		getFactory<FibonacciApproximator<double, double, uint64_t>>(),
-		getFactory<GoldenSectionApproximator<double, double>>(),
-		getFactory<ParabolicApproximator<double, double>>()
-	};
+	template<Approximator<double, double>... Approxs>
+	static std::vector<FactoryT> getFactories() {
+		return {getFactory<Approxs>()...};
+	}
+
+	static inline std::vector<FactoryT> factories = getFactories<DichotomyApproximator<double, double>,
+																															 FibonacciApproximator<double, double, uint64_t>,
+																															 GoldenSectionApproximator<double, double>,
+																															 ParabolicApproximator<double, double>,
+																															 BrentApproximator<double, double>>();
 
 	void recalc(int n, double eps);
 

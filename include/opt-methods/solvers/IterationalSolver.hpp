@@ -33,7 +33,7 @@ private:
 		auto gen = approximator(std::forward<F>(func), b);
 		for (std::size_t iterations = 0; gen.next(); iterations++)
 		{
-			data.push_back({gen.getCopy(), b});
+			data.push_back({gen.getIterationDataCopy(), b});
 			if (!checker(b, iterations)) break;
 			b = gen.getValue();
 		}

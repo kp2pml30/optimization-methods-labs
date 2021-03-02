@@ -11,7 +11,7 @@ struct Generator
 	{
 		std::variant<T const*, std::exception_ptr> value;
 
-		promise_type& get_return_object() { return *this; }
+		auto get_return_object() { return Generator(*this); }
 		std::suspend_always initial_suspend() noexcept { return {}; }
 		std::suspend_always final_suspend() noexcept { return {}; }
 		std::suspend_always yield_value(T const& other)
