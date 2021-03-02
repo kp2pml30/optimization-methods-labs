@@ -59,21 +59,58 @@ public:
 	}
 
 	template<Function<P, V> F>
+	std::optional<std::tuple<P, P, V, P>> choosePoints(F &&func, BoundsWithValues<P, V> r, std::size_t maxIter)
+	{
+		using std::abs;
+
+		auto a = r.l.p, b = r.r.p;
+		auto fa = r.l.v, fb = r.r.v;
+		auto x = (a + b) / 2;
+		auto fx = func(x);
+
+		if (abs(fx - fa) < epsilon || abs(fx - fb) < epsilon) return std::make_tuple(a, x, fx, b);
+
+		for (auto min = fa < fb ? a : b; abs(x - min) >= epsilon && maxIter > 0;
+				 maxIter--, x = (x + min) / 2, fx = func(x))
+			if (fa >= fx && fx <= fb)
+				return std::make_tuple(a, x, fx, b);
+		return {};
+	}
+
+	template<Function<P, V> F>
 	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData& data)
 	{
 		assert(r.l.p < r.r.p);
 
 		auto a = r.l.p, b = r.r.p;
-		/// TODO: choose x1,x2,x3 correctly
-		auto x1 = a, x3 = b, x2 = (a + b) / 2;
-		auto f1 = r.l.v, f3 = r.r.v, f2 = func(x2);
+		auto res          = choosePoints(func, r, 10);
+		if (!res.has_value()) {
+			// cannot satisfy initial conditions
+			co_yield r;
+			co_return;
+		}
+
+		auto [x1, x2, f2, x3] = *res;
+		auto f1 = r.l.v, f3 = r.r.v;
 
 		std::optional<P> last_x_bar;
 
 		while (true)
 		{
-			/// TODO: what if x1/x2/x3 stick together (division by zero)?
+			using std::abs;
 			auto [a0, a1, a2, x_bar] = approxParabola(x1, f1, x2, f2, x3, f3);
+			if (!(abs(x2 - x1) >= epsilon && abs(x3 - x2) >= epsilon && abs(x3 - x1) >= epsilon))
+			{
+				// cannot find minimum now
+				co_yield {{x1, f1}, {x3, f3}};
+				break;
+			}
+			if (!(abs(a2) >= epsilon))
+			{
+				// && f(x1) >= f(x2) <= f(x3) => f === const on [x1, x3]
+				co_yield {{x2, f2}, {x2, f2}};
+				break;
+			}
 			data.a0 = a0, data.a1 = a1, data.a2 = a2;
 			data.x1 = x1, data.x2 = x2, data.x3 = x3;
 			auto f_x_bar = func(x_bar);

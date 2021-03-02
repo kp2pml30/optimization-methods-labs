@@ -66,7 +66,7 @@ private:
 	}
 
 	static inline std::vector<FactoryT> factories = getFactories<DichotomyApproximator<double, double>,
-																															 FibonacciApproximator<double, double, uint64_t>,
+																															 FibonacciApproximator<double, double>,
 																															 GoldenSectionApproximator<double, double>,
 																															 ParabolicApproximator<double, double>,
 																															 BrentApproximator<double, double>>();
