@@ -3,6 +3,9 @@
 #include "Approximator.hpp"
 #include "opt-methods/util/Charting.hpp"
 
+/**
+ * @param CRTP_Child - CRTP class for compile time polymorphism
+ */
 template<typename From, typename To, typename CRTP_Child>
 class BaseApproximator
 {

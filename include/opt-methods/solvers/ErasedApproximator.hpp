@@ -59,6 +59,9 @@ struct TypeTag {};
 template<typename T>
 constexpr TypeTag<T> typeTag;
 
+/**
+ * type-erasure for approximator to simply choose in UI without recompilation
+ */
 template<typename F, typename T>
 class ErasedApproximator
 {

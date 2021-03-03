@@ -4,9 +4,15 @@
 #include <variant>
 #include <memory>
 
+/**
+ * base coroutines class
+ */
 template <typename T>
 struct Generator
 {
+	/**
+	 * what coroutines returns
+	 */
 	struct promise_type
 	{
 		std::variant<T const*, std::exception_ptr> value;
@@ -19,10 +25,10 @@ struct Generator
 			value = std::addressof(other);
 			return {};
 		}
-		void return_void() {}
+		void return_void() noexcept {}
 
 		template <typename Expression>
-		Expression&& await_transform(Expression&& expression)
+		Expression&& await_transform(Expression&& expression) noexcept
 		{
 			static_assert(sizeof(expression) == 0,
 				"co_await is not supported in coroutines of type Generator");
@@ -38,14 +44,14 @@ struct Generator
 	using handle_type = std::coroutine_handle<promise_type>;
 	handle_type handle{nullptr};
 
-	Generator(promise_type& promise) :
-		handle(handle_type::from_promise(promise))
+	Generator(promise_type& promise)
+	: handle(handle_type::from_promise(promise))
 	{}
 	Generator() = default;
 	Generator(Generator const&) = delete;
-	Generator &operator=(Generator const&) = delete;
+	Generator& operator=(Generator const&) = delete;
 	Generator(Generator&& other) : handle(other.handle) { other.handle = nullptr; }
-	Generator &operator=(Generator&& other) noexcept
+	Generator& operator=(Generator&& other) noexcept
 	{
 		if (this != &other)
 		{
@@ -73,12 +79,12 @@ struct Generator
 		return !handle.done();
 	}
 
-	operator bool() const
+	operator bool() const noexcept
 	{
 		return static_cast<bool>(handle);
 	}
 
-	const T &getValue()
+	T const& getValue() const
 	{
 		return *std::get<0>(handle.promise().value);
 	}

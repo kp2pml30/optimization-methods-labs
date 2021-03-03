@@ -2,6 +2,9 @@
 
 #include "./ErasedApproximator.hpp"
 
+/**
+ * wrapper class to solve with loops
+ */
 template<typename P, typename V, Approximator<P, V> Approx>
 class IterationalSolver
 {
@@ -41,12 +44,18 @@ private:
 	}
 
 public:
+	/**
+	 * @param iterations -- solve while possible && i=0.. < iterations
+	 */
 	template<Function<P, V> F>
 	BoundsEval solveIteration(F&& func, std::size_t iterations, Bounds bounds, SolveData &data)
 	{
 		return solveWhile(
 				std::forward<F>(func), std::move(bounds), [&](auto&&, std::size_t iter) { return iter < iterations; }, data);
 	}
+	/**
+	 * @param diff -- solve while possible && distance between ends > diff
+	 */
 	template<Function<P, V> F>
 	BoundsEval solveDiff(F&& func, double diff, Bounds bounds, SolveData &data)
 	{
@@ -59,6 +68,9 @@ public:
 				},
 				data);
 	}
+	/**
+	 * @param diff -- solve while possible
+	 */
 	template<Function<P, V> F>
 	BoundsEval solveUntilEnd(F&& func, Bounds bounds, SolveData& data) {
 		return solveWhile(
@@ -68,16 +80,18 @@ public:
 	}
 };
 
-template<typename T, typename Tuple, size_t ... Is>
-T ConstructFromTuple(Tuple&& tuple, std::index_sequence<Is...>)
+namespace impl
 {
-	return T{std::get<Is>(std::forward<Tuple>(tuple))...};
-}
-
-template<typename T, typename Tuple>
-T ConstructFromTuple(Tuple&& tuple)
-{
-	return ConstructFromTuple<T>(std::forward<Tuple>(tuple), std::make_index_sequence<std::tuple_size_v<std::decay_t<Tuple>>>{});
+	template<typename T, typename Tuple, size_t ... Is>
+	T ConstructFromTuple(Tuple&& tuple, std::index_sequence<Is...>)
+	{
+		return T{std::get<Is>(std::forward<Tuple>(tuple))...};
+	}
+	template<typename T, typename Tuple>
+	T ConstructFromTuple(Tuple&& tuple)
+	{
+		return ConstructFromTuple<T>(std::forward<Tuple>(tuple), std::make_index_sequence<std::tuple_size_v<std::decay_t<Tuple>>>{});
+	}
 }
 
 template<typename P, typename V, Approximator<P, V> ... A>
@@ -90,13 +104,22 @@ private:
 	using Chained = IterationalSolverBuilder<P, V, Tail...>;
 	IterationalSolver<P, V, A> approximator;
 public:
+	/**
+	 * ctor
+	 * @param tuples... -- arguments to constructors
+	 */
 	template<typename T1, typename ... Tuples>
 	IterationalSolverBuilder(T1&& t, Tuples&&... tail)
 	: Chained(std::forward<Tuples>(tail)...)
-	, approximator(ConstructFromTuple<decltype(approximator)>(std::forward<T1>(t)))
+	, approximator(impl::ConstructFromTuple<decltype(approximator)>(std::forward<T1>(t)))
 	{
 		static_assert(sizeof...(tail) == sizeof...(Tail));
 	}
+
+	/**
+	 * @param f -- function to call on each approximator
+	 * @param a... -- parameters to pass to function after current approximator
+	 */
 	template<typename Func, typename ... Args>
 	void each(Func& f, Args&& ... a)
 		requires std::invocable<Func, IterationalSolver<P, V, A>&, Args...>

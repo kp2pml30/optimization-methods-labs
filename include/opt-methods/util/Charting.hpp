@@ -10,6 +10,7 @@
 
 #include "opt-methods/solvers/Approximator.hpp"
 
+// namespace connected with UI drawing and qt
 namespace Charting
 {
 	template<std::derived_from<QtCharts::QAbstractSeries> SeriesT = QtCharts::QLineSeries, typename P, std::invocable<P> Func>

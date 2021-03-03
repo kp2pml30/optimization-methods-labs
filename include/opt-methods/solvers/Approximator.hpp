@@ -33,13 +33,6 @@ struct PointAndValue
 	PointAndValue& operator=(PointAndValue&&) = default;
 };
 
-template<typename T>
-struct IsPointAndValue : std::false_type {};
-template<typename F, typename T>
-struct IsPointAndValue<PointAndValue<F, T>> : std::true_type {};
-template<typename T>
-constexpr bool IsPointAndValueT = IsPointAndValue<T>::value;
-
 template<typename Y>
 struct RangeBounds
 {
@@ -74,9 +67,10 @@ struct DummyFunc
 
 template<typename P, typename V>
 struct BaseIterationData
-{
-};
+{};
 
+/** coroutines generator for approximators
+ */
 template<typename P, typename V>
 class ApproxGenerator : public Generator<BoundsWithValues<P, V>>
 {
@@ -96,6 +90,9 @@ public:
 	: Super(std::move(s))
 	{}
 
+	/**
+	 * data setter
+	 */
 	template<typename IterationData>
 	void setData(std::unique_ptr<IterationData> data) requires std::is_base_of_v<BaseIterationData<P, V>, IterationData>
 	{
@@ -105,11 +102,20 @@ public:
 		};
 	}
 
-	BaseIterationData<P, V> const& getIterationData() { return *data; }
+	/**
+	 * data getter
+	 */
+	BaseIterationData<P, V> const& getIterationData() const noexcept { return *data; }
 
-	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() { return copier(data.get()); }
+	/**
+	 * data copy getter
+	 */
+	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() const { return copier(data.get()); }
 };
 
+/**
+ * helper concept: has point and value typenames
+ */
 template<typename T, typename P, typename V>
 concept HasPV = requires(T& t) {
 	typename T::P;
@@ -118,6 +124,9 @@ concept HasPV = requires(T& t) {
 	std::is_same_v<typename T::V, V>;
 };
 
+/**
+ * helper concept: hasPV + has IterationalData typename
+ */
 template<typename T, typename P, typename V>
 concept HasIterationData = requires(T& t) {
 	requires HasPV<T, P, V>;
@@ -131,25 +140,40 @@ concept HasDrawImpl = requires(T& t, BoundsWithValues<P, V> bounds, QtCharts::QC
 	{ T::draw_impl(bounds, std::declval<typename T::IterationData>(), chart) };
 };
 
+
+template<typename From, typename To, typename CRTP_Child>
+class BaseApproximator; // forward declaration
+
+/**
+ * Approximator implementation concept, must inherint BaseApproximator
+ */
 template<typename T, typename P, typename V>
 concept ApproximatorImpl = requires(T& t, DummyFunc<P, V> func,
 																		BoundsWithValues<P, V> bounds) {
 	requires HasIterationData<T, P, V>;
 	requires Function<decltype(func), P, V>;
+	requires std::is_base_of_v<BaseApproximator<P, V, T>, T>;
 	{ t.begin_impl(func, bounds, std::declval<typename T::IterationData&>()) } -> std::same_as<ApproxGenerator<P, V>>;
 };
 
+/**
+ * concept for drawable with QChart objects
+ */
 template<typename T, typename P, typename V>
 concept Drawable = requires(T& t, BoundsWithValues<P, V> bounds, QtCharts::QChart& chart) {
 	{ t.draw(bounds, std::declval<BaseIterationData<P, V>>(), chart) };
 };
 
+/**
+ * most abstract Approximator concept
+ */
 template<typename T, typename P, typename V>
 concept Approximator = requires(T& t, DummyFunc<P, V> func, BoundsWithValues<P, V> bounds) {
 	// Function<P, V> func
 	requires HasPV<T, P, V>;
 	requires Drawable<T, P, V>;
 	requires Function<decltype(func), P, V>;
+	// approximating function
 	{ t(func, bounds) } -> std::same_as<ApproxGenerator<P, V>>;
 };
 
