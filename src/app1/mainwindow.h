@@ -60,16 +60,20 @@ private:
 						Approximator::name()};
 	}
 
-	template<Approximator<double, double>... Approxs>
+	template<template<typename, typename> typename... Approxs>
+		requires (... && Approximator<Approxs<double, double>, double, double>)
 	static std::vector<FactoryT> getFactories() {
-		return {getFactory<Approxs>()...};
+		return {getFactory<Approxs<double, double>>()...};
 	}
 
-	static inline std::vector<FactoryT> factories = getFactories<DichotomyApproximator<double, double>,
-																															 FibonacciApproximator<double, double>,
-																															 GoldenSectionApproximator<double, double>,
-																															 ParabolicApproximator<double, double>,
-																															 BrentApproximator<double, double>>();
+	template<typename P, typename V>
+	using FibonacciSizeTApproximator = FibonacciApproximator<P, V>; // for MSVC to match template template-parameter
+
+	static inline std::vector<FactoryT> factories = getFactories<DichotomyApproximator,
+																															 FibonacciSizeTApproximator,
+																															 GoldenSectionApproximator,
+																															 ParabolicApproximator,
+																															 BrentApproximator>();
 
 	void recalc(int n, double eps);
 

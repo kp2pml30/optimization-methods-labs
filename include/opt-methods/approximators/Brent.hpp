@@ -65,12 +65,12 @@ public:
 			auto epsilon = this->epsilon * (abs(x) + P(0.1));
 			if (abs(x - (a + b) / 2) + (b - a) / 2 <= 2 * epsilon) break;
 
-			auto step = cur_step;
+			auto step = last_step;
 			///   g
 			last_step = cur_step;
 
 			auto all_uneq = []<std::floating_point T>(T a, T b, T c) {
-				return a != b && a != c && c != a;
+				return a != b && a != c && b != c;
 			};
 
 			P u;
@@ -141,8 +141,8 @@ public:
 				}
 				else if (fu <= flpm || last_premin == x || last_premin == premin)
 				{
-					last_premin = premin;
-					flpm        = fpm;
+					last_premin = u;
+					flpm        = fu;
 				}
 			}
 
