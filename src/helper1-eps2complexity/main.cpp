@@ -35,48 +35,47 @@ int main(int argc, char* argv[])
 
 	constexpr double EPSILON = 1e-7;
 
-	auto approximators = IterationalSolverBuilder<double, double,
-				DichotomyApproximator<double, double>,
-				GoldenSectionApproximator<double, double>,
-				FibonacciApproximator<double, double>,
-				ParabolicApproximator<double, double>,
-				BrentApproximator<double, double>
-			>
-		(
-			std::make_tuple(EPSILON),
-			std::make_tuple(EPSILON),
-			std::make_tuple(EPSILON),
-			std::make_tuple(EPSILON),
-			std::make_tuple(EPSILON)
-		);
-
-
 	struct IterationInfo
 	{
 		int functionCalls = -1;
 		int iterations = -1;
 		double range = -1;
 	};
-
 	std::map<double, std::map<std::string, IterationInfo>> iterations;
 	std::set<std::string> names;
-	double epsilon = 0.5;
 
-	auto walker =  [&](auto& approx, RangeBounds<double> const& r) {
-		calculationsCount = 0;
-		typename std::decay_t<decltype(approx)>::SolveData dummy;
-		auto result = approx.solveDiff(func, epsilon, r, dummy);
-		std::string name = approx.approximator.name();
-		std::replace(name.begin(), name.end(), ' ', '-');
-		auto& info = iterations[epsilon][name];
-		info.functionCalls = calculationsCount;
-		info.iterations = dummy.size();
-		info.range = result.r.p - result.l.p;
-		names.emplace(name);
-	};
+	for (double epsilon = 0.5; epsilon > EPSILON * 2.2; epsilon /= 2)
+	{
+		auto approximators = IterationalSolverBuilder<double, double,
+					DichotomyApproximator<double, double>,
+					GoldenSectionApproximator<double, double>,
+					FibonacciApproximator<double, double>,
+					ParabolicApproximator<double, double>,
+					BrentApproximator<double, double>
+				>
+			(
+				std::make_tuple(epsilon),
+				std::make_tuple(epsilon),
+				std::make_tuple(epsilon),
+				std::make_tuple(epsilon),
+				std::make_tuple(epsilon)
+			);
 
-	for (epsilon = 0.5; epsilon > EPSILON * 2.2; epsilon /= 2)
+		auto walker =  [&](auto& approx, RangeBounds<double> const& r) {
+			calculationsCount = 0;
+			typename std::decay_t<decltype(approx)>::SolveData dummy;
+			auto result = approx.solveDiff(func, epsilon, r, dummy);
+			std::string name = approx.approximator.name();
+			std::replace(name.begin(), name.end(), ' ', '-');
+			auto& info = iterations[epsilon][name];
+			info.functionCalls = calculationsCount;
+			info.iterations = (int)dummy.size();
+			info.range = result.r.p - result.l.p;
+			names.emplace(name);
+		};
+
 		approximators.each(walker, RangeBounds<double>(-1, 1));
+	}
 
 	std::ofstream cout;
 

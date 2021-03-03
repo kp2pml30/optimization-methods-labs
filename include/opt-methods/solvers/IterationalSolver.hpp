@@ -53,7 +53,7 @@ public:
 		return solveWhile(
 				std::forward<F>(func),
 				std::move(bounds),
-				[&, d2 = diff * diff](const BoundsEval& b, std::size_t iter) {
+				[&, d2 = diff * diff](const BoundsEval& b, [[maybe_unused]] std::size_t iter) {
 					using std::norm;
 					return norm(b.r.p - b.l.p) >= d2;
 				},
