@@ -80,9 +80,9 @@ void MainWindow::recalc()
 	iterationNChanged(0);
 }
 
-void MainWindow::methodChanged(int n) { recalc(); }
-void MainWindow::epsChanged(double eps) { recalc(); }
-void MainWindow::powChanged(int pow) { recalc(); }
+void MainWindow::methodChanged(int) { recalc(); }
+void MainWindow::epsChanged(double) { recalc(); }
+void MainWindow::powChanged(int) { recalc(); }
 
 void MainWindow::paintEvent(QPaintEvent* ev)
 {
