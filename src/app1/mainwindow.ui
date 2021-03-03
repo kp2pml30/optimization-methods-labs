@@ -52,31 +52,61 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="epsSelector">
-          <property name="decimals">
-           <number>10</number>
-          </property>
-          <property name="maximum">
-           <double>1.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.000001000000000</double>
-          </property>
-          <property name="stepType">
-           <enum>QAbstractSpinBox::DefaultStepType</enum>
-          </property>
-          <property name="value">
-           <double>0.000100000000000</double>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
          <widget class="QLabel" name="epsSelectorLabel">
           <property name="text">
            <string>Desired accuracy:</string>
           </property>
          </widget>
+        </item>
+        <item row="2" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QDoubleSpinBox" name="epsSelector">
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="minimum">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>10.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'Arial','Helvetica Neue','Helvetica','sans-serif'; font-size:15px; color:#242729; background-color:#fefefb;&quot;&gt;⋅&lt;/span&gt;&lt;span style=&quot; font-family:'arial','sans-serif'; font-size:16px; color:#202124; background-color:#ffffff;&quot;&gt;10^&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="powSelector">
+            <property name="minimum">
+             <number>-10</number>
+            </property>
+            <property name="maximum">
+             <number>0</number>
+            </property>
+            <property name="value">
+             <number>-4</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -153,27 +183,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>383</x>
-     <y>72</y>
+     <y>71</y>
     </hint>
     <hint type="destinationlabel">
      <x>276</x>
      <y>-9</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>epsSelector</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>epsChanged(double)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>383</x>
-     <y>132</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>261</x>
-     <y>-10</y>
     </hint>
    </hints>
   </connection>
@@ -185,7 +199,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>383</x>
-     <y>101</y>
+     <y>100</y>
     </hint>
     <hint type="destinationlabel">
      <x>164</x>
@@ -195,17 +209,33 @@
   </connection>
   <connection>
    <sender>epsSelector</sender>
-   <signal>editingFinished()</signal>
+   <signal>valueChanged(double)</signal>
    <receiver>MainWindow</receiver>
-   <slot>epsEditingFinished()</slot>
+   <slot>epsChanged(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>273</x>
-     <y>122</y>
+     <x>219</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>313</x>
-     <y>-4</y>
+     <x>303</x>
+     <y>-5</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>powSelector</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>powChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>349</x>
+     <y>120</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>462</x>
+     <y>-1</y>
     </hint>
    </hints>
   </connection>
@@ -214,6 +244,7 @@
   <slot>iterationNChanged(int)</slot>
   <slot>methodChanged(int)</slot>
   <slot>epsChanged(double)</slot>
-  <slot>epsEditingFinished()</slot>
+  <slot>powChanged(int)</slot>
+  <slot>powEpsEditingFinished()</slot>
  </slots>
 </ui>

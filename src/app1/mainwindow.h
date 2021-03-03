@@ -35,7 +35,7 @@ public slots:
 	void iterationNChanged(int);
 	void methodChanged(int);
 	void epsChanged(double);
-	void epsEditingFinished();
+	void powChanged(int);
 
 private:
 	using Approx = ErasedApproximator<double, double>;
@@ -48,6 +48,7 @@ private:
 	Solver::SolveData data;
 	QtCharts::QLineSeries* plot = nullptr;
 	double lastEps              = 0;
+	int lastPow                 = 0;
 
 	using SolverConstructorT = std::function<Solver(double)>;
 
@@ -75,7 +76,7 @@ private:
 																															 ParabolicApproximator,
 																															 BrentApproximator>();
 
-	void recalc(int n, double eps);
+	void recalc();
 
 	std::unique_ptr<Ui::MainWindow> ui;
 };

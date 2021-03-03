@@ -54,8 +54,11 @@ void MainWindow::iterationNChanged(int n)
 	approx->approximator.draw(data[n].second, *data[n].first, *ch);
 }
 
-void MainWindow::recalc(int n, double eps)
+void MainWindow::recalc()
 {
+	int n = ui->methodSelector->currentIndex();
+	double eps = ui->epsSelector->value() * pow(10, ui->powSelector->value());
+
 	approx = factories[n].first(eps);
 	data.clear();
 	approx->solveUntilEnd(func, r, data);
@@ -74,22 +77,12 @@ void MainWindow::recalc(int n, double eps)
 	ui->iterSelector->setDisabled(false);
 	ui->iterSelector->setValue(0);
 
-	ui->epsSelector->setMinimum(1e-10);
-
 	iterationNChanged(0);
 }
 
-void MainWindow::methodChanged(int n) { recalc(n, ui->epsSelector->value()); }
-
-void MainWindow::epsChanged(double eps)
-{
-	lastEps = eps;
-}
-
-void MainWindow::epsEditingFinished()
-{
-	recalc(ui->methodSelector->currentIndex(), lastEps);
-}
+void MainWindow::methodChanged(int n) { recalc(); }
+void MainWindow::epsChanged(double eps) { recalc(); }
+void MainWindow::powChanged(int pow) { recalc(); }
 
 void MainWindow::paintEvent(QPaintEvent* ev)
 {
