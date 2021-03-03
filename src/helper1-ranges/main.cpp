@@ -1,3 +1,4 @@
+#include "opt-methods/approximators/Brent.hpp"
 #include "opt-methods/approximators/Dichotomy.hpp"
 #include "opt-methods/approximators/GoldenSection.hpp"
 #include "opt-methods/approximators/Fibonacci.hpp"
@@ -33,9 +34,11 @@ int main(int argc, char* argv[])
 				DichotomyApproximator<double, double>,
 				GoldenSectionApproximator<double, double>,
 				FibonacciApproximator<double, double>,
-				ParabolicApproximator<double, double>
+				ParabolicApproximator<double, double>,
+				BrentApproximator<double, double>
 			>
 		(
+			std::make_tuple(EPSILON),
 			std::make_tuple(EPSILON),
 			std::make_tuple(EPSILON),
 			std::make_tuple(EPSILON),
@@ -53,7 +56,7 @@ int main(int argc, char* argv[])
 
 	std::ofstream cout;
 	auto printHeader = [&](std::ostream& cout) {
-		cout << "i\tleft\tright\tlog(ratio)\n";
+		cout << "i\tleft\tright\tlog(ratio)\tlval\trval\n";
 	};
 
 	std::map<int, std::map<std::string, double>> ratios;
@@ -74,9 +77,13 @@ int main(int argc, char* argv[])
 		{
 			double ratio = std::log((i.second.r.p - i.second.l.p) / (r.r - r.l));
 			ratios[c][name] = ratio;
-			cout << c++ << '\t';
-			cout << i.second.l.p << '\t' << i.second.r.p << '\t';
-			cout << ratio << '\n';
+			cout
+				<< c++
+				<< '\t' << i.second.l.p << '\t' << i.second.r.p
+				<< '\t' << ratio
+				<< '\t' << func(i.second.l.p) << '\t' << func(i.second.r.p)
+				<< '\n'
+				;
 		}
 	};
 

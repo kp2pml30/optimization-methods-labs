@@ -12,7 +12,7 @@ public:
 	using V = To;
 	using IterationData = BaseIterationData<P, V>;
 
-	ApproximatorImpl<P, V> auto& impl()
+	/*ApproximatorImpl<P, V>*/ auto& impl()
 	{
 		return static_cast<CRTP_Child&>(*this);
 	}
@@ -29,7 +29,7 @@ public:
 	template<Function<P, V> F>
 	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
 	{
-		auto holder = std::make_unique<CRTP_Child::IterationData>();
+		auto holder = std::make_unique<typename CRTP_Child::IterationData>();
 		auto gen = impl().begin_impl(std::move(func), std::move(r), *holder);
 		gen.setData(std::move(holder));
 		return gen;

@@ -82,7 +82,7 @@ public:
 	{
 		assert(r.l.p < r.r.p);
 
-		auto a = r.l.p, b = r.r.p;
+		// auto a = r.l.p, b = r.r.p;
 		auto res          = choosePoints(func, r, 10);
 		if (!res.has_value()) {
 			// cannot satisfy initial conditions

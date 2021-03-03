@@ -71,17 +71,27 @@ f'(0.642636) \approx 0
 
 \section{Таблицы}
 
+\def\makePlots#1#2{
+	\addplot table [x={#2}, y={dichotomy}] {#1};
+	\addlegendentry{Дихотомия}
+	\addplot table [x={#2}, y={golden-section}] {#1};
+	\addlegendentry{Золотое сечение}
+	\addplot table [x={#2}, y={fibonacci}] {#1};
+	\addlegendentry{Фибоначчи}
+	\addplot table [x={#2}, y={parabolic}] {#1};
+	\addlegendentry{Парабол}
+	ожидаемо.\addplot table [x={#2}, y={brent}] {#1};
+	\addlegendentry{Брента}
+}
+
 \begin{itemize}
-\item Дихотомия\par
-	\csvautotabular[separator=tab]{dichotomyRange.csv}
-\item Золотое сечение\par
-	\csvautotabular[separator=tab]{golden-sectionRange.csv}
-\item Фибоначчи\par
-	\csvautotabular[separator=tab]{fibonacciRange.csv}
-\item Парабол\par
-	\csvautotabular[separator=tab]{parabolicRange.csv}
+\item \vbox{Дихотомия\newline\csvautotabular[separator=tab]{dichotomyRange.csv}}
+\item \vbox{Золотое сечение\newline\csvautotabular[separator=tab]{golden-sectionRange.csv}}
+\item \vbox{Фибоначчи\newline\csvautotabular[separator=tab]{fibonacciRange.csv}}
+\item \vbox{Парабол\newline\csvautotabular[separator=tab]{parabolicRange.csv}}
 	\par
 	Метод парабол выделился: он не меняет правую границу, из-за чего выглядит как худший результат, хотя это не так.
+\item \vbox{Брента\newline\csvautotabular[separator=tab]{brentRange.csv}}
 \end{itemize}
 
 \pgfplotstableread{ratios.csv}{\ratiosCsv}
@@ -93,14 +103,7 @@ f'(0.642636) \approx 0
 		xlabel = {итерация},
 		ylabel = {$\log ratio$},
 	]
-	\addplot table [x={i}, y={dichotomy}] {\ratiosCsv};
-	\addlegendentry{Дихотомия}
-	\addplot table [x={i}, y={golden-section}] {\ratiosCsv};
-	\addlegendentry{Золотое сечение}
-	\addplot table [x={i}, y={fibonacci}] {\ratiosCsv};
-	\addlegendentry{Фибоначчи}
-	\addplot table [x={i}, y={parabolic}] {\ratiosCsv};
-	\addlegendentry{Парабол}
+		\makePlots{\ratiosCsv}{i}
 	\end{axis}
 \end{tikzpicture}
 
@@ -109,29 +112,36 @@ f'(0.642636) \approx 0
 \subsection{Количество вычислений от $\varepsilon$}
 
 \pgfplotstableread{epsilonToComplexity.csv}{\epsPlot}
+\pgfplotstableread{epsilonToIterations.csv}{\epsPlotTwo}
 \begin{tikzpicture}[trim axis left]
 	\begin{axis}[
 		scale only axis,
 		width=\textwidth,
 		legend style={at={(0.5,-0.2)},anchor=north},
 		xlabel = {$\log \varepsilon$},
-		ylabel = {$C$},
+		ylabel = {число вызовов функции},
 	]
-	\addplot table [x={epsilon}, y={dichotomy}] {\epsPlot};
-	\addlegendentry{Дихотомия}
-	\addplot table [x={epsilon}, y={golden_section}] {\epsPlot};
-	\addlegendentry{Золотое сечение}
-	\addplot table [x={epsilon}, y={fibonacci}] {\epsPlot};
-	\addlegendentry{Фибоначчи}
-	\addplot table [x={epsilon}, y={parabolic}] {\epsPlot};
-	\addlegendentry{Парабол}
+		\makePlots{\epsPlot}{epsilon}
 	\end{axis}
 \end{tikzpicture}
 \par
-Можно заметить, что графики \textbf{визуально} хорошо аппроксимируются линейным.
-Помимо этого метод парабол хорошо аппроксимирует дунную функцию за малое число итераций, из-за чего можно видеть горизонтальную линию.
+Можно заметить, что графики \textbf{визуально} хорошо аппроксимируются линейным, особенно первые 3, которые уменьшают интервал нехитрыми способами. Помимо этого метод парабол хорошо аппроксимирует дунную функцию за малое число итераций, из-за чего можно видеть горизонтальную линию. Метод Брента имеет 2 горизонтальных участка, указывающих на то, что он за малое число итерций нашел более точный ответ для заданной функции, чем тот, что требовался.
+\par
+\begin{tikzpicture}[trim axis left]
+	\begin{axis}[
+		scale only axis,
+		width=\textwidth,
+		legend style={at={(0.5,-0.2)},anchor=north},
+		xlabel = {$\log \varepsilon$},
+		ylabel = {число итераций},
+	]
+		\makePlots{\epsPlotTwo}{epsilon}
+	\end{axis}
+\end{tikzpicture}
+\par
 
 \section{Вывод}
+Были реализованы и исследованы методы оптимизации унимодальных функций. Все результаты можно объяснить на основании полученных теоретических знаний. Неожиданно хорошим оказался только результат метода порабол, что хорошо видно на визуализации.
 
 \section{Многомодальные функции}
 Для функций, имеющих несколько минимумов, есть шанс что метод найдет локальный минимум а не глобальный.\par
@@ -160,8 +170,45 @@ f'(0.642636) \approx 0
 
 Дихотомия могла посмотреть на точки вблизи $1$ и сузить интервал до $[0;4]$, пропустив глобальный максимум.
 \par
-{\color{red} TODO} 
 Или, методы опирающиеся на несколько точек, могут посмотреть в $1$ и $2$ и получить неверное представление: функция на этом участке не монотонна и не имеет минимума, значит результат не дает никакой информации.
+\par
+\def\FunctionF(#1){sin(deg(15*#1))*e^(5*#1*#1)}
+\begin{tikzpicture}
+\begin{axis}[
+	scale only axis,
+	width=\textwidth,
+	samples=100,
+	legend style={at={(0.5,-0.2)},anchor=north},
+	xlabel = {$x$},
+	minor tick num = 1,
+]
+	\addplot[domain=-1:1] {\FunctionF(x)};
+	\addlegendentry{$\sin{15x}\cdot e^{5x^2}$}
+
+	\newcommand*{\SpecialX}{0.98}
+	\pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
+	\addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{1}]{} ;
+	\renewcommand*{\SpecialX}{-0.548}
+	\pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
+	\addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{2}]{} ;
+	\renewcommand*{\SpecialX}{-0.11}
+	\pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
+	\addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{3}]{} ;
+	\renewcommand*{\SpecialX}{0.33}
+	\pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
+	\addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{4}]{} ;
+	\renewcommand*{\SpecialX}{0.764}
+	\pgfmathsetmacro{\specialY}{\FunctionF(\SpecialX)}
+	\addplot[mark=*] coordinates {(\SpecialX,\specialY)} node[pin=150:{5}]{} ;
+\end{axis}
+\end{tikzpicture}
+\begin{itemize}
+	\item[1] метод парабол
+	\item[2] дихотоми, Брента
+	\item[5] Фибоначчи, золотое сечение
+\end{itemize}
+\par
+Данные методы не подходят для поиска минимума многомодальных функций, что ожидаемо.
 
 \newpage
 \appendix

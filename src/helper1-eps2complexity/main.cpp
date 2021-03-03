@@ -1,3 +1,4 @@
+#include "opt-methods/approximators/Brent.hpp"
 #include "opt-methods/approximators/Dichotomy.hpp"
 #include "opt-methods/approximators/GoldenSection.hpp"
 #include "opt-methods/approximators/Fibonacci.hpp"
@@ -38,9 +39,11 @@ int main(int argc, char* argv[])
 				DichotomyApproximator<double, double>,
 				GoldenSectionApproximator<double, double>,
 				FibonacciApproximator<double, double>,
-				ParabolicApproximator<double, double>
+				ParabolicApproximator<double, double>,
+				BrentApproximator<double, double>
 			>
 		(
+			std::make_tuple(EPSILON),
 			std::make_tuple(EPSILON),
 			std::make_tuple(EPSILON),
 			std::make_tuple(EPSILON),
@@ -50,8 +53,9 @@ int main(int argc, char* argv[])
 
 	struct IterationInfo
 	{
-		int iterationsCount;
-		double range;
+		int functionCalls = -1;
+		int iterations = -1;
+		double range = -1;
 	};
 
 	std::map<double, std::map<std::string, IterationInfo>> iterations;
@@ -63,9 +67,10 @@ int main(int argc, char* argv[])
 		typename std::decay_t<decltype(approx)>::SolveData dummy;
 		auto result = approx.solveDiff(func, epsilon, r, dummy);
 		std::string name = approx.approximator.name();
-		std::replace(name.begin(), name.end(), ' ', '_');
+		std::replace(name.begin(), name.end(), ' ', '-');
 		auto& info = iterations[epsilon][name];
-		info.iterationsCount = calculationsCount;
+		info.functionCalls = calculationsCount;
+		info.iterations = dummy.size();
 		info.range = result.r.p - result.l.p;
 		names.emplace(name);
 	};
@@ -82,15 +87,20 @@ int main(int argc, char* argv[])
 		cout << '\n';
 	};
 
+	auto complexityPrinter = [&](auto getter) {
+		printHeader(cout);
+		for (auto const& it : iterations)
+		{
+			cout << std::log(it.first);
+			for (auto const& b : it.second)
+				cout << '\t' << getter(b.second);
+			cout << '\n';
+		}
+	};
 	cout = std::ofstream(prefix + "/epsilonToComplexity.csv");
-	printHeader(cout);
-	for (auto const& it : iterations)
-	{
-		cout << std::log(it.first);
-		for (auto const& b : it.second)
-			cout << '\t' << b.second.iterationsCount;
-		cout << '\n';
-	}
+	complexityPrinter([](auto const& a) { return a.functionCalls; });
+	cout = std::ofstream(prefix + "/epsilonToIterations.csv");
+	complexityPrinter([](auto const& a) { return a.iterations; });
 
 	return 0;
 }
