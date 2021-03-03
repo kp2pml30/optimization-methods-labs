@@ -38,7 +38,6 @@ macro(appBuilder name)
 	add_executable(${name}
 		${SRC}
 		mainwindow.ui
-		${PROJECT_SOURCE_DIR}/res/res.qrc
 	)
 
 	target_link_libraries(${name} PRIVATE opt-methods)

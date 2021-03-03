@@ -1,5 +1,0 @@
-<RCC>
-  <qresource prefix="app1">
-    <file>app1/soft.png</file>
-  </qresource>
-</RCC>

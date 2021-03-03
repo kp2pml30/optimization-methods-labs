@@ -111,19 +111,22 @@
        </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="SoftwareButton">
+       <widget class="QLabel" name="label_2">
+        <property name="font">
+         <font>
+          <family>Cascadia Mono</family>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
         <property name="text">
-         <string/>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt; color:#0062ff;&quot;&gt;🤡 SOFTWARE&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt; color:#0062ff;&quot;&gt;DP5 KP2 NH5&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
-        <property name="icon">
-         <iconset resource="../../res/res.qrc">
-          <normaloff>:/app1/app1/soft.png</normaloff>:/app1/app1/soft.png</iconset>
+        <property name="scaledContents">
+         <bool>true</bool>
         </property>
-        <property name="iconSize">
-         <size>
-          <width>300</width>
-          <height>100</height>
-         </size>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
