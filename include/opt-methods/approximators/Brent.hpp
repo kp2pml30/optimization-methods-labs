@@ -54,9 +54,9 @@ public:
 		auto a = r.l.p, b = r.r.p;
 		///  a          c
 		auto fa = r.l.v, fb = r.r.v;
-		auto x = lerp(a, b, tau), premin = x, last_premin = x;
-		///  x                      w            v
-		auto fx = func(x), fpm = func(x), flpm = func(x);
+		auto x = lerp(a, b, 1 - tau), premin = x, last_premin = x;
+		///  x                        w            v
+		auto fx = func(x), fpm = fx, flpm = fx;
 		auto cur_step = b - a, last_step = cur_step;
 		///   d                   e
 
@@ -100,12 +100,12 @@ public:
 					// golden section
 					if (x < (a + b) / 2)
 					{
-						optu      = lerp(x, b, tau);
+						optu      = lerp(x, b, 1 - tau);
 						last_step = b - x;
 					}
 					else
 					{
-						optu      = lerp(a, x, 1 - tau);
+						optu      = lerp(a, x, tau);
 						last_step = x - a;
 					}
 				}
