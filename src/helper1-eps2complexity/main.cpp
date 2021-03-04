@@ -96,9 +96,9 @@ int main(int argc, char* argv[])
 			cout << '\n';
 		}
 	};
-	cout = std::ofstream(prefix + "/epsilonToComplexity.csv");
+	cout = std::ofstream(prefix + "/epsilonToComplexity.tsv");
 	complexityPrinter([](auto const& a) { return a.functionCalls; });
-	cout = std::ofstream(prefix + "/epsilonToIterations.csv");
+	cout = std::ofstream(prefix + "/epsilonToIterations.tsv");
 	complexityPrinter([](auto const& a) { return a.iterations; });
 
 	return 0;

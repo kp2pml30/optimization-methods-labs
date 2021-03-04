@@ -43,10 +43,10 @@
 \end{itemize}
 
 \section{Функция}
-\subsection{f}
+\subsection{Уравнение}
 $f(x)=x^4-\frac{3}{2}\arctan{x}$
 
-\subsection{график}
+\subsection{График}
 \par
 \begin{tikzpicture}
 \begin{axis}[
@@ -58,7 +58,7 @@ $f(x)=x^4-\frac{3}{2}\arctan{x}$
 \end{axis}
 \end{tikzpicture}
 
-\subsection{аналитическое решение}
+\subsection{Аналитическое решение}
 
 \begin{gather*}
 f'(x) = 4x^3 - \frac{3}{2(1+x^2)} \\
@@ -85,16 +85,16 @@ f'(0.642636) \approx 0
 }
 
 \begin{itemize}
-\item \vbox{Дихотомия\par\csvautotabular[separator=tab]{dichotomyRange.csv}}
-\item \vbox{Золотое сечение\par\csvautotabular[separator=tab]{golden-sectionRange.csv}}
-\item \vbox{Фибоначчи\par\csvautotabular[separator=tab]{fibonacciRange.csv}}
-\item \vbox{Парабол\par\csvautotabular[separator=tab]{parabolicRange.csv}}
+\item \vbox{Дихотомия\par\csvautotabular[separator=comma]{dichotomyRange.csv}}
+\item \vbox{Золотое сечение\par\csvautotabular[separator=comma]{golden-sectionRange.csv}}
+\item \vbox{Фибоначчи\par\csvautotabular[separator=comma]{fibonacciRange.csv}}
+\item \vbox{Парабол\par\csvautotabular[separator=comma]{parabolicRange.csv}}
 	\par
 	Метод парабол выделился: он не меняет правую границу, из-за чего выглядит как худший результат на графиках ratio, хотя это не так.
-\item \vbox{Брента\newline\csvautotabular[separator=tab]{brentRange.csv}}
+\item \vbox{Брента\newline\csvautotabular[separator=comma]{brentRange.csv}}
 \end{itemize}
 
-\pgfplotstableread{ratios.csv}{\ratiosCsv}
+\pgfplotstableread{ratios.tsv}{\ratiosCsv}
 \begin{tikzpicture}[trim axis left]
 	\begin{axis}[
 		scale only axis,
@@ -111,8 +111,8 @@ f'(0.642636) \approx 0
 \section{Графики}
 \subsection{Количество вычислений от $\varepsilon$}
 
-\pgfplotstableread{epsilonToComplexity.csv}{\epsPlot}
-\pgfplotstableread{epsilonToIterations.csv}{\epsPlotTwo}
+\pgfplotstableread{epsilonToComplexity.tsv}{\epsPlot}
+\pgfplotstableread{epsilonToIterations.tsv}{\epsPlotTwo}
 \begin{tikzpicture}[trim axis left]
 	\begin{axis}[
 		scale only axis,
@@ -204,21 +204,21 @@ f'(0.642636) \approx 0
 \end{tikzpicture}
 
 \begin{itemize}
-	\item[1] метод парабол
-	\item[2] дихотоми
-	\item[4] Брента
-	\item[5] Фибоначчи, золотое сечение
+	\item[\raisebox{.5pt}{\textcircled{\raisebox{-.9pt} {1}}}] метод парабол
+	\item[\raisebox{.5pt}{\textcircled{\raisebox{-.9pt} {2}}}] дихотоми
+	\item[\raisebox{.5pt}{\textcircled{\raisebox{-.9pt} {4}}}] Брента
+	\item[\raisebox{.5pt}{\textcircled{\raisebox{-.9pt} {5}}}] Фибоначчи, золотое сечение
 \end{itemize}
 \par
 Данные методы не подходят для поиска минимума многомодальных функций, что ожидаемо.
 
 \newpage
 \appendix
-\section{код}
-\subsection{архитектура}
+\section{Код}
+\subsection{Архитектура}
 Есть \code{Approximator}, который возвращает корутину, которая аппроксимирует данную функцию, на каждой итерации стягивая отрезок поиска. Данный подход позволяет иметь скорость выполнения как у нативного кода, сохраняет гарантии типов за счет c++ концептов, позволяет при необходимости использовать type-erasure и получить гибкость наследования, пожертвовав производительностью.
 
-\subsection{ссылка}
+\subsection{Ссылки}
 \url{https://github.com/kp2pml30/optimization-methods-labs}
 
 \end{document}

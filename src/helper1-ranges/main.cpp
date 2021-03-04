@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
 	std::ofstream cout;
 	auto printHeader = [&](std::ostream& cout) {
-		cout << "i\tleft\tright\tlog(ratio)\tlval\trval\n";
+		cout << "i,left,right,log(ratio),lval,rval\n";
 	};
 
 	std::map<int, std::map<std::string, double>> ratios;
@@ -79,9 +79,9 @@ int main(int argc, char* argv[])
 			ratios[c][name] = ratio;
 			cout
 				<< c++
-				<< '\t' << i.second.l.p << '\t' << i.second.r.p
-				<< '\t' << ratio
-				<< '\t' << func(i.second.l.p) << '\t' << func(i.second.r.p)
+				<< ',' << i.second.l.p << ',' << i.second.r.p
+				<< ',' << ratio
+				<< ',' << func(i.second.l.p) << ',' << func(i.second.r.p)
 				<< '\n'
 				;
 		}
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 	approximators.each(walker, RangeBounds<double>(-1, 1));
 
 
-	cout = std::ofstream(prefix + "/ratios.csv");
+	cout = std::ofstream(prefix + "/ratios.tsv");
 	cout << 'i';
 	for (auto const& i : names)
 		cout << '\t' << i;
