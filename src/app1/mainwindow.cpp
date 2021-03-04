@@ -66,11 +66,13 @@ void MainWindow::recalc()
 	auto* ch = ui->boundsChartView->chart();
 	ch->removeAllSeries();
 	ch->addSeries(Charting::plotFunction<QtCharts::QScatterSeries>(
-			[&](std::size_t i) { return data[i].second.r.p - data[i].second.l.p; },
+			[&](std::size_t i) { return std::log(data[i].second.r.p - data[i].second.l.p); },
 			RangeBounds<std::size_t>(0, data.size() - 1),
 			data.size(),
-			"Search bound size on each iteration"));
+			"Search bound size log on each iteration"));
 	Charting::createNaturalSequenceAxes(ch, static_cast<int>(data.size()));
+	Charting::axisX(ch)->setTitleText("Number of iterations");
+	Charting::axisY(ch)->setTitleText("log of search bound");
 
 	ui->iterSelector->setMinimum(0);
 	ui->iterSelector->setMaximum(static_cast<int>(data.size() - 1));
