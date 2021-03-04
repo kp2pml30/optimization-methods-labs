@@ -33,6 +33,13 @@ struct PointAndValue
 	PointAndValue& operator=(PointAndValue&&) = default;
 };
 
+template<typename T>
+struct IsPointAndValue : std::false_type {};
+template<typename F, typename T>
+struct IsPointAndValue<PointAndValue<F, T>> : std::true_type {};
+template<typename T>
+constexpr bool IsPointAndValueT = IsPointAndValue<T>::value;
+
 template<typename Y>
 struct RangeBounds
 {
@@ -69,48 +76,76 @@ template<typename P, typename V>
 struct BaseIterationData
 {};
 
-/** coroutines generator for approximators
+/** coroutines promise for approximators
  */
 template<typename P, typename V>
-class ApproxGenerator : public Generator<BoundsWithValues<P, V>>
+struct ApproxPromise : Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>
 {
-private:
-	using Super = Generator<BoundsWithValues<P, V>>;
+	using Super = Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>;
 
-public:
-	using promise_type = typename Super::promise_type;
-
-private:
-	using base_t = Generator<BoundsWithValues<P, V>>;
-	std::unique_ptr<BaseIterationData<P, V>> data;
+	std::unique_ptr<BaseIterationData<P, V>> data{};
 	std::function<std::unique_ptr<BaseIterationData<P, V>>(BaseIterationData<P, V> *)> copier;
 
-public:
-	ApproxGenerator(Super&& s)
-	: Super(std::move(s))
-	{}
+	std::suspend_never initial_suspend() noexcept { return {}; } // skip first yield resulting in data ptr
 
+	using Super::yield_value;
 	/**
 	 * data setter
 	 */
-	template<typename IterationData>
-	void setData(std::unique_ptr<IterationData> data) requires std::is_base_of_v<BaseIterationData<P, V>, IterationData>
+	template<std::derived_from<BaseIterationData<P, V>> IterationData>
+	std::suspend_always yield_value(IterationData* data) requires !std::is_same_v<std::remove_cvref_t<IterationData>, BoundsWithValues<P, V>>
 	{
-		this->data = std::move(data);
+		this->data = std::unique_ptr<IterationData>(data);
 		copier     = [](BaseIterationData<P, V>* data) -> std::unique_ptr<BaseIterationData<P, V>> {
 			return std::make_unique<IterationData>(static_cast<IterationData &>(*data));
 		};
+		return {};
 	}
 
 	/**
 	 * data getter
 	 */
-	BaseIterationData<P, V> const& getIterationData() const noexcept { return *data; }
+	BaseIterationData<P, V> const& getIterationData()
+	{
+		assert(data != nullptr);
+		return *data;
+	}
 
 	/**
 	 * data copy getter
 	 */
-	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() const { return copier(data.get()); }
+	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy()
+	{
+		assert(data != nullptr);
+		return copier(data.get());
+	}
+};
+
+/** coroutines generator for approximators
+ */
+template<typename P, typename V>
+class ApproxGenerator : public Generator<BoundsWithValues<P, V>, ApproxPromise<P, V>>
+{
+private:
+	using Super = Generator<BoundsWithValues<P, V>, ApproxPromise<P, V>>;
+
+public:
+	using Super::Generator;
+
+	ApproxGenerator(ApproxGenerator&& s) = default;
+	ApproxGenerator(const ApproxGenerator& s) = delete;
+	ApproxGenerator& operator=(ApproxGenerator&& s) = default;
+	ApproxGenerator& operator=(const ApproxGenerator& s) = delete;
+
+	/**
+	 * data getter
+	 */
+	BaseIterationData<P, V> const& getIterationData() { return this->handle.promise().getIterationData(); }
+
+	/**
+	 * data copy getter
+	 */
+	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() { return this->handle.promise().getIterationDataCopy(); }
 };
 
 /**
@@ -153,7 +188,7 @@ concept ApproximatorImpl = requires(T& t, DummyFunc<P, V> func,
 	requires HasIterationData<T, P, V>;
 	requires Function<decltype(func), P, V>;
 	requires std::is_base_of_v<BaseApproximator<P, V, T>, T>;
-	{ t.begin_impl(func, bounds, std::declval<typename T::IterationData&>()) } -> std::same_as<ApproxGenerator<P, V>>;
+	{ t(func, bounds) } -> std::same_as<ApproxGenerator<P, V>>;
 };
 
 /**

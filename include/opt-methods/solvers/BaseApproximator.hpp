@@ -29,12 +29,10 @@ public:
 			impl().draw_impl(r, static_cast<typename CRTP_Child::IterationData const&>(data), chart);
 	}
 
-	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
-	{
-		auto holder = std::make_unique<typename CRTP_Child::IterationData>();
-		auto gen = impl().begin_impl(std::move(func), std::move(r), *holder);
-		gen.setData(std::move(holder));
-		return gen;
+	// template so that can postpone getting IterationData from CRTP child
+	template<typename U = typename CRTP_Child::IterationData>
+	U* preproc(BoundsWithValues<P, V> r) {
+		assert(r.l.p < r.r.p);
+		return new U;
 	}
 };

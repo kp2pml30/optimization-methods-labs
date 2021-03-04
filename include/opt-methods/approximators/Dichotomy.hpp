@@ -6,6 +6,7 @@ template<typename From, typename To>
 class DichotomyApproximator : public BaseApproximator<From, To, DichotomyApproximator<From, To>>
 {
 	using BaseT = BaseApproximator<From, To, DichotomyApproximator>;
+
 private:
 public:
 	using IterationData = typename BaseT::IterationData;
@@ -22,9 +23,10 @@ public:
 	{}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData &)
+	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
 	{
-		assert(r.l.p < r.r.p);
+		IterationData* data;
+		co_yield data = this->preproc(r);
 
 		while ((r.r.p - r.l.p) / 2 > epsilon)
 		{

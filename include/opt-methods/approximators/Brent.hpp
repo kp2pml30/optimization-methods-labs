@@ -13,6 +13,7 @@ template<std::floating_point From, typename To> requires std::is_convertible_v<F
 class BrentApproximator : public BaseApproximator<From, To, BrentApproximator<From, To>>
 {
 	using BaseT = BaseApproximator<From, To, BrentApproximator>;
+
 private:
 public:
 	using P = From;
@@ -43,13 +44,14 @@ public:
 	}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData& data)
+	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
 	{
 		using std::abs;
 		using std::lerp;
 		using std::copysign;
 
-		assert(r.l.p < r.r.p);
+		IterationData* data;
+		co_yield data = this->preproc(r);
 
 		auto a = r.l.p, b = r.r.p;
 		///  a          c
@@ -75,7 +77,7 @@ public:
 
 			P u;
 			{
-				data.useParabola = false;
+				data->useParabola = false;
 
 				std::optional<P> optu;
 				if (all_uneq(x, premin, last_premin) && all_uneq(fx, fpm, flpm))
@@ -90,8 +92,8 @@ public:
 							u_cand = x - copysign(epsilon, x - (a + b) / 2); // don't stick
 						optu = u_cand;
 
-						data.useParabola = true;
-						data.parabola    = {{}, a0, a1, a2, x, premin, last_premin, {P(0), V(0)}};
+						data->useParabola = true;
+						data->parabola    = {{}, a0, a1, a2, x, premin, last_premin, {P(0), V(0)}};
 					}
 				}
 
@@ -118,7 +120,7 @@ public:
 			cur_step = abs(u - x);
 
 			auto fu = func(u);
-			data.parabola.bar = {u, fu};
+			data->parabola.bar = {u, fu};
 			if (fu <= fx)
 			{
 				if (u >= x)

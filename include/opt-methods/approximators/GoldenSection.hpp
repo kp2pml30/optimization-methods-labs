@@ -27,10 +27,11 @@ public:
 	{}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData &)
+	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
 	{
 		using std::lerp;
-		assert(r.l.p < r.r.p);
+		IterationData* data;
+		co_yield data = this->preproc(r);
 
 		auto a = r.l.p, b = r.r.p;
 		auto fa = r.l.v, fb = r.r.v;

@@ -8,8 +8,9 @@
 template<std::floating_point From, typename To, typename FibT = std::size_t>
 class FibonacciApproximator : public BaseApproximator<From, To, FibonacciApproximator<From, To, FibT>>
 {
-private:
 	using BaseT = BaseApproximator<From, To, FibonacciApproximator>;
+
+private:
 public:
 	using IterationData = typename BaseT::IterationData;
 	static char const* name() noexcept { return "fibonacci"; }
@@ -45,9 +46,10 @@ public:
 	FibonacciApproximator(P l) : l(l) {}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData &)
+	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
 	{
-		assert(r.l.p < r.r.p);
+		IterationData* data;
+		co_yield data = this->preproc(r);
 
 		auto [Fnk, Fnk1, n] = countFibFromBounds(r);
 		auto a = r.l.p, b = r.r.p;

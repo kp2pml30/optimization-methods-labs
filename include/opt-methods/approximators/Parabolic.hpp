@@ -13,6 +13,7 @@ template<std::floating_point From, typename To> requires std::is_convertible_v<T
 class ParabolicApproximator : public BaseApproximator<From, To, ParabolicApproximator<From, To>>
 {
 	using BaseT = BaseApproximator<From, To, ParabolicApproximator>;
+
 private:
 public:
 	using P = From;
@@ -78,9 +79,10 @@ public:
 	}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> begin_impl(F func, BoundsWithValues<P, V> r, IterationData& data)
+	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
 	{
-		assert(r.l.p < r.r.p);
+		IterationData* data;
+		co_yield data = this->preproc(r);
 
 		// auto a = r.l.p, b = r.r.p;
 		auto res          = choosePoints(func, r, 10);
@@ -111,10 +113,10 @@ public:
 				co_yield {{x2, f2}, {x2, f2}};
 				break;
 			}
-			data.a0 = a0, data.a1 = a1, data.a2 = a2;
-			data.x1 = x1, data.x2 = x2, data.x3 = x3;
+			data->a0 = a0, data->a1 = a1, data->a2 = a2;
+			data->x1 = x1, data->x2 = x2, data->x3 = x3;
 			auto f_x_bar = func(x_bar);
-			data.bar = {x_bar, f_x_bar};
+			data->bar = {x_bar, f_x_bar};
 
 			if (last_x_bar.has_value())
 			{
