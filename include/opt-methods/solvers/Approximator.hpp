@@ -93,7 +93,7 @@ struct ApproxPromise : Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>
 	 * data setter
 	 */
 	template<std::derived_from<BaseIterationData<P, V>> IterationData>
-	std::suspend_always yield_value(IterationData* data) requires !std::is_same_v<std::remove_cvref_t<IterationData>, BoundsWithValues<P, V>>
+	std::suspend_always yield_value(IterationData* data)
 	{
 		this->data = std::unique_ptr<IterationData>(data);
 		copier     = [](BaseIterationData<P, V>* data) -> std::unique_ptr<BaseIterationData<P, V>> {
@@ -105,7 +105,7 @@ struct ApproxPromise : Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>
 	/**
 	 * data getter
 	 */
-	BaseIterationData<P, V> const& getIterationData()
+	BaseIterationData<P, V> const& getIterationData() const noexcept
 	{
 		assert(data != nullptr);
 		return *data;
@@ -114,7 +114,7 @@ struct ApproxPromise : Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>
 	/**
 	 * data copy getter
 	 */
-	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy()
+	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() const
 	{
 		assert(data != nullptr);
 		return copier(data.get());
@@ -140,12 +140,12 @@ public:
 	/**
 	 * data getter
 	 */
-	BaseIterationData<P, V> const& getIterationData() { return this->handle.promise().getIterationData(); }
+	BaseIterationData<P, V> const& getIterationData() const noexcept { return this->handle.promise().getIterationData(); }
 
 	/**
 	 * data copy getter
 	 */
-	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() { return this->handle.promise().getIterationDataCopy(); }
+	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() const { return this->handle.promise().getIterationDataCopy(); }
 };
 
 /**
