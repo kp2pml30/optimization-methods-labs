@@ -2,6 +2,7 @@
 
 ## Requirements
 * `qt5`
+* `qt5charts` (arch `qt5-charts`, ubuntu `libqt5charts5` and `libqt5chats5-dev`)
 * `cmake` >= 3.8
 * `c++` compiler with C++20 support (tested with `g++ v10.2.0`)
 
@@ -12,6 +13,11 @@
 ## Build on Windows
 * build with `build.bat <configuration> [args for cmake...]`, e. g. `build.bat Release`
 * rebuild with `build.bat`
+
+## Packaging on *nix-like
+* build in `Release`
+* `cd` to build directory
+* run `cpack -C Release -G "STGZ"`
 
 
 ## Project structure

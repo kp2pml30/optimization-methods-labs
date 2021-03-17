@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(opt-methods-lab1 LANGUAGES CXX)
+project(opt-methods-lab LANGUAGES CXX)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -42,6 +42,8 @@ macro(appBuilder name)
 
 	target_link_libraries(${name} PRIVATE opt-methods)
 	target_link_libraries(${name} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts)
+	target_link_libraries(${name} PUBLIC -static-libgcc -static-libstdc++)
+	install(TARGETS ${name})
 endmacro()
 
 macro(helperBuilder name)
@@ -50,9 +52,18 @@ macro(helperBuilder name)
 	add_executable(${name}
 		${SRC}
 	)
-
 	target_link_libraries(${name} PRIVATE opt-methods)
 endmacro()
 
 add_subdirectory(src)
 
+### cpack
+set(CPACK_PACKAGE_NAME "OptimizationMethods")
+set(CPACK_PACKAGE_VENDOR "kp2dp5nh5")
+set(CPACK_VERBATIM_VARIABLES true)
+set(CPACK_PACKAGE_VERSION_MAJOR 0)
+set(CPACK_PACKAGE_VERSION_MINOR 0)
+set(CPACK_PACKAGE_VERSION_PATCH 1)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "qt5-default, libqt5charts5")
+include(CPack)

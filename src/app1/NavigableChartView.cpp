@@ -23,7 +23,14 @@ QPointF NavigableChartView::calc_posf(QPointF pos)
 
 void NavigableChartView::wheelEvent(QWheelEvent *event)
 {
-	QPointF mposf = calc_posf(event->position());
+	QPointF mposf = calc_posf(event->
+	// to be compatible with qt < 5.14
+// #if QT_VERSION >= 0x050E00
+// 		position()
+// #else
+		posF()
+// #endif
+		);
 	int delta = event->angleDelta().y() / 120;
 
 	qreal fac = pow(ZOOM_FACTOR, delta);
