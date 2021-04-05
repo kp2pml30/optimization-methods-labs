@@ -1,7 +1,10 @@
 #!/bin/bash
+set -e
 BUILDDIR="/tmp/build/methopts"
+SRCDIR=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
 
 mkdir -p "$BUILDDIR"
+cd "$BUILDDIR"
 
 if [[ -n "$1" ]]
 then
@@ -11,11 +14,11 @@ then
 	then
 		GEN=" -G Ninja "
 	fi
-	cmake $GEN -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "-DCMAKE_BUILD_TYPE=$BTYPE" "$@" -S . -B "$BUILDDIR"
-	if [ ! -L compile_commands.json ]
+	cmake $GEN -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "-DCMAKE_BUILD_TYPE=$BTYPE" "$@" "$SRCDIR"
+	if [ ! -L "$SRCDIR/compile_commands.json" ]
 	then
-		ln -s "$BUILDDIR/compile_commands.json"
+		ln -s "$BUILDDIR/compile_commands.json" "$SRCDIR/compile_commands.json"
 	fi
 fi
 
-cmake --build "$BUILDDIR"
+cmake --build .

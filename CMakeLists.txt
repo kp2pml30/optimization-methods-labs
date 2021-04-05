@@ -28,42 +28,10 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Charts REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
 
-macro(appBuilder name)
-	set(CMAKE_AUTOUIC ON)
-	set(CMAKE_AUTOMOC ON)
-	set(CMAKE_AUTORCC ON)
-
-	file(GLOB_RECURSE SRC "*.cpp")
-
-	add_executable(${name}
-		${SRC}
-		mainwindow.ui
-	)
-
-	target_link_libraries(${name} PRIVATE opt-methods)
-	target_link_libraries(${name} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts)
-	target_link_libraries(${name} PUBLIC -static-libgcc -static-libstdc++)
-	install(TARGETS ${name})
-endmacro()
-
-macro(helperBuilder name)
-	file(GLOB_RECURSE SRC "*.cpp")
-
-	add_executable(${name}
-		${SRC}
-	)
-	target_link_libraries(${name} PRIVATE opt-methods)
-endmacro()
+include(cmake/appBuilder.cmake)
+include(cmake/helperBuilder.cmake)
+include(cmake/linkGLibC.cmake)
 
 add_subdirectory(src)
 
-### cpack
-set(CPACK_PACKAGE_NAME "OptimizationMethods")
-set(CPACK_PACKAGE_VENDOR "kp2dp5nh5")
-set(CPACK_VERBATIM_VARIABLES true)
-set(CPACK_PACKAGE_VERSION_MAJOR 0)
-set(CPACK_PACKAGE_VERSION_MINOR 0)
-set(CPACK_PACKAGE_VERSION_PATCH 1)
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "qt5-default, libqt5charts5")
-include(CPack)
+include(cmake/packaging.cmake)
