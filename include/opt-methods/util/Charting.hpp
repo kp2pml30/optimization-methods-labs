@@ -14,21 +14,57 @@
 namespace Charting
 {
 	template<std::derived_from<QtCharts::QAbstractSeries> SeriesT = QtCharts::QLineSeries, typename P, std::invocable<P> Func>
-	SeriesT *plotFunction(Func&& func, RangeBounds<P> r, std::size_t nOfPoints, const std::string& name)
+	SeriesT* plotFunction(Func&& func, RangeBounds<P> r, std::size_t nOfPoints, std::string const& name)
 	{
+		assert(nOfPoints != 0);
 		auto plot = new SeriesT();
 		for (std::size_t i = 0; i < nOfPoints; i++)
 		{
 			using std::lerp;
 			auto x = lerp(r.l, r.r, i * 1.0 / (nOfPoints - 1));
-			*plot << QPointF{static_cast<qreal>(x), static_cast<qreal>(func(x))};
+			auto y = func(x);
+			if (!std::isnan(y))
+				*plot << QPointF{static_cast<qreal>(x), static_cast<qreal>(y)};
 		}
-		plot->setName(name.c_str());
+		if (!name.empty())
+			plot->setName(name.c_str());
+		return plot;
+	}
+
+	template<std::derived_from<QtCharts::QAbstractSeries> SeriesT = QtCharts::QLineSeries, typename P>
+	SeriesT* plotCircular(std::invocable<P> auto&& func1, std::invocable<P> auto&& func2, RangeBounds<P> r, std::size_t nOfPoints, std::string const& name)
+	{
+		assert(nOfPoints != 0);
+		auto plot = new SeriesT();
+		using std::lerp;
+		std::optional<PointAndValue<P, P>> first;
+		auto addPoint = [&](P x, P y) {
+			if (!std::isnan(y))
+			{
+				if (!first.has_value())
+					first = {x, y};
+				*plot << QPointF{static_cast<qreal>(x), static_cast<qreal>(y)};
+			}
+		};
+		for (std::size_t i = 0; i < nOfPoints; i++)
+		{
+			auto x = lerp(r.l, r.r, i * 1.0 / (nOfPoints - 1));
+			addPoint(x, func1(x));
+		}
+		for (std::size_t i = 0; i < nOfPoints; i++)
+		{
+			auto x = lerp(r.r, r.l, i * 1.0 / (nOfPoints - 1));
+			addPoint(x, func2(x));
+		}
+		if (first.has_value())
+			addPoint(first->p, first->v);
+		if (!name.empty())
+			plot->setName(name.c_str());
 		return plot;
 	}
 
 	template<std::derived_from<QtCharts::QAbstractSeries> SeriesT = QtCharts::QScatterSeries>
-	SeriesT *drawPoints(const std::vector<QPointF> &pts, const std::string& name)
+	SeriesT *drawPoints(std::vector<QPointF> const& pts, std::string const& name)
 	{
 		auto plot = new SeriesT();
 		for (auto &pt : pts)
