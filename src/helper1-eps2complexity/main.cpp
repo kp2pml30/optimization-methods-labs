@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 			auto& info = iterations[epsilon][name];
 			info.functionCalls = calculationsCount;
 			info.iterations = (int)dummy.size();
-			info.range = result.r.p - result.l.p;
+			info.range = 2 * result.r;
 			names.emplace(name);
 		};
 

@@ -57,14 +57,14 @@ MainWindow::MainWindow(QWidget* parent)
 		auto series = new QtCharts::QLineSeries();
 		*series << QPointF{startFrom[0], startFrom[1]};
 		GradientDescent<Vector<double>, double, DichotomyApproximator<double, double>> desc{0.001};
-		auto gen = desc(bifunc, {{startFrom, bifunc(startFrom)}, {{}, 0}});
+		auto gen = desc(bifunc, {startFrom, 0});
 		while (gen.next())
 		{
-			auto res = gen.getValue().l;
+			auto res = gen.getValue();
 			auto p = res.p;
 			if (std::isnan(maxVal))
-				maxVal = res.v;
-			minVal = res.v;
+				maxVal = bifunc(res.p);
+			minVal = bifunc(res.p);
 			assert(p.size() == 2);
 			*series << QPointF{p[0], p[1]};
 		}
@@ -109,7 +109,7 @@ void MainWindow::iterationNChanged(int n)
 	//ch->removeAllSeries();
 	//Charting::addToChart(ch, plot);
 
-	approx->approximator.draw(data[n].second, *data[n].first, *ch);
+	// approx->approximator.draw(data[n].second, *data[n].first, *ch);
 }
 
 void MainWindow::recalc()
@@ -124,7 +124,7 @@ void MainWindow::recalc()
 	auto* ch = ui->boundsChartView->chart();
 	ch->removeAllSeries();
 	ch->addSeries(Charting::plotFunction<QtCharts::QScatterSeries>(
-			[&](std::size_t i) { return std::log(data[i].second.r.p - data[i].second.l.p); },
+			[&](std::size_t i) { return std::log(2 * data[i].second.r); },
 			RangeBounds<std::size_t>(0, data.size() - 1),
 			data.size(),
 			"Search bound size log on each iteration"));

@@ -51,7 +51,11 @@ void MainWindow::iterationNChanged(int n)
 	ch->removeAllSeries();
 	Charting::addToChart(ch, plot);
 
-	approx->approximator.draw(data[n].second, *data[n].first, *ch);
+	auto region2bounds = [&](PointRegion<double> pr) -> BoundsWithValues<double, double> {
+		return {{pr.p - pr.r, func(pr.p - pr.r)}, {pr.p + pr.r, func(pr.p + pr.r)}};
+	};
+
+	approx->approximator.draw(region2bounds(data[n].second), *data[n].first, *ch);
 }
 
 void MainWindow::recalc()
@@ -66,7 +70,7 @@ void MainWindow::recalc()
 	auto* ch = ui->boundsChartView->chart();
 	ch->removeAllSeries();
 	ch->addSeries(Charting::plotFunction<QtCharts::QScatterSeries>(
-			[&](std::size_t i) { return std::log(data[i].second.r.p - data[i].second.l.p); },
+			[&](std::size_t i) { return std::log(2 * data[i].second.r); },
 			RangeBounds<std::size_t>(0, data.size() - 1),
 			data.size(),
 			"Search bound size log on each iteration"));

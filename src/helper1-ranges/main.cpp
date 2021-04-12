@@ -75,13 +75,13 @@ int main(int argc, char* argv[])
 		int c = 0;
 		for (auto const& i : info)
 		{
-			double ratio = std::log((i.second.r.p - i.second.l.p) / (r.r - r.l));
+			double ratio = std::log(2 * i.second.r / (r.r - r.l));
 			ratios[c][name] = ratio;
 			cout
 				<< c++
-				<< ',' << i.second.l.p << ',' << i.second.r.p
+				<< ',' << i.second.p - i.second.r << ',' << i.second.p + i.second.r
 				<< ',' << ratio
-				<< ',' << func(i.second.l.p) << ',' << func(i.second.r.p)
+				<< ',' << func(i.second.p - i.second.r) << ',' << func(i.second.p + i.second.r)
 				<< '\n'
 				;
 		}

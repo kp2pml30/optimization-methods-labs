@@ -10,6 +10,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QScatterSeries>
 
+#include "opt-methods/math/PointRegion.hpp"
 #include "opt-methods/coroutines/Generator.hpp"
 
 template<typename Point, typename Value>
@@ -79,9 +80,9 @@ struct BaseIterationData
 /** coroutines promise for approximators
  */
 template<typename P, typename V>
-struct ApproxPromise : Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>
+struct ApproxPromise : Promise<PointRegion<P>, ApproxPromise<P, V>>
 {
-	using Super = Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>;
+	using Super = Promise<PointRegion<P>, ApproxPromise<P, V>>;
 
 	std::unique_ptr<BaseIterationData<P, V>> data{};
 	std::function<std::unique_ptr<BaseIterationData<P, V>>(BaseIterationData<P, V> *)> copier;
@@ -93,9 +94,9 @@ struct ApproxPromise : Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>
 	 * data setter
 	 */
 	template<std::derived_from<BaseIterationData<P, V>> IterationData>
-	std::suspend_always yield_value(IterationData* data)
+	std::suspend_always yield_value(std::unique_ptr<IterationData> data)
 	{
-		this->data = std::unique_ptr<IterationData>(data);
+		this->data = std::move(data);
 		copier     = [](BaseIterationData<P, V>* data) -> std::unique_ptr<BaseIterationData<P, V>> {
 			return std::make_unique<IterationData>(static_cast<IterationData &>(*data));
 		};
@@ -124,10 +125,10 @@ struct ApproxPromise : Promise<BoundsWithValues<P, V>, ApproxPromise<P, V>>
 /** coroutines generator for approximators
  */
 template<typename P, typename V>
-class ApproxGenerator : public Generator<BoundsWithValues<P, V>, ApproxPromise<P, V>>
+class ApproxGenerator : public Generator<PointRegion<P>, ApproxPromise<P, V>>
 {
 private:
-	using Super = Generator<BoundsWithValues<P, V>, ApproxPromise<P, V>>;
+	using Super = Generator<PointRegion<P>, ApproxPromise<P, V>>;
 
 public:
 	using Super::Generator;
@@ -184,7 +185,7 @@ class BaseApproximator; // forward declaration
  */
 template<typename T, typename P, typename V>
 concept ApproximatorImpl = requires(T& t, DummyFunc<P, V> func,
-																		BoundsWithValues<P, V> bounds) {
+																		PointRegion<P> bounds) {
 	requires HasIterationData<T, P, V>;
 	requires Function<decltype(func), P, V>;
 	requires std::is_base_of_v<BaseApproximator<P, V, T>, T>;
@@ -203,7 +204,7 @@ concept Drawable = requires(T& t, BoundsWithValues<P, V> bounds, QtCharts::QChar
  * most abstract Approximator concept
  */
 template<typename T, typename P, typename V>
-concept Approximator = requires(T& t, DummyFunc<P, V> func, BoundsWithValues<P, V> bounds) {
+concept Approximator = requires(T& t, DummyFunc<P, V> func, PointRegion<P> bounds) {
 	// Function<P, V> func
 	requires HasPV<T, P, V>;
 	requires Drawable<T, P, V>;

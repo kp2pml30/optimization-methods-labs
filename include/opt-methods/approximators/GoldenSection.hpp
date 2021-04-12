@@ -27,14 +27,13 @@ public:
 	{}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
 		using std::lerp;
-		IterationData* data;
-		co_yield data = this->preproc(r);
 
-		auto a = r.l.p, b = r.r.p;
-		auto fa = r.l.v, fb = r.r.v;
+		BEGIN_APPROX_COROUTINE(data, r);
+
+		auto [a, fa, b, fb] = this->countBwV(func, r);
 
 		P x1 = lerp(a, b, 1 - tau), x2 = lerp(a, b, tau);
 		V f1 = func(x1), f2 = func(x2);
@@ -54,7 +53,7 @@ public:
 				x2 = lerp(a, b, tau), f2 = func(x2);
 			}
 
-			co_yield {{a, fa}, {b, fb}};
+			co_yield {a, b, bound_tag};
 		}
 	}
 };

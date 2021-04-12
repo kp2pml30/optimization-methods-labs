@@ -2,6 +2,7 @@
 
 #include "opt-methods/solvers/BaseApproximator.hpp"
 #include <iostream>
+
 template<typename From, typename To, Approximator<To, To> OneDimApprox>
 class GradientDescent : public BaseApproximator<From, To, GradientDescent<From, To, OneDimApprox>>
 {
@@ -23,14 +24,13 @@ public:
 	{}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
-		IterationData* data;
-		co_yield data = this->preproc(r);
+		BEGIN_APPROX_COROUTINE(data, r);
 
 		OneDimApprox onedim{epsilon};
 
-		P x = r.l.p;
+		P x = r.p;
 
 		for (int i = 0; i < 10; i++)
 		{
@@ -38,12 +38,12 @@ public:
 			auto curfunc = [=](V const& lambda) {
 				return func(x - lambda * grad);
 			};
-			auto gen = onedim(curfunc, {{0, curfunc(0)}, {100, curfunc(100)}});
+			auto gen = onedim(curfunc, {0, 100, bound_tag});
 			while (gen.next())
 				;
-			auto lambda = gen.getValue().l.p;
+			auto lambda = gen.getValue().p;
 			x -= lambda * grad;
-			co_yield {{x, func(x)}, {{}, 0}};
+			co_yield {x, 0};
 		}
 	}
 };

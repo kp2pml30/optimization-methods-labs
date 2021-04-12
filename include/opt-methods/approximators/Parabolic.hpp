@@ -60,12 +60,11 @@ public:
 	}
 
 	template<Function<P, V> F>
-	std::optional<std::tuple<P, P, V, P>> choosePoints(F &&func, BoundsWithValues<P, V> r, std::size_t maxIter)
+	std::optional<std::tuple<P, P, V, P>> choosePoints(F func, PointRegion<P> r, std::size_t maxIter)
 	{
 		using std::abs;
 
-		auto a = r.l.p, b = r.r.p;
-		auto fa = r.l.v, fb = r.r.v;
+		auto [a, fa, b, fb] = this->countBwV(func, r);
 		auto x = (a + b) / 2;
 		auto fx = func(x);
 
@@ -79,10 +78,9 @@ public:
 	}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
-		IterationData* data;
-		co_yield data = this->preproc(r);
+		BEGIN_APPROX_COROUTINE(func, r);
 
 		// auto a = r.l.p, b = r.r.p;
 		auto res          = choosePoints(func, r, 10);
@@ -93,7 +91,7 @@ public:
 		}
 
 		auto [x1, x2, f2, x3] = *res;
-		auto f1 = r.l.v, f3 = r.r.v;
+		auto f1 = func(x1), f3 = func(x3);
 
 		std::optional<P> last_x_bar;
 
@@ -104,13 +102,13 @@ public:
 			if (!(abs(x2 - x1) >= epsilon && abs(x3 - x2) >= epsilon && abs(x3 - x1) >= epsilon))
 			{
 				// cannot find minimum now
-				co_yield {{x1, f1}, {x3, f3}};
+				co_yield {x1, x3, bound_tag};
 				break;
 			}
 			if (!(abs(a2) >= epsilon))
 			{
 				// && f(x1) >= f(x2) <= f(x3) => f === const on [x1, x3]
-				co_yield {{x2, f2}, {x2, f2}};
+				co_yield {x2, x2, bound_tag};
 				break;
 			}
 			data->a0 = a0, data->a1 = a1, data->a2 = a2;
@@ -124,7 +122,7 @@ public:
 				auto delta = abs(x_bar - *last_x_bar);
 				if (delta < epsilon)
 				{
-					co_yield {{x_bar, f_x_bar}, {x_bar, f_x_bar}};
+					co_yield {x_bar, x_bar, bound_tag};
 					break;
 				}
 			}
@@ -147,7 +145,7 @@ public:
 				else
 					x3 = x_bar, f3 = f_x_bar;
 
-			co_yield {{x1, f1}, {x3, f3}};
+			co_yield {x1, x3, bound_tag};
 		}
 	}
 };

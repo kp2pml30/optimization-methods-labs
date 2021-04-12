@@ -10,9 +10,9 @@ class IterationalSolver
 {
 public:
 	using Bounds = RangeBounds<P>;
-	using BoundsEval = BoundsWithValues<P, V>;
+	using BoundsEval = PointRegion<P>;
 
-	using SolveData = std::vector<std::pair<std::unique_ptr<BaseIterationData<P, V>>, BoundsWithValues<P, V>>>;
+	using SolveData = std::vector<std::pair<std::unique_ptr<BaseIterationData<P, V>>, PointRegion<P>>>;
 
 	Approx approximator;
 
@@ -32,7 +32,7 @@ private:
 			{ checker(b, iter) } -> std::convertible_to<bool>;
 		}
 	{
-		BoundsEval b = {{bounds.l, func(bounds.l)}, {bounds.r, func(bounds.r)}};
+		BoundsEval b = {bounds.l, bounds.r, bound_tag};
 		auto gen = approximator(std::forward<F>(func), b);
 		for (std::size_t iterations = 0; gen.next(); iterations++)
 		{
@@ -62,9 +62,8 @@ public:
 		return solveWhile(
 				std::forward<F>(func),
 				std::move(bounds),
-				[&, d2 = diff * diff](const BoundsEval& b, [[maybe_unused]] std::size_t iter) {
-					using std::norm;
-					return norm(b.r.p - b.l.p) >= d2;
+				[&](const BoundsEval& b, [[maybe_unused]] std::size_t iter) {
+					return b.r >= diff;
 				},
 				data);
 	}

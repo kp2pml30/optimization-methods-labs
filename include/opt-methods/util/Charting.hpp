@@ -2,6 +2,7 @@
 
 #include <string>
 #include <concepts>
+#include <optional>
 
 #include <QtCharts/QChart>
 #include <QtCharts/QLineSeries>

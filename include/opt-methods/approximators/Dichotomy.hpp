@@ -23,22 +23,21 @@ public:
 	{}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
-		IterationData* data;
-		co_yield data = this->preproc(r);
+		BEGIN_APPROX_COROUTINE(data, r);
 
-		while ((r.r.p - r.l.p) / 2 > epsilon)
+		while (r.r > epsilon)
 		{
-			auto x = (r.l.p + r.r.p) / 2;
+			auto x = r.p;
 			auto nl = x - epsilon / 2;
 			auto nr = x + epsilon / 2;
 			auto lv = func(nl);
 			auto rv = func(nr);
 			if (lv < rv)
-				co_yield r = {r.l, {nr, rv}};
+				co_yield r = {r.p - r.r, nr, bound_tag};
 			else
-				co_yield r = {{nl, lv}, r.r};
+				co_yield r = {nl, r.p + r.r, bound_tag};
 		}
 	}
 };

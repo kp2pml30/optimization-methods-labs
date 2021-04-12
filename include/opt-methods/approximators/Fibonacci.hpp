@@ -20,11 +20,11 @@ public:
 
 	P l;
 
-	std::tuple<FibT, FibT, int> countFibFromBounds(BoundsWithValues<P, V> const& r)
+	std::tuple<FibT, FibT, int> countFibFromBounds(PointRegion<P> const& r)
 	{
 		int n = 1;
 		FibT FLast = 1, FPrelast = 0;
-		P goal = (r.r.p - r.l.p) / l;
+		P goal = 2 * r.r / l;
 		for (; FLast <= goal; n++)
 		{
 			auto cur = FLast + FPrelast;
@@ -46,14 +46,12 @@ public:
 	FibonacciApproximator(P l) : l(l) {}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, BoundsWithValues<P, V> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
-		IterationData* data;
-		co_yield data = this->preproc(r);
+		BEGIN_APPROX_COROUTINE(data, r);
 
 		auto [Fnk, Fnk1, n] = countFibFromBounds(r);
-		auto a = r.l.p, b = r.r.p;
-		auto fa = r.l.v, fb = r.r.v;
+		auto [a, fa, b, fb] = this->countBwV(func, r);
 		auto tau = Fnk1 * 1.0 / Fnk;
 		auto x1 = std::lerp(a, b, 1 - tau), x2 = std::lerp(a, b, tau);
 		auto f1 = func(x1), f2 = func(x2);
@@ -75,7 +73,7 @@ public:
 				x2 = std::lerp(a, b, tau), f2 = func(x2);
 			}
 
-			co_yield {{a, fa}, {b, fb}};
+			co_yield {a, b, bound_tag};
 		}
 	}
 };
