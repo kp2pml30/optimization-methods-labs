@@ -46,7 +46,7 @@ public:
 };
 
 #define BEGIN_APPROX_COROUTINE(data, r)					\
-	IterationData *data;													\
+	[[maybe_unused]] IterationData *data;					\
 	{																							\
 		std::unique_ptr u_data = this->preproc(r);	\
 		data = u_data.get();												\

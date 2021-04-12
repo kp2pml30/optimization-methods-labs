@@ -100,18 +100,6 @@ MainWindow::MainWindow(QWidget* parent)
 		ui->methodSelector->addItem(QString(name.c_str()));
 }
 
-void MainWindow::iterationNChanged(int n)
-{
-	assert(approx.has_value());
-
-	auto ch = ui->visualChartView->chart();
-	//ch->removeSeries(plot);
-	//ch->removeAllSeries();
-	//Charting::addToChart(ch, plot);
-
-	// approx->approximator.draw(data[n].second, *data[n].first, *ch);
-}
-
 void MainWindow::recalc()
 {
 	int n = ui->methodSelector->currentIndex();
@@ -131,13 +119,6 @@ void MainWindow::recalc()
 	Charting::createNaturalSequenceAxes(ch, static_cast<int>(data.size()));
 	Charting::axisX(ch)->setTitleText("Number of iterations");
 	Charting::axisY(ch)->setTitleText("log of search bound");
-
-	ui->iterSelector->setMinimum(0);
-	ui->iterSelector->setMaximum(static_cast<int>(data.size() - 1));
-	ui->iterSelector->setDisabled(false);
-	ui->iterSelector->setValue(0);
-
-	iterationNChanged(0);
 }
 
 void MainWindow::methodChanged(int) { recalc(); }

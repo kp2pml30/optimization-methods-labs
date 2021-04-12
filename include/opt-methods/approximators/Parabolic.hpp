@@ -80,10 +80,10 @@ public:
 	template<Function<P, V> F>
 	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
-		BEGIN_APPROX_COROUTINE(func, r);
+		BEGIN_APPROX_COROUTINE(data, r);
 
 		// auto a = r.l.p, b = r.r.p;
-		auto res          = choosePoints(func, r, 10);
+		auto res = choosePoints(func, r, 10);
 		if (!res.has_value()) {
 			// cannot satisfy initial conditions
 			co_yield r;

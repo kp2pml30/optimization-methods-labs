@@ -34,7 +34,6 @@ public:
 	void paintEvent(QPaintEvent*) override;
 
 public slots:
-	void iterationNChanged(int);
 	void methodChanged(int);
 	void epsChanged(double);
 	void powChanged(int);
