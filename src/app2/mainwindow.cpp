@@ -33,8 +33,6 @@ MainWindow::MainWindow(QWidget* parent)
 	// auto bifunc = BisquareFunction<double>::Rand([]() { return rand() % 9 - 4; });
 	auto bifunc = BisquareFunction<double>(2, 1, 1, 0, 0, -1);
 
-	// TODO find minimum value and use it when drawing lines
-
 	auto addLevel = [&](double delta, double colCoef) {
 		auto copy = bifunc;
 		copy.c -= delta;
@@ -56,7 +54,7 @@ MainWindow::MainWindow(QWidget* parent)
 	{
 		auto series = new QtCharts::QLineSeries();
 		*series << QPointF{startFrom[0], startFrom[1]};
-		GradientDescent<Vector<double>, double, DichotomyApproximator<double, double>> desc{0.001};
+		auto desc = GradientDescent<Vector<double>, double, DichotomyApproximator<double, double>>(1e-5, {1e-5});
 		auto gen = desc(bifunc, {startFrom, 0});
 		while (gen.next())
 		{

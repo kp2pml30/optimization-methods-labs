@@ -1,13 +1,13 @@
 #pragma once
 
 #include "opt-methods/solvers/BaseApproximator.hpp"
-#include <iostream>
 
 template<typename From, typename To, Approximator<To, To> OneDimApprox>
 class GradientDescent : public BaseApproximator<From, To, GradientDescent<From, To, OneDimApprox>>
 {
 private:
 	using BaseT = BaseApproximator<From, To, GradientDescent>;
+	[[no_unique_address]] OneDimApprox onedim;
 
 public:
 	using IterationData = typename BaseT::IterationData;
@@ -17,10 +17,11 @@ public:
 	using P = From;
 	using V = To;
 
-	V epsilon;
+	Scalar<P> epsilon;
 
-	GradientDescent(V epsilon)
-	: epsilon(std::move(epsilon))
+	GradientDescent(decltype(epsilon) epsilon, OneDimApprox onedim)
+	: onedim(std::move(onedim))
+	, epsilon(std::move(epsilon))
 	{}
 
 	template<Function<P, V> F>
@@ -28,22 +29,23 @@ public:
 	{
 		BEGIN_APPROX_COROUTINE(data, r);
 
-		OneDimApprox onedim{epsilon};
-
 		P x = r.p;
 
-		for (int i = 0; i < 10; i++)
+		while (true)
 		{
 			auto grad = func.grad(x);
-			auto curfunc = [=](V const& lambda) {
+			auto curfunc = [=](Scalar<P> const& lambda) {
 				return func(x - lambda * grad);
 			};
 			auto gen = onedim(curfunc, {0, 100, bound_tag});
 			while (gen.next())
 				;
 			auto lambda = gen.getValue().p;
-			x -= lambda * grad;
+			auto delta = lambda * grad;
+			x -= delta;
 			co_yield {x, 0};
+			if (len(static_cast<P const&>(delta)) < epsilon)
+				break;
 		}
 	}
 };

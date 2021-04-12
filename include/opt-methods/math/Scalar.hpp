@@ -20,4 +20,4 @@ struct ScalarImpl<std::valarray<T>>
 };
 
 template<typename T>
-using Scalar = ScalarImpl<T>::type;
+using Scalar = typename ScalarImpl<T>::type;
