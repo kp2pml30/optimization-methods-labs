@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "./def.hpp"
+#include "./Vector.hpp"
 
 template<typename T>
 class BisquareFunction
@@ -29,6 +30,23 @@ public:
 	T operator()(T const& X, T const& Y) const
 	{
 		return x2 * X * X + xy * X * Y + y2 * Y * Y + x * X + y * Y + c;
+	}
+
+	T operator()(Vector<T> const& v) const
+	{
+		assert(v.size() == 2);
+		return operator()(v[0], v[1]);
+	}
+
+	Vector<T> grad(T const& X, T const& Y) const
+	{
+		return {2 * x2 * X + xy * Y + x, 2 * y2 * Y + xy * X + y};
+	}
+
+	Vector<T> grad(Vector<T> const& v) const
+	{
+		assert(v.size() == 2);
+		return grad(v[0], v[1]);
 	}
 
 	// y2 + (y + xy) + x2 + x + c

@@ -31,7 +31,6 @@ public:
 
 	// template so that can postpone getting IterationData from CRTP child
 	auto* preproc([[maybe_unused]] BoundsWithValues<P, V> r) {
-		assert(r.l.p < r.r.p);
 		return new typename CRTP_Child::IterationData();
 	}
 };
