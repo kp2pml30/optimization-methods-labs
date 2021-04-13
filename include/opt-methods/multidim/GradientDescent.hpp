@@ -2,12 +2,11 @@
 
 #include "opt-methods/solvers/BaseApproximator.hpp"
 
-template<typename From, typename To, Approximator<To, To> OneDimApprox>
-class GradientDescent : public BaseApproximator<From, To, GradientDescent<From, To, OneDimApprox>>
+template<typename From, typename To>
+class GradientDescent : public BaseApproximator<From, To, GradientDescent<From, To>>
 {
 private:
 	using BaseT = BaseApproximator<From, To, GradientDescent>;
-	[[no_unique_address]] OneDimApprox onedim;
 
 public:
 	using IterationData = typename BaseT::IterationData;
@@ -19,9 +18,8 @@ public:
 
 	Scalar<P> epsilon;
 
-	GradientDescent(decltype(epsilon) epsilon, OneDimApprox onedim)
-	: onedim(std::move(onedim))
-	, epsilon(std::move(epsilon))
+	GradientDescent(decltype(epsilon) epsilon)
+	: epsilon(std::move(epsilon))
 	{}
 
 	template<Function<P, V> F>
@@ -29,6 +27,7 @@ public:
 	{
 		BEGIN_APPROX_COROUTINE(data, r);
 
+		/*
 		P x = r.p;
 
 		while (true)
@@ -46,6 +45,30 @@ public:
 			co_yield {x, 0};
 			if (len(static_cast<P const&>(delta)) < epsilon)
 				break;
+		}
+		*/
+
+		P x = r.p;
+		auto fx = func(x);
+		Scalar<P> alpha = 0.1;
+
+		while (true)
+		{
+			auto grad = func.grad(x);
+			if (len(grad) < epsilon)
+				break;
+			P y;
+			V fy;
+			do
+			{
+				y = x - alpha * grad;
+				fy = func(y);
+				alpha /= 2;
+			} while (fy >= fx);
+			alpha *= 2;
+			x = y;
+			fx = fy;
+			co_yield {x, 0};
 		}
 	}
 };
