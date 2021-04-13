@@ -27,34 +27,15 @@ public:
 	{
 		BEGIN_APPROX_COROUTINE(data, r);
 
-		/*
-		P x = r.p;
-
-		while (true)
-		{
-			auto grad = func.grad(x);
-			auto curfunc = [=](Scalar<P> const& lambda) {
-				return func(x - lambda * grad);
-			};
-			auto gen = onedim(curfunc, {0, 100, bound_tag});
-			while (gen.next())
-				;
-			auto lambda = gen.getValue().p;
-			auto delta = lambda * grad;
-			x -= delta;
-			co_yield {x, 0};
-			if (len(static_cast<P const&>(delta)) < epsilon)
-				break;
-		}
-		*/
-
 		P x = r.p;
 		auto fx = func(x);
 		Scalar<P> alpha = 0.1;
 
+		auto gradf = func.grad();
+
 		while (true)
 		{
-			auto grad = func.grad(x);
+			auto grad = gradf(x);
 			if (len(grad) < epsilon)
 				break;
 			P y;

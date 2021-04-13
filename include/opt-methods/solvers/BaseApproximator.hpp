@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <type_traits>
 
 #include "Approximator.hpp"
 #include "opt-methods/util/Charting.hpp"
@@ -33,7 +34,8 @@ public:
 	{
 		using namespace QtCharts;
 
-		Charting::addToChart(&chart, Charting::drawPoints({QPointF{r.l.p, r.l.v}, QPointF{r.r.p, r.r.v}}, "Search bounds"));
+		if constexpr (std::is_floating_point_v<decltype(r.l.p)>)
+			Charting::addToChart(&chart, Charting::drawPoints({QPointF{r.l.p, r.l.v}, QPointF{r.r.p, r.r.v}}, "Search bounds"));
 		if constexpr (HasDrawImpl<CRTP_Child, P, V>)
 			impl().draw_impl(r, static_cast<typename CRTP_Child::IterationData const&>(data), chart);
 	}

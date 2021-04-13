@@ -7,7 +7,6 @@
 #include "opt-methods/approximators/Fibonacci.hpp"
 #include "opt-methods/approximators/Parabolic.hpp"
 #include "opt-methods/solvers/IterationalSolver.hpp"
-#include "opt-methods/solvers/ErasedApproximator.hpp"
 
 #include <QMouseEvent>
 #include <QTimer>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./Approximator.hpp"
+#include "./function/ErasedFunction.hpp"
 
 #include <functional>
 #include <type_traits>
@@ -13,7 +14,7 @@ namespace impl
 	class ErasedApproximator
 	{
 	public:
-		virtual ApproxGenerator<P, V> operator()(std::function<V(P const&)> func, PointRegion<P> const& bounds) = 0;
+		virtual ApproxGenerator<P, V> operator()(ErasedFunction<V(P const&)> func, PointRegion<P> const& bounds) = 0;
 		virtual void draw(BoundsWithValues<P, V> const& bounds, BaseIterationData<P, V> const& data, QtCharts::QChart& chart) = 0;
 		virtual ~ErasedApproximator() {}
 		virtual const char* name() const noexcept = 0;
@@ -36,7 +37,7 @@ namespace impl
 		ErasedApproximatorImplementation(Args&&... a)
 		: approx(std::forward<Args>(a)...)
 		{}
-		ApproxGenerator<P, V> operator()(std::function<V(P const&)> func, PointRegion<P> const& bounds) override
+		ApproxGenerator<P, V> operator()(ErasedFunction<V(P const&)> func, PointRegion<P> const& bounds) override
 		{
 			return approx(std::move(func), bounds);
 		}
@@ -51,6 +52,11 @@ namespace impl
 			else
 				return "<erased unknown>";
 		}
+	};
+
+	template<typename T, typename P, typename V>
+	concept FunctionHelper = requires(T const& f, P const& v) {
+		{ f(v) } -> std::same_as<V>;
 	};
 }
 
@@ -78,7 +84,7 @@ private:
 	: holder(new impl::ErasedApproximatorImplementation<P, V, Approx>(std::forward<Args>(a)...))
 	{}
 
-	ApproxGenerator<P, V> operator()(std::function<V(P const&)> func, PointRegion<P> bounds)
+	ApproxGenerator<P, V> operator()(ErasedFunction<V(P const&)> func, PointRegion<P> bounds)
 	{
 		assert(holder != nullptr);
 		return (*holder)(std::move(func), std::move(bounds));

@@ -7,9 +7,6 @@
 #include "opt-methods/approximators/Fibonacci.hpp"
 #include "opt-methods/approximators/Parabolic.hpp"
 #include "opt-methods/solvers/IterationalSolver.hpp"
-#include "opt-methods/solvers/ErasedApproximator.hpp"
-
-#include "opt-methods/multidim/GradientDescent.hpp"
 
 #include <QMouseEvent>
 #include <QTimer>
@@ -29,9 +26,55 @@
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent), ui(new Ui::MainWindow)
 {
-	auto ch = new QtCharts::QChart();
-	// auto bifunc = BisquareFunction<double>::Rand([]() { return rand() % 9 - 4; });
-	auto bifunc = BisquareFunction<double>(2, 1, 1, 0, 0, -1);
+	ui->setupUi(this);
+
+	ui->function->setText(QString::fromStdString(static_cast<std::string>(bifunc)));
+
+	for (auto const& a : factories)
+		ui->methodSelector->addItem(QString::fromStdString(a.second));
+	recalc();
+	recalc();
+	recalc();
+}
+
+void MainWindow::addVisual(MApprox& desc, std::vector<double>& ys)
+{
+	Vector<double> startFrom = {1, 1};
+	auto series = new QtCharts::QLineSeries();
+	*series << QPointF{startFrom[0], startFrom[1]};
+	ys.push_back(bifunc(startFrom));
+	auto gen = desc(bifunc, {startFrom, 10});
+	while (gen.next())
+	{
+		auto res = gen.getValue();
+		auto p = res.p;
+		ys.push_back(bifunc(p));
+		assert(p.size() == 2);
+		*series << QPointF{p[0], p[1]};
+	}
+	series->setName(desc.name());
+	chart->addSeries(series);
+}
+
+void MainWindow::recalc()
+{
+	struct Smth {};
+	const int onedimIndex = ui->methodSelector->currentIndex();
+	double eps = ui->epsSelector->value() * pow(10, ui->powSelector->value());
+
+	auto oldFlusher = std::unique_ptr<QtCharts::QChart>(chart);
+	chart = new QtCharts::QChart();
+
+	auto erasedProvider = [&]() { return factories[onedimIndex].first(eps); };
+	std::vector<double> levels;
+	{
+		auto desc = MApprox(TypeTag<GradientDescent<Vector<double>, double>>{}, eps);
+		addVisual(desc, levels);
+	}
+	{
+		auto desc = MApprox(TypeTag<SteepestDescent<Vector<double>, double, ErasedApproximator<double, double>>>{}, eps, erasedProvider());
+		addVisual(desc, levels);
+	}
 
 	auto addLevel = [&](double delta, double colCoef) {
 		auto copy = bifunc;
@@ -41,69 +84,33 @@ MainWindow::MainWindow(QWidget* parent)
 			return;
 		if (f > t)
 			std::swap(f, t);
-		auto bounds = RangeBounds<double>{f + 0.0001, t - 0.0001};
-		auto series = Charting::plotCircular<QtCharts::QLineSeries>([&](auto const& x) { return copy.evalYPls(x); }, [&](auto const& x) { return copy.evalYNeg(x); }, bounds, 500, "");
+		auto bounds = RangeBounds<double>{f, t};
+		auto series = Charting::plotCircular<QtCharts::QLineSeries>(
+				[&](auto const& x) { return copy.evalYPls(x); },
+				[&](auto const& x) { return copy.evalYNeg(x); },
+				bounds,
+				500,
+				"");
 		series->setColor(QColor((1 - colCoef) * 255, colCoef * 255, 0));
-		ch->addSeries(series);
-		for (auto *a : ch->legend()->markers(series))
+		chart->addSeries(series);
+		for (auto *a : chart->legend()->markers(series))
 			a->setVisible(false);
 	};
-	Vector<double> startFrom = {1, 1};
-	double minVal = 0;
-	double maxVal = std::numeric_limits<double>::quiet_NaN();
+
+	if (!levels.empty())
 	{
-		auto series = new QtCharts::QLineSeries();
-		*series << QPointF{startFrom[0], startFrom[1]};
-		auto desc = GradientDescent<Vector<double>, double, DichotomyApproximator<double, double>>(1e-5, {1e-5});
-		auto gen = desc(bifunc, {startFrom, 0});
-		while (gen.next())
-		{
-			auto res = gen.getValue();
-			auto p = res.p;
-			if (std::isnan(maxVal))
-				maxVal = bifunc(res.p);
-			minVal = bifunc(res.p);
-			assert(p.size() == 2);
-			*series << QPointF{p[0], p[1]};
-		}
-		series->setColor(QColor(0, 0, 255));
-		series->setName(desc.name());
-		ch->addSeries(series);
+		std::sort(levels.begin(), levels.end());
+		levels.erase(std::unique(levels.begin(), levels.end()), levels.end());
+		/// TODO change color distribution
+		for (auto const& a : levels)
+			addLevel(a, (a - levels.front()) / (levels.back() - levels.front()));
 	}
-	auto merp = [](auto l, auto r, auto c) {
-		using std::pow;
-		c = pow(c, 4);
-		return (1 - c) * l + c * r;
-	};
-	constexpr int count = 30;
-	for (int i = 0; i <= count; i++)
-	{
-		auto coef = i * 1.0 / count;
-		addLevel(merp(minVal, maxVal, coef), coef);
-	}
-	ch->createDefaultAxes();
-	Charting::growAxisRange(Charting::axisX<QtCharts::QValueAxis>(ch), 0.1);
-	Charting::growAxisRange(Charting::axisY<QtCharts::QValueAxis>(ch), 0.1);
-
-	ui->setupUi(this);
-	ui->visualChartView->setChart(ch, 0.5);
-
-	ui->function->setText(QString::fromStdString(static_cast<std::string>(bifunc)));
-
-	ch = new QtCharts::QChart();
-	ch->setAnimationOptions(QtCharts::QChart::SeriesAnimations);
-	ui->boundsChartView->setChart(ch);
-
-	for (auto&& [_, name] : factories)
-		ui->methodSelector->addItem(QString(name.c_str()));
-}
-
-void MainWindow::recalc()
-{
-	int n = ui->methodSelector->currentIndex();
-	double eps = ui->epsSelector->value() * pow(10, ui->powSelector->value());
-
-	approx = factories[n].first(eps);
+	
+	chart->createDefaultAxes();
+	Charting::growAxisRange(Charting::axisX<QtCharts::QValueAxis>(chart), 0.1);
+	Charting::growAxisRange(Charting::axisY<QtCharts::QValueAxis>(chart), 0.1);
+	ui->visualChartView->setChart(chart, 0.5);
+#if 0
 	data.clear();
 	approx->solveUntilEnd(func, r, data);
 
@@ -117,8 +124,10 @@ void MainWindow::recalc()
 	Charting::createNaturalSequenceAxes(ch, static_cast<int>(data.size()));
 	Charting::axisX(ch)->setTitleText("Number of iterations");
 	Charting::axisY(ch)->setTitleText("log of search bound");
+#endif
 }
 
+void MainWindow::multiMethodChanged(int) { recalc(); }
 void MainWindow::methodChanged(int) { recalc(); }
 void MainWindow::epsChanged(double) { recalc(); }
 void MainWindow::powChanged(int) { recalc(); }

@@ -44,10 +44,29 @@ public:
 		return dot(A * v, v) / 2 + dot(b, v) + c;
 	}
 
-	Vector<T> grad(Vector<T> const& v) const
+public:
+	class GradientFunc
 	{
-		assert(v.size() == A.n);
-		return A * v + b;
+	private:
+		friend BisquareFunction;
+
+		Matrix<T> A;
+		Vector<T> b;
+		GradientFunc(Matrix<T> A, Vector<T> b)
+		: A(std::move(A))
+		, b(std::move(b))
+		{}
+	public:
+		Vector<T> operator()(Vector<T> const& v) const
+		{
+			assert(v.size() == A.n);
+			return A * v + b;
+		}
+	};
+
+	GradientFunc grad() const
+	{
+		return GradientFunc(A, b);
 	}
 
 	std::tuple<T, T, T, T, T> get2d_coefs() const

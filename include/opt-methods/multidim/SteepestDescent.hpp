@@ -30,10 +30,11 @@ public:
 		BEGIN_APPROX_COROUTINE(data, r);
 
 		P x = r.p;
+		auto gradf = func.grad();
 
 		while (true)
 		{
-			auto grad = func.grad(x);
+			auto grad = gradf(x);
 			if (len(grad) < epsilon) break;
 
 			auto curfunc = [=](Scalar<P> const& lambda) {

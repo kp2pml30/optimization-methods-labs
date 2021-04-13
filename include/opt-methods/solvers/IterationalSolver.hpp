@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./ErasedApproximator.hpp"
+#include "./Erased.hpp"
 
 /**
  * wrapper class to solve with loops

@@ -175,8 +175,8 @@
    <slot>methodChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>383</x>
-     <y>71</y>
+     <x>368</x>
+     <y>58</y>
     </hint>
     <hint type="destinationlabel">
      <x>276</x>
@@ -191,8 +191,8 @@
    <slot>epsChanged(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>219</x>
-     <y>120</y>
+     <x>235</x>
+     <y>116</y>
     </hint>
     <hint type="destinationlabel">
      <x>303</x>
@@ -207,8 +207,8 @@
    <slot>powChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>349</x>
-     <y>120</y>
+     <x>367</x>
+     <y>116</y>
     </hint>
     <hint type="destinationlabel">
      <x>462</x>
@@ -223,5 +223,6 @@
   <slot>epsChanged(double)</slot>
   <slot>powChanged(int)</slot>
   <slot>powEpsEditingFinished()</slot>
+  <slot>multiMethodChanged(int)</slot>
  </slots>
 </ui>

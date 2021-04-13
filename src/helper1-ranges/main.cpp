@@ -5,7 +5,7 @@
 #include "opt-methods/approximators/Parabolic.hpp"
 
 #include "opt-methods/solvers/IterationalSolver.hpp"
-#include "opt-methods/solvers/ErasedApproximator.hpp"
+#include "opt-methods/solvers/Erased.hpp"
 
 #include <map>
 #include <vector>
