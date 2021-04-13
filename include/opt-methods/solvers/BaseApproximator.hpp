@@ -41,16 +41,16 @@ public:
 	}
 
 	// template so that can postpone getting IterationData from CRTP child
-	auto preproc([[maybe_unused]] PointRegion<P> r)
+	auto preproc()
 	{
 		return std::make_unique<typename CRTP_Child::IterationData>();
 	}
 };
 
-#define BEGIN_APPROX_COROUTINE(data, r)					\
+#define BEGIN_APPROX_COROUTINE(data)						\
 	[[maybe_unused]] IterationData *data;					\
 	{																							\
-		std::unique_ptr u_data = this->preproc(r);	\
+		std::unique_ptr u_data = this->preproc();		\
 		data = u_data.get();												\
 		co_yield std::move(u_data);									\
 	}

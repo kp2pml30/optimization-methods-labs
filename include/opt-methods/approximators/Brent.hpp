@@ -50,7 +50,7 @@ public:
 		using std::lerp;
 		using std::copysign;
 
-		BEGIN_APPROX_COROUTINE(data, r);
+		BEGIN_APPROX_COROUTINE(data);
 
 		auto [a, fa, b, fb] = this->countBwV(func, r);
 		///   a      c

@@ -17,17 +17,17 @@ public:
 	using P = From;
 	using V = To;
 
-	Scalar<P> epsilon;
+	Scalar<P> epsilon2;
 
-	SteepestDescent(decltype(epsilon) epsilon, OneDimApprox onedim)
+	SteepestDescent(decltype(epsilon2) epsilon, OneDimApprox onedim)
 	: onedim(std::move(onedim))
-	, epsilon(std::move(epsilon))
+	, epsilon2(epsilon * epsilon)
 	{}
 
 	template<Function<P, V> F>
 	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
-		BEGIN_APPROX_COROUTINE(data, r);
+		BEGIN_APPROX_COROUTINE(data);
 
 		P x = r.p;
 		auto gradf = func.grad();
@@ -35,7 +35,7 @@ public:
 		while (true)
 		{
 			auto grad = gradf(x);
-			if (len(grad) < epsilon) break;
+			if (len2(grad) < epsilon2) break;
 
 			auto curfunc = [=](Scalar<P> const& lambda) {
 				return func(x - lambda * grad);

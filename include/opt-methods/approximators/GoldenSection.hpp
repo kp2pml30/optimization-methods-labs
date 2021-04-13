@@ -31,7 +31,7 @@ public:
 	{
 		using std::lerp;
 
-		BEGIN_APPROX_COROUTINE(data, r);
+		BEGIN_APPROX_COROUTINE(data);
 
 		auto [a, fa, b, fb] = this->countBwV(func, r);
 

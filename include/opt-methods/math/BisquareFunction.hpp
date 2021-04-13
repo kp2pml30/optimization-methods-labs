@@ -9,28 +9,22 @@
 #include "./Matrix.hpp"
 
 template<typename T>
-class BisquareFunction
+class QuadraticFunction
 {
 public:
-	Matrix<T> A;
-	Vector<T> b;
-	T c;
+	const Matrix<T> A;
+	const Vector<T> b;
+	const T c;
 
-	BisquareFunction(T x2, T xy, T y2, T x, T y, T c)
-	: A({2 * x2, xy, xy, 2 * y2})
-	, b({x, y})
-	, c(c)
-	{}
-
-	BisquareFunction(Matrix<T> A, Vector<T> b, T c)
-		: A(std::move(A))
-		, b(std::move(b))
-		, c(std::move(c))
+	QuadraticFunction(Matrix<T> A, Vector<T> b, T c)
+	: A(std::move(A))
+	, b(std::move(b))
+	, c(std::move(c))
 	{
-		assert(A.n == b.size());
+		assert(this->A.n == this->b.size());
 	}
 
-	BisquareFunction swap() const noexcept
+	QuadraticFunction swap() const noexcept
 	{
 		/// TEST ME
 		Vector<T> b_rev = b;
@@ -68,18 +62,34 @@ public:
 	{
 		return GradientFunc(A, b);
 	}
+};
+
+template<typename T>
+class QuadraticFunction2d : public QuadraticFunction<T>
+{
+public:
+	QuadraticFunction2d(T x2, T xy, T y2, T x, T y, T c)
+	: QuadraticFunction<T>(Matrix<T>{{2 * x2, xy, xy, 2 * y2}}, Vector<T>{x, y}, c)
+	{}
 
 	std::tuple<T, T, T, T, T> get2d_coefs() const
 	{
-		assert(A.n == 2);
+		auto& A = this->A;
+		auto& b = this->b;
 		return {A.data[0], A.data[1] + A.data[2], A.data[3], b[0], b[1]};
+	}
+
+	QuadraticFunction2d shift(T delta_c) const
+	{
+		auto [x2, xy, y2, x, y] = get2d_coefs();
+		return QuadraticFunction2d(x2, xy, y2, x, y, this->c + delta_c);
 	}
 
 	// y2 + (y + xy) + x2 + x + c
 	T yDescrSquare(T X) const
 	{
 		auto [x2, xy, y2, x, y] = get2d_coefs();
-		return square(y + xy * X) - 4 * y2 * (x2 * X * X + x * X + c);
+		return square(y + xy * X) - 4 * y2 * (x2 * X * X + x * X + this->c);
 	}
 
 	// UI. assumes floating type and NaN evaluation
@@ -99,20 +109,20 @@ public:
 	std::pair<T, T> zeroDescrYAt() const
 	{
 		auto [x2, xy, y2, x, y] = get2d_coefs();
-		return solveSquare(xy * xy - 4 * y2 * x2, 2 * y * xy - 4 * y2 * x, y * y - 4 * y2 * c);
+		return solveSquare(xy * xy - 4 * y2 * x2, 2 * y * xy - 4 * y2 * x, y * y - 4 * y2 * this->c);
 	}
 	explicit operator std::string() const noexcept
 	{
 		// return std::format("{}y^2 + {}xy + {}x^2 + {}y + {}x + {} = 0", y2, xy, x2, y, x, c);
 		auto [x2, xy, y2, x, y] = get2d_coefs();
 		std::stringstream sstream;
-		sstream << y2 << "y^2 + " << xy << "xy + " << x2 << "x^2 + " << y << "y +" << x << "x + " << c << " = 0";
+		sstream << y2 << "y^2 + " << xy << "xy + " << x2 << "x^2 + " << y << "y +" << x << "x + " << this->c << " = 0";
 		return sstream.str();
 	}
 
 	template<typename Random>
-	static BisquareFunction Rand(Random const& r)
+	static QuadraticFunction2d Rand(Random const& r)
 	{
-		return BisquareFunction(r(), r(), r(), r(), r(), r());
+		return QuadraticFunction2d(r(), r(), r(), r(), r(), r());
 	}
 };

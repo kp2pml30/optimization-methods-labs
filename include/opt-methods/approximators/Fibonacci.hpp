@@ -48,7 +48,7 @@ public:
 	template<Function<P, V> F>
 	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
-		BEGIN_APPROX_COROUTINE(data, r);
+		BEGIN_APPROX_COROUTINE(data);
 
 		auto [Fnk, Fnk1, n] = countFibFromBounds(r);
 		auto [a, fa, b, fb] = this->countBwV(func, r);

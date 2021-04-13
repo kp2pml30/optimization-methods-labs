@@ -8,6 +8,8 @@
 #include "opt-methods/approximators/Parabolic.hpp"
 #include "opt-methods/solvers/IterationalSolver.hpp"
 
+#include "opt-methods/multidim/GradientDescent.hpp"
+
 #include <QMouseEvent>
 #include <QTimer>
 #include <QtCharts/QValueAxis>
@@ -77,8 +79,7 @@ void MainWindow::recalc()
 	}
 
 	auto addLevel = [&](double delta, double colCoef) {
-		auto copy = bifunc;
-		copy.c -= delta;
+		auto copy = bifunc.shift(-delta);
 		auto [f, t] = bifunc.zeroDescrYAt();
 		if (std::isnan(f) || std::isinf(f))
 			return;

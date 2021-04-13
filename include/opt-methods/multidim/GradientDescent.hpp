@@ -16,16 +16,16 @@ public:
 	using P = From;
 	using V = To;
 
-	Scalar<P> epsilon;
+	Scalar<P> epsilon2;
 
-	GradientDescent(decltype(epsilon) epsilon)
-	: epsilon(std::move(epsilon))
+	GradientDescent(decltype(epsilon2) epsilon)
+	: epsilon2(epsilon * epsilon)
 	{}
 
 	template<Function<P, V> F>
 	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 	{
-		BEGIN_APPROX_COROUTINE(data, r);
+		BEGIN_APPROX_COROUTINE(data);
 
 		P x = r.p;
 		auto fx = func(x);
@@ -36,17 +36,17 @@ public:
 		while (true)
 		{
 			auto grad = gradf(x);
-			if (len(grad) < epsilon)
+			if (len2(grad) < epsilon2)
 				break;
 			P y;
 			V fy;
-			do
+			while (true)
 			{
 				y = x - alpha * grad;
 				fy = func(y);
+				if (fy < fx) break;
 				alpha /= 2;
-			} while (fy >= fx);
-			alpha *= 2;
+			}
 			x = y;
 			fx = fy;
 			co_yield {x, 0};
