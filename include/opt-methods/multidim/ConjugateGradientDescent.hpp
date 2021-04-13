@@ -2,6 +2,7 @@
 
 #include "opt-methods/solvers/BaseApproximator.hpp"
 #include "opt-methods/math/BisquareFunction.hpp"
+#include "opt-methods/solvers/function/ErasedFunction.hpp"
 
 template<typename From, typename To>
 class ConjugateGradientDescent : public BaseApproximator<From, To, ConjugateGradientDescent<From, To>>
@@ -17,28 +18,42 @@ public:
 	using P = From;
 	using V = To;
 
-	Scalar<P> epsilon;
+	Scalar<P> epsilon2;
 
-	SteepestDescent(decltype(epsilon) epsilon)
-	, epsilon(std::move(epsilon))
+	ConjugateGradientDescent(decltype(epsilon2) epsilon)
+	: epsilon2(epsilon * epsilon)
 	{}
 
 	template<Function<P, V> F>
-	requires std::is_same_v<F, BisquareFunction<Scalar<P>>>
-	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
+	ApproxGenerator<P, V> operator()(F func_, PointRegion<P> r)
 	{
 		BEGIN_APPROX_COROUTINE(data);
 
-		auto grad = func.gradient();
+		QuadraticFunction<Scalar<P>> *func_ptr;
+		if constexpr (std::is_same_v<F, ErasedFunction<V(P const&)>>)
+		{
+			func_ptr = func_.target<QuadraticFunction2d<Scalar<P>>>();
+			if (func_ptr == nullptr)
+				func_ptr = func_.target<QuadraticFunction<Scalar<P>>>();
+			assert(func_ptr);
+		}
+		else if constexpr (std::is_same_v<F, QuadraticFunction2d<Scalar<P>>> ||
+											 std::is_same_v<F, QuadraticFunction<Scalar<P>>>)
+			func_ptr = &func_;
+		else
+			abort(); // no static assert allowed, thanks GCC UwU
+		QuadraticFunction<Scalar<P>> &func = *func_ptr;
+
+		auto gradf = func.grad();
 
 		P x = r.p;
-		auto gradx = grad(x);
+		auto gradx = gradf(x);
 		P p = -gradx;
 		const auto &A = func.A;
 
 		while (true)
 		{
-			if (len(gradx) < epsilon)
+			if (len2(gradx) < epsilon2)
 				break;
 
 			/*

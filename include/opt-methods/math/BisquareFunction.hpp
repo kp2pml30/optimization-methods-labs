@@ -42,7 +42,7 @@ public:
 	class GradientFunc
 	{
 	private:
-		friend BisquareFunction;
+		friend QuadraticFunction;
 
 		Matrix<T> A;
 		Vector<T> b;
@@ -69,14 +69,14 @@ class QuadraticFunction2d : public QuadraticFunction<T>
 {
 public:
 	QuadraticFunction2d(T x2, T xy, T y2, T x, T y, T c)
-	: QuadraticFunction<T>(Matrix<T>{{2 * x2, xy, xy, 2 * y2}}, Vector<T>{x, y}, c)
+	: QuadraticFunction<T>(Matrix<T>{{x2 * 2, xy, xy, y2 * 2}}, Vector<T>{x, y}, c)
 	{}
 
 	std::tuple<T, T, T, T, T> get2d_coefs() const
 	{
 		auto& A = this->A;
 		auto& b = this->b;
-		return {A.data[0], A.data[1] + A.data[2], A.data[3], b[0], b[1]};
+		return {A.data[0] / 2, (A.data[1] + A.data[2]) / 2, A.data[3] / 2, b[0], b[1]};
 	}
 
 	QuadraticFunction2d shift(T delta_c) const

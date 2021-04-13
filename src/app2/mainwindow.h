@@ -54,7 +54,7 @@ private:
 	double lastEps = 0;
 	int lastPow    = 0;
 
-	BisquareFunction<double> bifunc = BisquareFunction<double>(8, 1, 1, 0, 0, -1);
+	QuadraticFunction2d<double> bifunc = QuadraticFunction2d<double>(8, 1, 1, 0, 0, -1);
 
 	QtCharts::QChart* chart = nullptr;
 
@@ -77,10 +77,10 @@ private:
 	void addVisual(MApprox& approx, std::vector<double>& pointZts);
 
 	static inline std::vector<OneDimFactoryT> factories = getFactories<DichotomyApproximator,
-																															 FibonacciSizeTApproximator,
-																															 GoldenSectionApproximator,
-																															 ParabolicApproximator,
-																															 BrentApproximator>();
+																																		 FibonacciSizeTApproximator,
+																																		 GoldenSectionApproximator,
+																																		 ParabolicApproximator,
+																																		 BrentApproximator>();
 
 	void recalc();
 

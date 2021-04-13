@@ -4,8 +4,6 @@
 #include <exception>
 #include <type_traits>
 
-#include <experimental/type_traits>
-
 #include "opt-methods/math/Scalar.hpp"
 
 template<typename F>
@@ -51,10 +49,10 @@ namespace function_helper
 	{
 	private:
 		template<typename Y>
-		friend class ::ErasedFunction;
+		friend struct ::ErasedFunction;
 
 		template<typename Y, typename D>
-		friend class FunctionTraits;
+		friend struct FunctionTraits;
 
 		FunctionBuffer buf;
 		TypeDescriptor<R, Args...> const* desc;

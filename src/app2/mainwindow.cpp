@@ -9,12 +9,15 @@
 #include "opt-methods/solvers/IterationalSolver.hpp"
 
 #include "opt-methods/multidim/GradientDescent.hpp"
+#include "opt-methods/multidim/SteepestDescent.hpp"
+#include "opt-methods/multidim/ConjugateGradientDescent.hpp"
 
 #include <QMouseEvent>
 #include <QTimer>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QLegendMarker>
 
+#include <utility>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -34,8 +37,6 @@ MainWindow::MainWindow(QWidget* parent)
 
 	for (auto const& a : factories)
 		ui->methodSelector->addItem(QString::fromStdString(a.second));
-	recalc();
-	recalc();
 	recalc();
 }
 
@@ -77,10 +78,14 @@ void MainWindow::recalc()
 		auto desc = MApprox(TypeTag<SteepestDescent<Vector<double>, double, ErasedApproximator<double, double>>>{}, eps, erasedProvider());
 		addVisual(desc, levels);
 	}
+	{
+		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double>>{}, eps);
+		addVisual(desc, levels);
+	}
 
 	auto addLevel = [&](double delta, double colCoef) {
 		auto copy = bifunc.shift(-delta);
-		auto [f, t] = bifunc.zeroDescrYAt();
+		auto [f, t] = copy.zeroDescrYAt();
 		if (std::isnan(f) || std::isinf(f))
 			return;
 		if (f > t)
@@ -90,7 +95,7 @@ void MainWindow::recalc()
 				[&](auto const& x) { return copy.evalYPls(x); },
 				[&](auto const& x) { return copy.evalYNeg(x); },
 				bounds,
-				500,
+				(size_t)std::lerp(10.0, 300.0, std::clamp((bounds.r - bounds.l) * 10, 0.0, 1.0)),
 				"");
 		series->setColor(QColor((1 - colCoef) * 255, colCoef * 255, 0));
 		chart->addSeries(series);
