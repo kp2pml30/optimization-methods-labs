@@ -2,12 +2,6 @@
 #include "ui_mainwindow.h"
 #include "mainwindow.h"
 
-#include "opt-methods/approximators/Dichotomy.hpp"
-#include "opt-methods/approximators/GoldenSection.hpp"
-#include "opt-methods/approximators/Fibonacci.hpp"
-#include "opt-methods/approximators/Parabolic.hpp"
-#include "opt-methods/solvers/IterationalSolver.hpp"
-
 #include <QMouseEvent>
 #include <QTimer>
 #include <QtCharts/QValueAxis>
@@ -20,6 +14,7 @@
 #include <qnamespace.h>
 
 #include "opt-methods/util/Charting.hpp"
+#include "opt-methods/solvers/BaseApproximatorDraw.hpp"
 
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent), ui(new Ui::MainWindow)

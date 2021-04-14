@@ -1,23 +1,14 @@
 #pragma once
 
-#include <qchart.h>
 #include <vector>
 
 #include <QMainWindow>
-#include <QPainter>
-#include <QTimer>
-#include <QtCharts/QLineSeries>
 
-#include "opt-methods/solvers/IterationalSolver.hpp"
 #include "opt-methods/solvers/Erased.hpp"
-#include "opt-methods/approximators/Dichotomy.hpp"
-#include "opt-methods/approximators/GoldenSection.hpp"
-#include "opt-methods/approximators/Fibonacci.hpp"
-#include "opt-methods/approximators/Parabolic.hpp"
-#include "opt-methods/approximators/Brent.hpp"
-#include "opt-methods/multidim/GradientDescent.hpp"
-#include "opt-methods/multidim/SteepestDescent.hpp"
 #include "opt-methods/math/BisquareFunction.hpp"
+#include "opt-methods/solvers/IterationalSolver.hpp"
+
+#include "opt-methods/approximators/all.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -31,6 +22,8 @@ struct BindMApprox
 {
 	using type = Base<Vector<double>, double, Third<double, double>>;
 };
+
+class QCheckBox;
 
 class MainWindow : public QMainWindow
 {
@@ -50,6 +43,8 @@ public slots:
 private:
 	using Approx = ErasedApproximator<double, double>;
 	using MApprox = ErasedApproximator<Vector<double>, double>;
+
+	std::map<std::string, QCheckBox*> gradientTogglers;
 
 	double lastEps = 0;
 	int lastPow    = 0;

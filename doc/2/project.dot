@@ -8,7 +8,7 @@ digraph Project {
 
 		valarray[label="std::valarray"];
 		valarray -> Vector;
-		Matrix;
+		valarray -> Matrix [style="dotted"];
 		BisquareFunction[label="BisquareFunction|{Matrix|Vector|\<scalar\>}"];
 		PointRegion[label="PointRegion|{\<vector\>|\<scalar\>}"];
 	}
@@ -44,7 +44,7 @@ digraph Project {
 		color=blue;
 
 		Function[label="Function|call: (\<from\>) → \<to\>|grad: () → Function\<(\<from\>) → from.substitute_scalar_with(to)\>"];
-		Approximator[label="Approximator|<f1>call: (\<vector\>, PointRegion) → ApproxGenerator|name?|drawable?"]
+		Approximator[label="Approximator|<f1>call: (Fucntion, PointRegion) → ApproxGenerator|name?|drawable?"]
 	}
 	ApproxGenerator -> Approximator:f1;
 	Fibonacci -> SteepestGradient [ltail=cluster_Onedim];
@@ -59,5 +59,14 @@ digraph Project {
 		IterationalSolverBuilder[label="IterationalSolverBuilder|векторный IterationalSolver|Approximator..."];
 		IterationalSolver -> IterationalSolverBuilder [style="dotted"];
 	}
-	Approximator -> IterationalSolver:f1;
+	Approximator -> IterationalSolver:f1 [style="dotted"];
+	subgraph cluster_Erased {
+		label = "стертые типы для UI";
+		color=blue;
+
+		Function -> ErasedFunction;
+		ErasedFunction[label="ErasedFunction|grad: () → ErasedFunction\<(\<from\>) → from.substitute_scalar_with(to)\>|..."];
+		Approximator -> ErasedApproximator;
+		ErasedApproximator[label="ErasedApproximator|call: (ErasedFucntion, PointRegion) → ApproxGenerator|..."]
+	}
 }

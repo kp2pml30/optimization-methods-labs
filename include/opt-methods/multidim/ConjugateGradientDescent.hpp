@@ -99,7 +99,7 @@ public:
 	}
 
 	template<Function<P, V> F>
-		requires QuadraticFunctionImpl<F> || std::convertible_to<F, ErasedFunction<V(P const&)>>
+		requires QuadraticFunctionImpl<F, Scalar<P>> || std::convertible_to<F, ErasedFunction<V(P const&)>>
 	ApproxGenerator<P, V> operator()(F func_, PointRegion<P> r)
 	{
 		BEGIN_APPROX_COROUTINE(data);

@@ -7,7 +7,7 @@
 #include <QtCharts/QLineSeries>
 
 #include "opt-methods/solvers/BaseApproximator.hpp"
-#include "Parabolic.hpp"
+#include "./Parabolic.hpp"
 
 template<std::floating_point From, typename To> requires std::is_convertible_v<From, To>
 class BrentApproximator : public BaseApproximator<From, To, BrentApproximator<From, To>>

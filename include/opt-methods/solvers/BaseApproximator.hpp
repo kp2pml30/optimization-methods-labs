@@ -3,8 +3,12 @@
 #include <memory>
 #include <type_traits>
 
-#include "Approximator.hpp"
-#include "opt-methods/util/Charting.hpp"
+#include "./Approximator.hpp"
+
+namespace QtCharts
+{
+	class QChart;
+}
 
 /**
  * @param CRTP_Child - CRTP class for compile time polymorphism
@@ -30,15 +34,7 @@ public:
 		return {l, func(l), r, func(r)};
 	}
 
-	void draw(BoundsWithValues<P, V> r, IterationData const& data, QtCharts::QChart& chart)
-	{
-		using namespace QtCharts;
-
-		if constexpr (std::is_floating_point_v<decltype(r.l.p)>)
-			Charting::addToChart(&chart, Charting::drawPoints({QPointF{r.l.p, r.l.v}, QPointF{r.r.p, r.r.v}}, "Search bounds"));
-		if constexpr (HasDrawImpl<CRTP_Child, P, V>)
-			impl().draw_impl(r, static_cast<typename CRTP_Child::IterationData const&>(data), chart);
-	}
+	void draw(BoundsWithValues<P, V> r, [[maybe_unused]] IterationData const& data, QtCharts::QChart& chart);
 
 	// template so that can postpone getting IterationData from CRTP child
 	auto preproc()

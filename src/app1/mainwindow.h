@@ -9,11 +9,7 @@
 
 #include "opt-methods/solvers/IterationalSolver.hpp"
 #include "opt-methods/solvers/Erased.hpp"
-#include "opt-methods/approximators/Dichotomy.hpp"
-#include "opt-methods/approximators/GoldenSection.hpp"
-#include "opt-methods/approximators/Fibonacci.hpp"
-#include "opt-methods/approximators/Parabolic.hpp"
-#include "opt-methods/approximators/Brent.hpp"
+#include "opt-methods/approximators/all.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui

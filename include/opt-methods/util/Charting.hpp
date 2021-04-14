@@ -83,34 +83,11 @@ namespace Charting
 		return static_cast<AxisT *>(chart->axes(Qt::Vertical)[0]);
 	}
 
-	inline void addToChart(QtCharts::QChart *chart, QtCharts::QAbstractSeries *s) {
-		chart->addSeries(s);
-		s->attachAxis(axisX(chart));
-		s->attachAxis(axisY(chart));
-	}
+	void addToChart(QtCharts::QChart *chart, QtCharts::QAbstractSeries *s);
 
-	inline qreal getAxisRange(QtCharts::QValueAxis *axis) { return axis->max() - axis->min(); }
+	qreal getAxisRange(QtCharts::QValueAxis *axis);
 
-	inline void growAxisRange(QtCharts::QValueAxis *axis, double coef)
-	{
-		qreal r = getAxisRange(axis);
-		axis->setRange(axis->min() - r * coef, axis->max() + r * coef);
-	}
+	void growAxisRange(QtCharts::QValueAxis *axis, double coef);
 
-	inline void createNaturalSequenceAxes(QtCharts::QChart* chart, int n) {
-		using namespace QtCharts;
-		chart->createDefaultAxes();
-		auto* x = axisX<QtCharts::QValueAxis>(chart);
-		auto* y = axisY<QtCharts::QValueAxis>(chart);
-
-		x->setTickAnchor(1);
-		x->setTickInterval(1);
-		x->setTickCount(n);
-
-		x->setLabelFormat("%i");
-		growAxisRange(y, 0.01);
-		y->setTickAnchor(0);
-		y->setTickInterval(getAxisRange(y) / 10);
-		y->setTickType(QtCharts::QValueAxis::TicksDynamic);
-	}
+	void createNaturalSequenceAxes(QtCharts::QChart* chart, int n);
 } // namespace Charting

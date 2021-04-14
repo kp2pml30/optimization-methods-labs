@@ -11,8 +11,11 @@ macro(appBuilder name)
 		${UI}
 	)
 
+	# target_include_directories(${name} PRIVATE "${CMAKE_SOURCE_DIR}/include/opt-methods/widgets")
+
 	linkGLibC(${name})
 	target_link_libraries(${name} PRIVATE opt-methods)
+	# target_link_libraries(${name} PRIVATE opt-methods-widgets)
 	target_link_libraries(${name} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts)
 	install(TARGETS ${name} DESTINATION ./bin)
 endmacro()

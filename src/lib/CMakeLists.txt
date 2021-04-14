@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
 file(GLOB_RECURSE SRC "*.cpp")
-
 add_library(opt-methods STATIC ${SRC})
 
 find_library(PThread pthread)
