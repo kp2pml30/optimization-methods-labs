@@ -17,17 +17,12 @@ template<typename T>
 class DenseMatrix
 {
 public:
-	std::valarray<T> data;
-	size_t n;
+	const std::valarray<T> data;
+	const size_t n;
 
 	DenseMatrix(std::valarray<T> data)
 	: data(std::move(data))
 	, n((size_t)sqrt(this->data.size()))
-	{}
-
-	DenseMatrix(size_t n)
-	: data(n * n)
-	, n(n)
 	{}
 
 	size_t dims() const { return n; }
@@ -37,22 +32,42 @@ public:
 	std::valarray<T> col_(size_t j) const { return data[std::slice(j, n, n)]; }
 	Vector<T> row(size_t i) const { return Vector<T>(row_(i)); }
 	Vector<T> col(size_t j) const { return Vector<T>(col_(j)); }
-	DenseMatrix<T> transpose() const
+	DenseMatrix transpose() const
 	{
-		DenseMatrix<T> res(n);
+		std::valarray<T> res(n * n);
 		for (size_t i = 0; i < n; i++)
-			res.col_(i) = static_cast<std::valarray<T>>(row_(i));
-		return res;
+			res[std::slice(i, n, n)] = static_cast<std::valarray<T>>(row_(i));
+		return DenseMatrix(res);
 	}
 };
 
 template<typename T>
 Vector<T> operator*(DenseMatrix<T> const& l, Vector<T> const& r)
 {
-	assert(l.n == r.size());
+	assert(l.dims() == r.size());
 	Vector<T> res(l.n);
 	for (size_t i = 0; i < l.n; i++)
 		res[i] = dot(l.row(i), r);
 	return res;
 }
 
+template<typename T>
+class DiagonalMatrix
+{
+public:
+	const std::valarray<T> diag;
+
+	DiagonalMatrix(std::valarray<T> diag)
+	: diag(std::move(diag))
+	{}
+
+	size_t dims() const { return diag.size(); }
+	DiagonalMatrix transpose() const { return *this; }
+};
+
+template<typename T>
+Vector<T> operator*(DiagonalMatrix<T> const& l, Vector<T> const& r)
+{
+	assert(l.dims() == r.size());
+	return l.diag * r;
+}

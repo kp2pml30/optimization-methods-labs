@@ -8,16 +8,15 @@
 #include "./Vector.hpp"
 #include "./Matrix.hpp"
 
-template<typename T, template<typename> class MatrixImpl = DenseMatrix>
-	requires Matrix<MatrixImpl<T>, T>
+template<typename T, Matrix<T> MatrixImpl = DenseMatrix<T>>
 class QuadraticFunction
 {
 public:
-	const MatrixImpl<T> A;
+	const MatrixImpl A;
 	const Vector<T> b;
 	const T c;
 
-	QuadraticFunction(MatrixImpl<T> A, Vector<T> b, T c)
+	QuadraticFunction(MatrixImpl A, Vector<T> b, T c)
 	: A(std::move(A))
 	, b(std::move(b))
 	, c(std::move(c))
@@ -45,9 +44,9 @@ public:
 	private:
 		friend QuadraticFunction;
 
-		MatrixImpl<T> A;
+		MatrixImpl A;
 		Vector<T> b;
-		GradientFunc(MatrixImpl<T> A, Vector<T> b)
+		GradientFunc(MatrixImpl A, Vector<T> b)
 		: A(std::move(A))
 		, b(std::move(b))
 		{}
@@ -64,6 +63,9 @@ public:
 		return GradientFunc(A, b);
 	}
 };
+
+template<typename T, Matrix<T> MatrixImpl>
+QuadraticFunction(MatrixImpl, Vector<T>, T) -> QuadraticFunction<T, MatrixImpl>;
 
 template<typename T>
 class QuadraticFunction2d : public QuadraticFunction<T>
@@ -130,8 +132,8 @@ public:
 
 namespace helper
 {
-	template<typename T, template<typename> class MatrixImpl>
-	MatrixImpl<T> quadraticFunctionMatrixGetter(QuadraticFunction<T, MatrixImpl>);
+	template<typename T, Matrix<T> MatrixImpl>
+	MatrixImpl quadraticFunctionMatrixGetter(QuadraticFunction<T, MatrixImpl>);
 
 	template<typename T, typename S, typename U = void>
 	struct BaseQuadraticFunctionMatrixParameterT {
