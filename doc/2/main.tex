@@ -46,8 +46,19 @@
 \section{Зависимость числа итераций}
 \subsection{Параметры}
 \csvautotabular[separator=tab]{properties.tsv}
-\subsection{От числа обусловленности}
-\subsection{От размерности пространства}
+\subsection{Графики}
+\pgfplotstableread{gradient-descent.tsv}{\ratiosCsv}
+\begin{tikzpicture}[trim axis left]
+	\begin{axis}[
+		scale only axis,
+		width=\textwidth,
+		legend style={at={(0.5,-0.2)},anchor=north},
+		xlabel = {число обусловленности},
+		ylabel = {итерация},
+	]
+	\addplot table [x={cond}, y={n=10}] {\ratiosCsv};
+	\end{axis}
+\end{tikzpicture}
 
 \section{Вывод}
 

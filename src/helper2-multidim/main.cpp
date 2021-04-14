@@ -136,6 +136,29 @@ int main(int argc, char* argv[])
 
 	double eps = 1e-5;
 
+	{
+		Table<std::string> paramsTable;
+		paramsTable.xName = "property";
+		paramsTable
+			.add("value", "epsilon", std::to_string(eps))
+			.add("value", "start", "(1;...1)");
+		auto prop = std::ofstream(prefix + "/properties.tsv");
+		prop << paramsTable;
+		std::cout << paramsTable << std::flush;
+		for (auto const& a : paramsTable.cols)
+			std::cout << a.first << std::endl;
+	}
+
+	auto const& saveToFiles = [&]() {
+		for (auto const& g : graphs)
+		{
+			auto name = g.first;
+			std::replace(name.begin(), name.end(), ' ', '-');
+			auto prop = std::ofstream(prefix + "/" + name + ".tsv");
+			prop << g.second;
+		}
+	};
+
 	auto const& addResult = [&](std::string const& approxName, Info const& info, Report const& r) {
 		if (r.interrupted)
 		{
@@ -150,10 +173,9 @@ int main(int argc, char* argv[])
 
 	for (int n = 10; n <= 10'000; n *= 10)
 	{
-		std::cout << "n: " << n << std::endl;
 		auto distr_n = std::uniform_int_distribution<int>(0, n - 1);
 
-		for (int k = 1; k < 200; k += 100)
+		for (int k = 1; k < 200; k += 10)
 		{
 			auto distr_k = std::uniform_int_distribution<int>(1, k);
 
@@ -173,25 +195,11 @@ int main(int argc, char* argv[])
 				addResult(name, info, rep);
 			});
 		}
+
+		std::cout << "saving n=" << n << std::flush;
+		saveToFiles();
+		std::cout << "\t✓" << std::endl;
 	}
 
-	{
-		Table<std::string> paramsTable;
-		paramsTable.xName = "property";
-		paramsTable << std::make_pair<std::string, std::map<std::string, std::string>>("epsilon",
-		                                                                               {{"value", std::to_string(eps)}});
-		paramsTable << std::make_pair<std::string, std::map<std::string, std::string>>("start", {{"value", "(1;...1)"}});
-
-		auto prop = std::ofstream(prefix + "/properties.tsv");
-		prop << paramsTable;
-	}
-
-	for (auto const& g : graphs)
-	{
-		auto name = g.first;
-		std::replace(name.begin(), name.end(), ' ', '-');
-		auto prop = std::ofstream(prefix + "/" + name + ".tsv");
-		prop << g.second;
-	}
 	return 0;
 }
