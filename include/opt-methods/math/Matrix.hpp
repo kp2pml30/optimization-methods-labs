@@ -9,7 +9,7 @@
 template<typename T, typename S>
 concept Matrix = requires(T& t, T const& ct, Vector<S> const& v) {
 	{ ct.transpose() } -> std::same_as<T>;
-	{ v * ct } -> std::same_as<Vector<S>>;
+	{ ct * v } -> std::same_as<Vector<S>>;
 	{ ct.dims() } -> std::same_as<size_t>;
 };
 

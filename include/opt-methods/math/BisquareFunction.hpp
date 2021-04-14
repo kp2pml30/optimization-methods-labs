@@ -9,6 +9,7 @@
 #include "./Matrix.hpp"
 
 template<typename T, template<typename> class MatrixImpl = DenseMatrix>
+	requires Matrix<MatrixImpl<T>, T>
 class QuadraticFunction
 {
 public:
