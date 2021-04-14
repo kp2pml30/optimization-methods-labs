@@ -29,7 +29,7 @@ public:
 
 		P x = r.p;
 		auto fx = func(x);
-		Scalar<P> alpha = 0.1;
+		Scalar<P> alpha = r.r;
 
 		auto gradf = func.grad();
 

@@ -10,6 +10,8 @@
 #include <functional>
 #include <numeric>
 #include <random>
+#include <thread>
+#include <mutex>
 
 namespace
 {
@@ -94,6 +96,15 @@ namespace
 			return *this;
 		}
 
+		Table& merge(Table&& other)
+		{
+			xName = other.xName;
+			x.merge(other.x);
+			for (auto&& [str, map] : other.cols)
+				cols[str].merge(map);
+			return *this;
+		}
+
 		Table& operator<<(std::pair<std::string, std::map<T, T>> w)
 		{
 			for (auto const& v : w.second)
@@ -123,6 +134,26 @@ namespace
 	};
 } // namespace
 
+template<typename Task>
+struct TaskQueue
+{
+	std::vector<Task> tasks;
+	std::mutex m;
+
+	TaskQueue(std::vector<Task> tasks)
+	: tasks(std::move(tasks))
+	{}
+
+	std::optional<Task> get()
+	{
+		std::unique_lock lg(m);
+		if (tasks.empty()) return {};
+		auto task = std::move(tasks.back());
+		tasks.pop_back();
+		return task;
+	}
+};
+
 int main(int argc, char* argv[])
 {
 	if (argc != 2)
@@ -132,6 +163,8 @@ int main(int argc, char* argv[])
 	}
 	std::string prefix = argv[1];
 
+	int nThreads = std::thread::hardware_concurrency();
+	std::vector<std::map<std::string, Table<int>>> graphsStorage(nThreads);
 	std::map<std::string, Table<int>> graphs;
 
 	double eps = 1e-5;
@@ -141,7 +174,7 @@ int main(int argc, char* argv[])
 		paramsTable.xName = "property";
 		paramsTable
 			.add("value", "epsilon", std::to_string(eps))
-			.add("value", "start", "(1;...1)");
+			.add("value", "start", "(1;...;1)");
 		auto prop = std::ofstream(prefix + "/properties.tsv");
 		prop << paramsTable;
 		std::cout << paramsTable << std::flush;
@@ -159,47 +192,71 @@ int main(int argc, char* argv[])
 		}
 	};
 
-	auto const& addResult = [&](std::string const& approxName, Info const& info, Report const& r) {
+	auto const& addResult = [&](int storage_id, std::string const& approxName, Info const& info, Report const& r) {
 		if (r.interrupted)
 		{
 			std::cerr << "interrupted" << std::endl;
 			abort();
 		}
-		graphs[approxName].xName = "cond";
-		graphs[approxName].add(info.cond, "n=" + std::to_string(info.dim), (int)r.iterations);
+		graphsStorage[storage_id][approxName].xName = "cond";
+		graphsStorage[storage_id][approxName].add(info.cond, "n=" + std::to_string(info.dim), (int)r.iterations);
 	};
 
 	auto engine = std::default_random_engine();
 
-	for (int n = 10; n <= 10'000; n *= 10)
-	{
-		auto distr_n = std::uniform_int_distribution<int>(0, n - 1);
+	const std::vector<int> ns = {10, 100, 1'000, 10'000};
+	constexpr int kBegin = 1, kEnd = 2001, kStride = 100;
+	constexpr int kN = (kEnd - kBegin) / kStride;
 
-		for (int k = 1; k < 200; k += 10)
+	std::vector<std::pair<int, int>> tasksStg;
+	for (int k = kBegin; k <= kEnd; k += kStride)
+		for (int n : ns)
+			tasksStg.push_back({n, k});
+	TaskQueue<std::pair<int, int>> tasks(tasksStg);
+
+	auto testTable = [&](int thread_id) {
+		while (true)
 		{
-			auto distr_k = std::uniform_int_distribution<int>(1, k);
+			auto task = tasks.get();
+			if (!task.has_value())
+			{
+				std::cout << "ran out of tasks...\n";
+				return;
+			}
+
+			auto [n, k] = *task;
+			std::cout << (std::to_string(thread_id) + ": " + std::to_string(n) + " " + std::to_string(k) + "\n");
+
+			auto distrK = std::uniform_real_distribution<Type>(1, k);
 
 			Info info;
 			info.dim  = n;
 			info.cond = k;
+
 			std::valarray<Type> diag(n);
-			std::generate(std::next(std::begin(diag)), std::prev(std::end(diag)), [&]() { return distr_k(engine); });
-			diag[0]     = 1;
-			diag[n - 1] = k;
-			std::swap(diag[n - 1], diag[distr_n(engine)]);
-			std::swap(diag[0],     diag[distr_n(engine)]);
+			diag[0] = 1;
+			diag[1] = k;
+			std::generate(std::next(std::begin(diag), 2), std::end(diag), [&]() { return distrK(engine); });
+			std::sort(std::begin(diag), std::end(diag));
+
 			auto bifunc        = Bi2Func(Mat(diag), Vec(0.0, n), 0.0);
-			auto const& onedim = []() {
-				return GoldenSectionApproximator<Type, Type>(1e-5); };
-			test(onedim, eps, bifunc, PReg(Vec(1.0, n), 10), [&](std::string const& name, Report const& rep) {
-				addResult(name, info, rep);
+			auto const& onedim = []() { return GoldenSectionApproximator<Type, Type>(1e-5); };
+			test(onedim, eps, bifunc, PReg(Vec(1.0, n), 2.0 / (1 + k)), [&](std::string const& name, Report const& rep) {
+				addResult(thread_id, name, info, rep);
 			});
 		}
+	};
 
-		std::cout << "saving n=" << n << std::flush;
-		saveToFiles();
-		std::cout << "\t✓" << std::endl;
-	}
+	std::vector<std::thread> factory;
+	for (int i = 0; i < nThreads; i++)
+		factory.push_back(std::thread(testTable, i));
+	for (int i = 0; i < nThreads; i++)
+		factory[i].join();
+	for (auto& storage_block : graphsStorage)
+		for (auto&& [name, table] : storage_block)
+			graphs[name].merge(std::move(table));
+
+	saveToFiles();
 
 	return 0;
 }
