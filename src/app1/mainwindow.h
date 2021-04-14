@@ -10,6 +10,7 @@
 #include "opt-methods/solvers/IterationalSolver.hpp"
 #include "opt-methods/solvers/Erased.hpp"
 #include "opt-methods/approximators/all.hpp"
+#include "opt-methods/solvers/BaseApproximatorDraw.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui

@@ -85,7 +85,6 @@ int main(int argc, char* argv[])
 
 	approximators.each(walker, RangeBounds<double>(-1, 1));
 
-
 	cout = std::ofstream(prefix + "/ratios.tsv");
 	cout << 'i';
 	for (auto const& i : names)

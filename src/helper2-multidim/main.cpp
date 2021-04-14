@@ -3,6 +3,7 @@
 #include "opt-methods/solvers/BaseApproximatorDraw.hpp"
 #include "opt-methods/util/Charting.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <set>
 #include <algorithm>
@@ -122,8 +123,15 @@ namespace
 	};
 } // namespace
 
-int main()
+int main(int argc, char* argv[])
 {
+	if (argc != 2)
+	{
+		std::cerr << "expected single argument: <path>" << std::endl;
+		return 1;
+	}
+	std::string prefix = argv[1];
+
 	std::map<std::string, Table<int>> graphs;
 
 	double eps = 1e-5;
@@ -142,9 +150,10 @@ int main()
 
 	for (int n = 10; n <= 10'000; n *= 10)
 	{
+		std::cout << "n: " << n << std::endl;
 		auto distr_n = std::uniform_int_distribution<int>(0, n - 1);
 
-		for (int k = 1; k < 2000; k += 100)
+		for (int k = 1; k < 200; k += 100)
 		{
 			auto distr_k = std::uniform_int_distribution<int>(1, k);
 
@@ -172,13 +181,17 @@ int main()
 		paramsTable << std::make_pair<std::string, std::map<std::string, std::string>>("epsilon",
 		                                                                               {{"value", std::to_string(eps)}});
 		paramsTable << std::make_pair<std::string, std::map<std::string, std::string>>("start", {{"value", "(1;...1)"}});
-		std::cout << "-== params ==-\n\n" << paramsTable;
+
+		auto prop = std::ofstream(prefix + "/properties.tsv");
+		prop << paramsTable;
 	}
 
 	for (auto const& g : graphs)
 	{
-		std::cout << "-== " << g.first << " ==-\n\n";
-		std::cout << g.second << std::endl;
+		auto name = g.first;
+		std::replace(name.begin(), name.end(), ' ', '-');
+		auto prop = std::ofstream(prefix + "/" + name + ".tsv");
+		prop << g.second;
 	}
 	return 0;
 }

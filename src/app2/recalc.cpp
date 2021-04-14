@@ -3,7 +3,6 @@
 
 #include "opt-methods/multidim/all.hpp"
 #include "opt-methods/util/Charting.hpp"
-#include "opt-methods/solvers/BaseApproximatorDraw.hpp"
 
 #include <QCheckBox>
 #include <QtCharts/QValueAxis>
