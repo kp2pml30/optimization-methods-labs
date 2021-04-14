@@ -95,6 +95,11 @@ struct Generator
 		return static_cast<bool>(handle);
 	}
 
+	bool hasValue() const
+	{
+		return handle.promise().value.index() == 0;
+	}
+
 	T const& getValue() const
 	{
 		return *std::get<0>(handle.promise().value);

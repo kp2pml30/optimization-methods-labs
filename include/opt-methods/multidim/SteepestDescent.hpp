@@ -43,6 +43,12 @@ public:
 			auto gen = onedim(curfunc, {0, r.r, bound_tag});
 			while (gen.next())
 				;
+			if (!gen.hasValue())
+			{
+				co_yield {x, r.r};
+				break;
+			}
+
 			x -= gen.getValue().p * grad;
 			co_yield {x, 0};
 		}

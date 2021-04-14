@@ -60,7 +60,7 @@ public:
 	}
 
 	template<Function<P, V> F>
-	std::optional<std::tuple<P, P, V, P>> choosePoints(F func, PointRegion<P> r, std::size_t maxIter)
+	std::optional<std::tuple<P, V, P, V, P, V>> choosePoints(F func, PointRegion<P> r, std::size_t maxIter)
 	{
 		using std::abs;
 
@@ -68,12 +68,10 @@ public:
 		auto x = (a + b) / 2;
 		auto fx = func(x);
 
-		if (abs(fx - fa) < epsilon || abs(fx - fb) < epsilon) return std::make_tuple(a, x, fx, b);
-
 		for (auto min = fa < fb ? a : b; abs(x - min) >= epsilon && maxIter > 0;
 				 maxIter--, x = (x + min) / 2, fx = func(x))
 			if (fa >= fx && fx <= fb)
-				return std::make_tuple(a, x, fx, b);
+				return std::make_tuple(a, fa, x, fx, b, fb);
 		return {};
 	}
 
@@ -90,8 +88,7 @@ public:
 			co_return;
 		}
 
-		auto [x1, x2, f2, x3] = *res;
-		auto f1 = func(x1), f3 = func(x3);
+		auto [x1, f1, x2, f2, x3, f3] = *res;
 
 		std::optional<P> last_x_bar;
 
@@ -101,8 +98,8 @@ public:
 			auto [a0, a1, a2, x_bar] = approxParabola(x1, f1, x2, f2, x3, f3);
 			if (!(abs(x2 - x1) >= epsilon && abs(x3 - x2) >= epsilon && abs(x3 - x1) >= epsilon))
 			{
-				// cannot find minimum now
-				co_yield {x1, x3, bound_tag};
+				// cannot find minimum now, return region centered in best apprioximation
+				co_yield {x2, std::max(abs(x3 - x2), abs(x1 - x2))};
 				break;
 			}
 			if (!(abs(a2) >= epsilon))
