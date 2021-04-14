@@ -19,7 +19,7 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,3">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,5">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0,5">
       <item>
        <layout class="QFormLayout" name="formLayout">
         <property name="formAlignment">
@@ -99,6 +99,13 @@
          </widget>
         </item>
        </layout>
+      </item>
+      <item>
+       <widget class="QPushButton" name="snap">
+        <property name="text">
+         <string>save screenshot</string>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QLabel" name="label_2">
@@ -192,7 +199,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>235</x>
-     <y>116</y>
+     <y>100</y>
     </hint>
     <hint type="destinationlabel">
      <x>303</x>
@@ -208,11 +215,27 @@
    <hints>
     <hint type="sourcelabel">
      <x>367</x>
-     <y>116</y>
+     <y>100</y>
     </hint>
     <hint type="destinationlabel">
      <x>462</x>
      <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>snap</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>screenshot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>304</x>
+     <y>160</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>695</x>
+     <y>-14</y>
     </hint>
    </hints>
   </connection>
@@ -224,5 +247,6 @@
   <slot>powChanged(int)</slot>
   <slot>powEpsEditingFinished()</slot>
   <slot>multiMethodChanged(int)</slot>
+  <slot>screenshot()</slot>
  </slots>
 </ui>

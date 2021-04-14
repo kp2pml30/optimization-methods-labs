@@ -119,7 +119,53 @@ public:
 		// return std::format("{}y^2 + {}xy + {}x^2 + {}y + {}x + {} = 0", y2, xy, x2, y, x, c);
 		auto [x2, xy, y2, x, y] = get2d_coefs();
 		std::stringstream sstream;
-		sstream << y2 << "y^2 + " << xy << "xy + " << x2 << "x^2 + " << y << "y +" << x << "x + " << this->c << " = 0";
+		bool was = false;
+		auto const& first = [&](auto const& coef, std::string_view str) {
+			if (coef == 0)
+				return;
+			if (std::abs(coef) == 1)
+			{
+				if (coef < 0)
+					sstream << "-";
+			}
+			else
+				sstream << coef;
+			was = true;
+			sstream << str;
+		};
+		auto const& next = [&](auto const& coef, std::string_view str) {
+			if (coef == 0)
+				return;
+			was = true;
+			if (coef > 0)
+				sstream << " + ";
+			else
+				sstream << " - ";
+			if (auto abs = std::abs(coef); abs != 1)
+				sstream << abs;
+			sstream << str;
+		};
+		auto const& last = [&](auto const& coef) {
+			if (coef == 0)
+			{
+				if (!was)
+					sstream << "0";
+				return;
+			}
+			// TODO handle was again
+			if (coef > 0)
+				sstream << " + ";
+			else
+				sstream << " - ";
+			sstream << std::abs(coef);
+		};
+		first(y2, "y^2");
+		next(x2, "x^2");
+		next(xy, "xy");
+		next(x, "x");
+		next(y, "y");
+		last(this->c);
+		sstream << " = 0";
 		return sstream.str();
 	}
 

@@ -88,8 +88,9 @@ void MainWindow::recalc()
 		std::sort(levels.begin(), levels.end());
 		levels.erase(std::unique(levels.begin(), levels.end()), levels.end());
 		/// TODO change color distribution
+		double index = 0;
 		for (auto const& a : levels)
-			addLevel(a, (a - levels.front()) / (levels.back() - levels.front()));
+			addLevel(a, std::pow(index++ / (levels.size() - 1), 4));
 	}
 	
 	if (levels.size() == 0)
@@ -98,26 +99,16 @@ void MainWindow::recalc()
 	for (auto ser : serieses)
 		chart->addSeries(ser);
 	serieses.clear();
+	// add function to legend
+	{
+		auto add = new QtCharts::QLineSeries();
+		add->setName(QString::fromStdString((std::string)bifunc));
+		add->setColor(QColor(255, 0, 0));
+		chart->addSeries(add);
+	}
 	chart->createDefaultAxes();
 	Charting::growAxisRange(Charting::axisX<QtCharts::QValueAxis>(chart), 0.1);
 	Charting::growAxisRange(Charting::axisY<QtCharts::QValueAxis>(chart), 0.1);
-	ui->visualChartView->setChart(chart, 0.5);
-#if 0
-	data.clear();
-	approx->solveUntilEnd(func, r, data);
-
-	auto* ch = ui->boundsChartView->chart();
-	ch->removeAllSeries();
-	ch->addSeries(Charting::plotFunction<QtCharts::QScatterSeries>(
-			[&](std::size_t i) { return std::log(2 * data[i].second.r); },
-			RangeBounds<std::size_t>(0, data.size() - 1),
-			data.size(),
-			"Search bound size log on each iteration"));
-	Charting::createNaturalSequenceAxes(ch, static_cast<int>(data.size()));
-	Charting::axisX(ch)->setTitleText("Number of iterations");
-	Charting::axisY(ch)->setTitleText("log of search bound");
-#endif
+	ui->visualChartView->setChart(chart, 0.1);
 }
-
-
 

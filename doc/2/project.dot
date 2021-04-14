@@ -8,9 +8,12 @@ digraph Project {
 
 		valarray[label="std::valarray"];
 		valarray -> Vector;
-		valarray -> Matrix [style="dotted"];
+		valarray -> DenseMatrix [style="dotted"];
+		valarray -> DiagonalMatrix [style="dotted"];
 		BisquareFunction[label="BisquareFunction|{Matrix|Vector|\<scalar\>}"];
 		PointRegion[label="PointRegion|{\<vector\>|\<scalar\>}"];
+		Matrix -> DenseMatrix;
+		Matrix -> DiagonalMatrix;
 	}
 	subgraph cluster_Onedim {
 		label = "Одномерные методы";
@@ -48,7 +51,6 @@ digraph Project {
 	}
 	ApproxGenerator -> Approximator:f1;
 	Fibonacci -> SteepestGradient [ltail=cluster_Onedim];
-	Fibonacci -> ConjugateGradientDescent [ltail=cluster_Onedim];
 	Approximator -> Fibonacci [lhead=cluster_Onedim];
 	Approximator -> SteepestGradient [lhead=cluster_Multidim];
 	subgraph cluster_Helpers {
@@ -56,7 +58,7 @@ digraph Project {
 		color=blue;
 
 		IterationalSolver[label="IterationalSolver|решает итеративно с условием|<f1>Approximator"];
-		IterationalSolverBuilder[label="IterationalSolverBuilder|векторный IterationalSolver|Approximator..."];
+		IterationalSolverBuilder[label="IterationalSolverBuilder|векторный IterationalSolver|Approximator[]"];
 		IterationalSolver -> IterationalSolverBuilder [style="dotted"];
 	}
 	Approximator -> IterationalSolver:f1 [style="dotted"];

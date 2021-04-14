@@ -40,6 +40,7 @@ public slots:
 	void multiMethodChanged(int);
 	void epsChanged(double);
 	void powChanged(int);
+	void screenshot();
 
 private:
 	using Approx = ErasedApproximator<double, double>;
