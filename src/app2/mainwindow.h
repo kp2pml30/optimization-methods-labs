@@ -69,7 +69,7 @@ private:
 	template<typename P, typename V>
 	using FibonacciSizeTApproximator = FibonacciApproximator<P, V>; // for MSVC to match template template-parameter
 
-	void addVisual(MApprox& approx, std::vector<double>& pointZts);
+	void addVisual(MApprox& approx, std::vector<double>& pointZts, std::vector<QtCharts::QLineSeries*>& series);
 
 	static inline std::vector<OneDimFactoryT> factories = getFactories<DichotomyApproximator,
 																																		 FibonacciSizeTApproximator,

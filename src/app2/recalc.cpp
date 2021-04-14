@@ -10,7 +10,9 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QLegendMarker>
 
-void MainWindow::addVisual(MApprox& desc, std::vector<double>& ys)
+#include <iostream>
+
+void MainWindow::addVisual(MApprox& desc, std::vector<double>& ys, std::vector<QtCharts::QLineSeries*>& serieses)
 {
 	if (auto iter = gradientTogglers.find(desc.name()); iter == gradientTogglers.end() || !iter->second->isChecked())
 		return;
@@ -19,8 +21,14 @@ void MainWindow::addVisual(MApprox& desc, std::vector<double>& ys)
 	*series << QPointF{startFrom[0], startFrom[1]};
 	ys.push_back(bifunc(startFrom));
 	auto gen = desc(bifunc, {startFrom, 10});
+	int i = 0;
 	while (gen.next())
 	{
+		if (i++ >= 1000)
+		{
+			std::cerr << desc.name() << "interrupted on " << i << " iteration" << std::endl;
+			break;
+		}
 		auto res = gen.getValue();
 		auto p = res.p;
 		ys.push_back(bifunc(p));
@@ -28,7 +36,7 @@ void MainWindow::addVisual(MApprox& desc, std::vector<double>& ys)
 		*series << QPointF{p[0], p[1]};
 	}
 	series->setName(desc.name());
-	chart->addSeries(series);
+	serieses.push_back(series);
 }
 
 void MainWindow::recalc()
@@ -42,17 +50,18 @@ void MainWindow::recalc()
 
 	auto erasedProvider = [&]() { return factories[onedimIndex].first(eps); };
 	std::vector<double> levels;
+	std::vector<QtCharts::QLineSeries*> serieses;
 	{
 		auto desc = MApprox(TypeTag<GradientDescent<Vector<double>, double>>{}, eps);
-		addVisual(desc, levels);
+		addVisual(desc, levels, serieses);
 	}
 	{
 		auto desc = MApprox(TypeTag<SteepestDescent<Vector<double>, double, ErasedApproximator<double, double>>>{}, eps, erasedProvider());
-		addVisual(desc, levels);
+		addVisual(desc, levels, serieses);
 	}
 	{
 		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double, QuadraticFunction2d<double>>>{}, eps);
-		addVisual(desc, levels);
+		addVisual(desc, levels, serieses);
 	}
 
 	auto addLevel = [&](double delta, double colCoef) {
@@ -84,9 +93,12 @@ void MainWindow::recalc()
 			addLevel(a, (a - levels.front()) / (levels.back() - levels.front()));
 	}
 	
-	if (chart->series().size() == 0)
+	if (levels.size() == 0)
 		for (int i = 0; i <= 100; i++)
 			addLevel(i, i / 100.0);
+	for (auto ser : serieses)
+		chart->addSeries(ser);
+	serieses.clear();
 	chart->createDefaultAxes();
 	Charting::growAxisRange(Charting::axisX<QtCharts::QValueAxis>(chart), 0.1);
 	Charting::growAxisRange(Charting::axisY<QtCharts::QValueAxis>(chart), 0.1);
