@@ -8,20 +8,20 @@
 #include "./Vector.hpp"
 #include "./Matrix.hpp"
 
-template<typename T>
+template<typename T, template<typename> class MatrixImpl = DenseMatrix>
 class QuadraticFunction
 {
 public:
-	const Matrix<T> A;
+	const MatrixImpl<T> A;
 	const Vector<T> b;
 	const T c;
 
-	QuadraticFunction(Matrix<T> A, Vector<T> b, T c)
+	QuadraticFunction(MatrixImpl<T> A, Vector<T> b, T c)
 	: A(std::move(A))
 	, b(std::move(b))
 	, c(std::move(c))
 	{
-		assert(this->A.n == this->b.size());
+		assert(this->A.dims() == this->b.size());
 	}
 
 	QuadraticFunction swap() const noexcept
@@ -29,12 +29,12 @@ public:
 		/// TEST ME
 		Vector<T> b_rev = b;
 		std::reverse(std::begin(b_rev), std::end(b_rev));
-		return BisquareFunction(A.transpose(), b_rev, c);
+		return QuadraticFunction(A.transpose(), b_rev, c);
 	}
 
 	T operator()(Vector<T> const& v) const
 	{
-		assert(v.size() == A.n);
+		assert(v.size() == A.dims());
 		return dot(A * v, v) / 2 + dot(b, v) + c;
 	}
 
@@ -44,16 +44,16 @@ public:
 	private:
 		friend QuadraticFunction;
 
-		Matrix<T> A;
+		MatrixImpl<T> A;
 		Vector<T> b;
-		GradientFunc(Matrix<T> A, Vector<T> b)
+		GradientFunc(MatrixImpl<T> A, Vector<T> b)
 		: A(std::move(A))
 		, b(std::move(b))
 		{}
 	public:
 		Vector<T> operator()(Vector<T> const& v) const
 		{
-			assert(v.size() == A.n);
+			assert(v.size() == A.dims());
 			return A * v + b;
 		}
 	};
@@ -69,7 +69,7 @@ class QuadraticFunction2d : public QuadraticFunction<T>
 {
 public:
 	QuadraticFunction2d(T x2, T xy, T y2, T x, T y, T c)
-	: QuadraticFunction<T>(Matrix<T>{{x2 * 2, xy, xy, y2 * 2}}, Vector<T>{x, y}, c)
+	: QuadraticFunction<T>(DenseMatrix<T>{{x2 * 2, xy, xy, y2 * 2}}, Vector<T>{x, y}, c)
 	{}
 
 	std::tuple<T, T, T, T, T> get2d_coefs() const
@@ -126,3 +126,24 @@ public:
 		return QuadraticFunction2d(r(), r(), r(), r(), r(), r());
 	}
 };
+
+namespace helper
+{
+	template<typename T, template<typename> class MatrixImpl>
+	MatrixImpl<T> quadraticFunctionMatrixGetter(QuadraticFunction<T, MatrixImpl>);
+
+	template<typename T, typename S, typename U = void>
+	struct BaseQuadraticFunctionMatrixParameterT {
+	};
+
+	template<typename T, typename S>
+	struct BaseQuadraticFunctionMatrixParameterT<T, S, std::void_t<decltype(quadraticFunctionMatrixGetter<S>(std::declval<T>()))>> {
+		using type = decltype(quadraticFunctionMatrixGetter<S>(std::declval<T>()));
+	};
+}
+
+template<typename T, typename S>
+concept QuadraticFunctionImpl = requires {
+	typename helper::BaseQuadraticFunctionMatrixParameterT<T, S>::type;
+};
+

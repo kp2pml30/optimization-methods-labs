@@ -79,7 +79,7 @@ void MainWindow::recalc()
 		addVisual(desc, levels);
 	}
 	{
-		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double>>{}, eps);
+		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double, QuadraticFunction2d<double>>>{}, eps);
 		addVisual(desc, levels);
 	}
 

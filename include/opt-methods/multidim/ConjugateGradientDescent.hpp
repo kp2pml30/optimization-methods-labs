@@ -1,10 +1,18 @@
 #pragma once
 
+#include <concepts>
+
 #include "opt-methods/solvers/BaseApproximator.hpp"
 #include "opt-methods/math/BisquareFunction.hpp"
 #include "opt-methods/solvers/function/ErasedFunction.hpp"
 
-template<typename From, typename To>
+namespace helper
+{
+	template<typename T, typename... FuncTs>
+	concept FunctionAction = (std::invocable<T, FuncTs const&> && ...);
+}
+
+template<typename From, typename To, QuadraticFunctionImpl<Scalar<From>>... FuncTs>
 class ConjugateGradientDescent : public BaseApproximator<From, To, ConjugateGradientDescent<From, To>>
 {
 private:
@@ -18,31 +26,29 @@ public:
 	using P = From;
 	using V = To;
 
+private:
+	template<QuadraticFunctionImpl<Scalar<From>> FuncHeadT,
+					 QuadraticFunctionImpl<Scalar<From>>... FuncTailT>
+	void getErasedTarget(ErasedFunction<V(P const &)> const& f, helper::FunctionAction<FuncTs...> auto action)
+	{
+		auto func = f.template target<FuncHeadT>();
+		if (func != nullptr)
+			action(*func);
+		else if constexpr (sizeof...(FuncTailT) > 0)
+			getErasedTarget<FuncTailT...>(f, std::move(action));
+		else
+			abort(); // nothing matches
+	}
+
+public:
 	Scalar<P> epsilon2;
 
 	ConjugateGradientDescent(decltype(epsilon2) epsilon)
 	: epsilon2(epsilon * epsilon)
 	{}
 
-	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func_, PointRegion<P> r)
-	{
+	ApproxGenerator<P, V> implementQuadratic(QuadraticFunctionImpl<Scalar<P>> auto const& func, PointRegion<P> r) {
 		BEGIN_APPROX_COROUTINE(data);
-
-		QuadraticFunction<Scalar<P>> *func_ptr;
-		if constexpr (std::is_same_v<F, ErasedFunction<V(P const&)>>)
-		{
-			func_ptr = func_.target<QuadraticFunction2d<Scalar<P>>>();
-			if (func_ptr == nullptr)
-				func_ptr = func_.target<QuadraticFunction<Scalar<P>>>();
-			assert(func_ptr);
-		}
-		else if constexpr (std::is_same_v<F, QuadraticFunction2d<Scalar<P>>> ||
-											 std::is_same_v<F, QuadraticFunction<Scalar<P>>>)
-			func_ptr = &func_;
-		else
-			abort(); // no static assert allowed, thanks GCC UwU
-		QuadraticFunction<Scalar<P>> &func = *func_ptr;
 
 		auto gradf = func.grad();
 
@@ -70,13 +76,39 @@ public:
 			Scalar<P> alpha = len2(gradx) / app;
 
 			x += alpha * p;
-			auto next_gradx = gradx + alpha * ap;
+			decltype(gradx) next_gradx = gradx + alpha * ap;
 
 			Scalar<P> beta = len2(next_gradx) / len2(gradx);
 			gradx = next_gradx;
 			p = -gradx + beta * p;
 
 			co_yield {x, 0};
+		}
+	}
+
+	ApproxGenerator<P, V> implementQuadratic(ErasedFunction<V(P const&)> const& func, PointRegion<P> r)
+	{
+		if constexpr (sizeof...(FuncTs) > 0)
+		{
+			ApproxGenerator<P, V> res;
+			getErasedTarget<FuncTs...>(func, [&, r](auto& f) { res = implementQuadratic(f, r); });
+			return res;
+		}
+		// cannot get anything from erased function
+		abort();
+	}
+
+	template<Function<P, V> F>
+		requires QuadraticFunctionImpl<F> || std::convertible_to<F, ErasedFunction<V(P const&)>>
+	ApproxGenerator<P, V> operator()(F func_, PointRegion<P> r)
+	{
+		BEGIN_APPROX_COROUTINE(data);
+
+		auto gen = implementQuadratic(func_, r);
+
+		while (gen.next()) {
+			*data = gen.getIterationData();
+			co_yield gen.getValue();
 		}
 	}
 };
