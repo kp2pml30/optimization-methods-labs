@@ -1,0 +1,62 @@
+\documentclass[russian, english]{article}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\usepackage{graphicx}
+\usepackage{csvsimple}
+\usepackage{hyperref}
+\usepackage[pdf]{graphviz}
+\usepackage[final]{pdfpages}
+
+\inputencoding{utf8}
+\def\code#1{\texttt{#1}}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+	{\scshape\LARGE Методы оптимизации \par}
+	\vspace{1cm}
+	{\scshape\Large Лабораторная работа №2\par}
+	\vspace{2cm}
+	{\Large\itshape Дмитрий Проценко M3234 \par
+	Кирилл Прокопенко M3236 \par
+	Николай Холявин M3238 \par}
+	\vfill
+	ИТМО y2019
+	\vfill
+	{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Цель}
+Исследовать методы:
+\begin{itemize}
+	\item градиентного спуска
+	\item наискорейшего спуска
+	\item сопряженных градиентов
+\end{itemize}
+
+\section{Примеры квадратичных функций}
+\section{Зависимость числа итераций}
+\subsection{От числа обусловленности}
+\subsection{От размерности пространства}
+
+\section{Вывод}
+
+
+\appendix
+\section{Код}
+Основано на первой лабораторной, исправлены некоторые архитекнутрные недостатки.
+
+\section{Диаграмма классов}
+Из-за использования концептов doxygen не сгенерирует адекватную диаграмму.
+%\setboolean{@twoside}{false}
+\includepdf[pages=-,pagecommand={},width=\paperwidth]{project.pdf}
+
+\end{document}

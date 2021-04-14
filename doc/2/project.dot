@@ -1,0 +1,63 @@
+digraph Project {
+	node[shape=record];
+	rankdir="LR";
+	compound=true;
+	subgraph cluster_Math {
+		label = Математика;
+		color=blue;
+
+		valarray[label="std::valarray"];
+		valarray -> Vector;
+		Matrix;
+		BisquareFunction[label="BisquareFunction|{Matrix|Vector|\<scalar\>}"];
+		PointRegion[label="PointRegion|{\<vector\>|\<scalar\>}"];
+	}
+	subgraph cluster_Onedim {
+		label = "Одномерные методы";
+		color=blue;
+
+		Dichotomy;
+		Brent;
+		Fibonacci;
+		GoldenSection;
+		Parabolic;
+	}
+	subgraph cluster_Multidim {
+		label = "Многомерные методы";
+		color=blue;
+
+		GradientDescent;
+		SteepestGradient;
+		ConjugateGradientDescent;
+	}
+	subgraph cluster_Coroutines {
+		label = "Корутины";
+		color=blue;
+
+		Promise -> Generator [style="dotted"];
+		Generator -> ApproxGenerator;
+		Promise -> ApproxPromise;
+		ApproxPromise -> ApproxGenerator [style="dotted"];
+	}
+	subgraph cluster_Concepts {
+		label = "концепты";
+		color=blue;
+
+		Function[label="Function|call: (\<from\>) → \<to\>|grad: () → Function\<(\<from\>) → from.substitute_scalar_with(to)\>"];
+		Approximator[label="Approximator|<f1>call: (\<vector\>, PointRegion) → ApproxGenerator|name?|drawable?"]
+	}
+	ApproxGenerator -> Approximator:f1;
+	Fibonacci -> SteepestGradient [ltail=cluster_Onedim];
+	Fibonacci -> ConjugateGradientDescent [ltail=cluster_Onedim];
+	Approximator -> Fibonacci [lhead=cluster_Onedim];
+	Approximator -> SteepestGradient [lhead=cluster_Multidim];
+	subgraph cluster_Helpers {
+		label = "вспомогательные классы";
+		color=blue;
+
+		IterationalSolver[label="IterationalSolver|решает итеративно с условием|<f1>Approximator"];
+		IterationalSolverBuilder[label="IterationalSolverBuilder|векторный IterationalSolver|Approximator..."];
+		IterationalSolver -> IterationalSolverBuilder [style="dotted"];
+	}
+	Approximator -> IterationalSolver:f1;
+}
