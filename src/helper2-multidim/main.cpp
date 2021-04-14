@@ -5,16 +5,20 @@
 
 #include <iostream>
 #include <set>
+#include <algorithm>
+#include <functional>
+#include <numeric>
+#include <random>
 
 namespace
 {
 	using Type    = double;
-	using Mat     = DenseMatrix<Type>;
+	using Mat     = DiagonalMatrix<Type>;
 	using Vec     = Vector<Type>;
-	using Bi2Func = QuadraticFunction<Type>;
+	using Bi2Func = QuadraticFunction<Type, Mat>;
 	using PReg    = PointRegion<Vec>;
 
-	constexpr std::size_t ITERATIONS_LIMIT = 100;
+	constexpr std::size_t ITERATIONS_LIMIT = 50'000;
 
 	struct Report
 	{
@@ -50,10 +54,7 @@ namespace
 	template<typename T>
 	concept OnedimProvider = requires(T const& t)
 	{
-		{
-			t()
-		}
-		->Approximator<Type, Type>;
+		{ t() } -> Approximator<Type, Type>;
 	};
 
 	void test(OnedimProvider auto const& oneDimProvider,
@@ -81,7 +82,6 @@ namespace
 	template<typename T>
 	struct Table
 	{
-		// axis_name -> value
 		std::set<T> x;
 		std::string xName = "x";
 		std::map<std::string, std::map<T, T>> cols;
@@ -135,17 +135,35 @@ int main()
 			abort();
 		}
 		graphs[approxName].xName = "cond";
-		graphs[approxName].add(info.cond, "n=" + std::to_string(info.dim), r.iterations);
+		graphs[approxName].add(info.cond, "n=" + std::to_string(info.dim), (int)r.iterations);
 	};
 
+	auto engine = std::default_random_engine();
+
+	for (int n = 10; n <= 10'000; n *= 10)
 	{
-		Info info;
-		info.dim           = 2;
-		auto bifunc        = QuadraticFunction2d<Type>(1, 0, 1, 0, 0, -1);
-		auto const& onedim = []() { return GoldenSectionApproximator<Type, Type>(1e-5); };
-		test(onedim, eps, bifunc, PReg({1, 1}, 10), [&](std::string const& name, Report const& rep) {
-			addResult(name, info, rep);
-		});
+		auto distr_n = std::uniform_int_distribution<int>(0, n - 1);
+
+		for (int k = 1; k < 2000; k += 100)
+		{
+			auto distr_k = std::uniform_int_distribution<int>(1, k);
+
+			Info info;
+			info.dim  = n;
+			info.cond = k;
+			std::valarray<Type> diag(n);
+			std::generate(std::next(std::begin(diag)), std::prev(std::end(diag)), [&]() { return distr_k(engine); });
+			diag[0]     = 1;
+			diag[n - 1] = k;
+			std::swap(diag[n - 1], diag[distr_n(engine)]);
+			std::swap(diag[0],     diag[distr_n(engine)]);
+			auto bifunc        = Bi2Func(Mat(diag), Vec(0.0, n), 0.0);
+			auto const& onedim = []() {
+				return GoldenSectionApproximator<Type, Type>(1e-5); };
+			test(onedim, eps, bifunc, PReg(Vec(1.0, n), 10), [&](std::string const& name, Report const& rep) {
+				addResult(name, info, rep);
+			});
+		}
 	}
 
 	{
