@@ -12,6 +12,7 @@
 #include <random>
 #include <thread>
 #include <mutex>
+#include <filesystem>
 
 namespace
 {
@@ -138,15 +139,24 @@ template<typename Task>
 struct TaskQueue
 {
 	std::vector<Task> tasks;
+	int nTasks, nCompleted = 0, percentage = 0;
 	std::mutex m;
 
-	TaskQueue(std::vector<Task> tasks)
-	: tasks(std::move(tasks))
+	TaskQueue(std::vector<Task> tasks, int nThreads)
+	: tasks(std::move(tasks)), nTasks((int)this->tasks.size())
+	, nCompleted(-nThreads)
 	{}
 
 	std::optional<Task> get()
 	{
 		std::unique_lock lg(m);
+
+		++nCompleted;
+		int newPercentage = nCompleted * 100 / nTasks;
+		if (newPercentage > percentage) {
+			std::cout << "\r" << (percentage = newPercentage) << "% complete";
+		}
+
 		if (tasks.empty()) return {};
 		auto task = std::move(tasks.back());
 		tasks.pop_back();
@@ -172,9 +182,7 @@ int main(int argc, char* argv[])
 	{
 		Table<std::string> paramsTable;
 		paramsTable.xName = "property";
-		paramsTable
-			.add("value", "epsilon", std::to_string(eps))
-			.add("value", "start", "(1;...;1)");
+		paramsTable.add("value", "epsilon", std::to_string(eps)).add("value", "start", "(1;...;1)");
 		auto prop = std::ofstream(prefix + "/properties.tsv");
 		prop << paramsTable;
 		std::cout << paramsTable << std::flush;
@@ -182,50 +190,30 @@ int main(int argc, char* argv[])
 			std::cout << a.first << std::endl;
 	}
 
-	auto const& saveToFiles = [&]() {
+	auto const& saveToFiles = [&](std::string dir) {
 		for (auto const& g : graphs)
 		{
+			namespace fs = std::filesystem;
+
 			auto name = g.first;
 			std::replace(name.begin(), name.end(), ' ', '-');
-			auto prop = std::ofstream(prefix + "/" + name + ".tsv");
+			auto dirp = fs::path(prefix)/dir;
+			fs::create_directories(dirp);
+			auto prop = std::ofstream(dirp/(name + ".tsv"));
 			prop << g.second;
 		}
 	};
 
-	auto const& addResult = [&](int storage_id, std::string const& approxName, Info const& info, Report const& r) {
-		if (r.interrupted)
-		{
-			std::cerr << "interrupted" << std::endl;
-			abort();
-		}
-		graphsStorage[storage_id][approxName].xName = "cond";
-		graphsStorage[storage_id][approxName].add(info.cond, "n=" + std::to_string(info.dim), (int)r.iterations);
-	};
-
 	auto engine = std::default_random_engine();
 
-	const std::vector<int> ns = {10, 100, 1'000, 10'000};
-	constexpr int kBegin = 1, kEnd = 2001, kStride = 100;
-	constexpr int kN = (kEnd - kBegin) / kStride;
-
-	std::vector<std::pair<int, int>> tasksStg;
-	for (int k = kBegin; k <= kEnd; k += kStride)
-		for (int n : ns)
-			tasksStg.push_back({n, k});
-	TaskQueue<std::pair<int, int>> tasks(tasksStg);
-
-	auto testTable = [&](int thread_id) {
+	auto testTable = [&](int thread_id, TaskQueue<std::pair<int, int>>& tasks, auto addResult) {
 		while (true)
 		{
 			auto task = tasks.get();
 			if (!task.has_value())
-			{
-				std::cout << "ran out of tasks...\n";
 				return;
-			}
 
 			auto [n, k] = *task;
-			std::cout << (std::to_string(thread_id) + ": " + std::to_string(n) + " " + std::to_string(k) + "\n");
 
 			auto distrK = std::uniform_real_distribution<Type>(1, k);
 
@@ -247,16 +235,72 @@ int main(int argc, char* argv[])
 		}
 	};
 
-	std::vector<std::thread> factory;
-	for (int i = 0; i < nThreads; i++)
-		factory.push_back(std::thread(testTable, i));
-	for (int i = 0; i < nThreads; i++)
-		factory[i].join();
-	for (auto& storage_block : graphsStorage)
-		for (auto&& [name, table] : storage_block)
-			graphs[name].merge(std::move(table));
+	auto parallelTestTable = [&](TaskQueue<std::pair<int, int>>& tasks, std::string tag, auto &addResult) {
+		std::vector<std::thread> factory;
+		for (int i = 0; i < nThreads; i++)
+			factory.push_back(std::thread(testTable, i, std::ref(tasks), std::ref(addResult)));
+		for (int i = 0; i < nThreads; i++)
+			factory[i].join();
+		for (auto& storage_block : graphsStorage)
+			for (auto&& [name, table] : storage_block)
+				graphs[name].merge(std::move(table));
+		saveToFiles(tag);
+	};
 
-	saveToFiles();
+	/*
+	{
+		std::cout << "cond table\n";
+		auto const& addResult = [&](int storage_id, std::string const& approxName, Info const& info, Report const& r) {
+			if (r.interrupted)
+			{
+				std::cerr << "interrupted" << std::endl;
+				abort();
+			}
+			graphsStorage[storage_id][approxName].xName = "cond";
+			graphsStorage[storage_id][approxName].add(info.cond, "n=" + std::to_string(info.dim), (int)r.iterations);
+		};
+
+		const std::vector<int> ns = {10, 100, 1'000, 10'000};
+		constexpr int kBegin = 1, kEnd = 2001, kStride = 100;
+		constexpr int kN = (kEnd - kBegin) / kStride;
+
+		std::vector<std::pair<int, int>> tasksStg;
+		for (int k = kBegin; k <= kEnd; k += kStride)
+			for (int n : ns)
+				tasksStg.push_back({n, k});
+		TaskQueue<std::pair<int, int>> tasks(tasksStg, nThreads);
+		parallelTestTable(tasks, "cond", addResult);
+	}
+
+	graphs.clear();
+	for (auto &el : graphsStorage)
+		el.clear();
+	std::cout << '\n';
+	*/
+
+	{
+		std::cout << "dims table\n";
+		auto const& addResult = [&](int storage_id, std::string const& approxName, Info const& info, Report const& r) {
+			if (r.interrupted)
+			{
+				std::cerr << "interrupted" << std::endl;
+				abort();
+			}
+			graphsStorage[storage_id][approxName].xName = "dims";
+			graphsStorage[storage_id][approxName].add(info.dim, "k=" + std::to_string(info.cond), (int)r.iterations);
+		};
+
+		const std::vector<int> ks = {10, 60, 360, 2160};
+		constexpr int nBegin = 2, nEnd = 500, nStride = 1;
+		constexpr int nN = (nEnd - nBegin) / nStride;
+
+		std::vector<std::pair<int, int>> tasksStg;
+		for (int k : ks)
+			for (int n = nBegin; n <= nEnd; n += nStride)
+				tasksStg.push_back({n, k});
+		TaskQueue<std::pair<int, int>> tasks(tasksStg, nThreads);
+		parallelTestTable(tasks, "dims", addResult);
+	}
 
 	return 0;
 }
