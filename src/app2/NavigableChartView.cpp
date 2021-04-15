@@ -55,6 +55,32 @@ void NavigableChartView::wheelEvent(QWheelEvent *event)
 	QChartView::wheelEvent(event);
 }
 
+static void resolveScale(QSizeF s, QtCharts::QChart* chart)
+{
+	QPointF ratio(1, 1);
+
+	auto xaxis = Charting::axisX<QtCharts::QValueAxis>(chart);
+	auto yaxis = Charting::axisY<QtCharts::QValueAxis>(chart);
+	auto xrange = Charting::getAxisRange(xaxis);
+	auto yrange = Charting::getAxisRange(yaxis);
+
+	qreal fac_x = s.width() / xrange, fac_y = s.height() / yrange;
+	if (fac_x > fac_y)
+		ratio.setX(fac_x / fac_y);
+	else
+		ratio.setY(fac_y / fac_x);
+
+	Charting::growAxisRange(xaxis, (ratio.x() - 1) / 2);
+	Charting::growAxisRange(yaxis, (ratio.y() - 1) / 2);
+}
+
+void NavigableChartView::resizeEvent(QResizeEvent *event)
+{
+	QChartView::resizeEvent(event);
+
+	resolveScale(chart()->plotArea().size(), chart());
+}
+
 void NavigableChartView::mousePressEvent(QMouseEvent *event)
 {
 	if (event->button() == Qt::LeftButton)
@@ -106,4 +132,6 @@ void NavigableChartView::setChart(QtCharts::QChart *chart, double tickInterval)
 	y->setTickAnchor(0);
 	y->setTickInterval(tickInterval);
 	y->setTickType(QtCharts::QValueAxis::TicksDynamic);
+
+	resolveScale(chart->plotArea().size(), chart);
 }

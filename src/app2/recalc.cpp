@@ -75,7 +75,7 @@ void MainWindow::recalc()
 				[&](auto const& x) { return copy.evalYPls(x); },
 				[&](auto const& x) { return copy.evalYNeg(x); },
 				bounds,
-				(size_t)std::lerp(10.0, 300.0, std::clamp((bounds.r - bounds.l) * 10, 0.0, 1.0)),
+				(size_t)std::lerp(300.0, 300.0, std::clamp((bounds.r - bounds.l) * 10, 0.0, 1.0)),
 				"");
 		series->setColor(QColor((1 - colCoef) * 255, colCoef * 255, 0));
 		chart->addSeries(series);
@@ -107,8 +107,6 @@ void MainWindow::recalc()
 		chart->addSeries(add);
 	}
 	chart->createDefaultAxes();
-	Charting::growAxisRange(Charting::axisX<QtCharts::QValueAxis>(chart), 0.1);
-	Charting::growAxisRange(Charting::axisY<QtCharts::QValueAxis>(chart), 0.1);
 	ui->visualChartView->setChart(chart, 0.1);
 }
 
