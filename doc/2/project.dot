@@ -10,7 +10,9 @@ digraph Project {
 		valarray -> Vector;
 		valarray -> DenseMatrix [style="dotted"];
 		valarray -> DiagonalMatrix [style="dotted"];
-		BisquareFunction[label="BisquareFunction|{Matrix|Vector|\<scalar\>}"];
+		QuadticFunction[label="QadricFunction|{Matrix|Vector|\<scalar\>}"];
+		QuadticFunction -> QuadticFunction2d;
+		QuadticFunction2d[label="QadricFunction2d|дополнительные функции для отрисовки|tostring|..."];
 		PointRegion[label="PointRegion|{\<vector\>|\<scalar\>}"];
 		Matrix -> DenseMatrix;
 		Matrix -> DiagonalMatrix;

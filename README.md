@@ -21,13 +21,27 @@
 
 
 ## Project structure
-┣ [doc](/doc/1/) — Отчет и данные, полученные в результате работы  
-┣ [opt-methods](/include/opt-methods/) — Реализация алгоритмов минимизации  
-┊&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣ [approximators](/include/opt-methods/approximators/) — Методы дихотомии, золотого сечения, Фиббоначи, парабол, Брента  
-┊&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣ [solvers](/include/opt-methods/solvers/) — Модуль стягивания отрезка поиска  
-┊&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┗ [util](/include/opt-methods/util/) — Вспомогательный модуль для отрисовки графиков  
-┣ [src](/src/) — Группа приложений лабораторной работы  
-┊&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣ [app1](/src/app1/) — Основное приложение с графическим интерфейсом  
-┊&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣ [helper1-eps2complexity](/src/helper1-eps2complexity/) — Вспомогательное приложение для получения графиков  
-┊&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┗ [helper1-ranges](/src/helper1-ranges/) — Вспомогательное приложение для получения таблиц  
-┗ [build.sh](/build.sh) — Скрипт для сборки приложения под *\*nix-like* ОС.
+```
+.
+├── cmake                     - вспомогательные cmake листы: генераторы проектов, информация для запаковки
+├── doc                       - отчеты
+│   ├── 1
+│   └── 2
+├── include
+│   └── opt-methods
+│       ├── approximators     - одномерные методы оптимизации
+│       ├── coroutines        - поддержка корутин
+│       ├── math              - миниатюрная библиотека математики
+│       ├── multidim          - многомерные методы оптимизации
+│       ├── solvers           - общий интерфейс аппроксиматоров
+│       │   └── function      - ``стертая'' функция с поддержкой градиента
+│       └── util              - вспомогательный модуль для визуализации
+├── misc
+└── src                       - реализации пользовательских приложний, сборщиков статистики
+    ├── app1
+    ├── app2
+    ├── helper1-eps2complexity
+    ├── helper1-ranges
+    ├── helper2-multidim
+    └── lib                   - реализация нешаблонных методов
+```
