@@ -19,7 +19,7 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,3">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0,5">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0,4">
       <item>
        <layout class="QFormLayout" name="formLayout">
         <property name="formAlignment">
@@ -91,12 +91,77 @@
           </item>
          </layout>
         </item>
-        <item row="2" column="0" colspan="2">
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="arrowheadsCheckBox">
+          <property name="text">
+           <string>Show arrowheads</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="2">
          <widget class="QLabel" name="function">
           <property name="text">
            <string>TextLabel</string>
           </property>
          </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="levelSetsCheckBox">
+          <property name="text">
+           <string>Show level sets</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Starting point:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>x:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="startXSelector">
+            <property name="minimum">
+             <double>-99.989999999999995</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>y:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="startYSelector">
+            <property name="minimum">
+             <double>-99.989999999999995</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -128,7 +193,26 @@
        </widget>
       </item>
       <item>
-       <widget class="QtCharts::QChartView" name="boundsChartView"/>
+       <widget class="QLCDNumber" name="lcdNumber">
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
+        <property name="lineWidth">
+         <number>5</number>
+        </property>
+        <property name="smallDecimalPoint">
+         <bool>false</bool>
+        </property>
+        <property name="digitCount">
+         <number>1</number>
+        </property>
+        <property name="segmentStyle">
+         <enum>QLCDNumber::Filled</enum>
+        </property>
+        <property name="intValue" stdset="0">
+         <number>2</number>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -150,7 +234,7 @@
      <x>0</x>
      <y>0</y>
      <width>1473</width>
-     <height>18</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
@@ -165,14 +249,9 @@
     <slot>iterationDisplayNChanged(int)</slot>
    </slots>
   </customwidget>
-  <customwidget>
-   <class>QtCharts::QChartView</class>
-   <extends>QGraphicsView</extends>
-   <header>QtCharts/QChartView</header>
-  </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../res/res.qrc"/>
+  <include location="res/res.qrc"/>
  </resources>
  <connections>
   <connection>
@@ -198,8 +277,8 @@
    <slot>epsChanged(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>235</x>
-     <y>100</y>
+     <x>245</x>
+     <y>92</y>
     </hint>
     <hint type="destinationlabel">
      <x>303</x>
@@ -214,8 +293,8 @@
    <slot>powChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>367</x>
-     <y>100</y>
+     <x>368</x>
+     <y>92</y>
     </hint>
     <hint type="destinationlabel">
      <x>462</x>
@@ -230,12 +309,76 @@
    <slot>screenshot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>304</x>
-     <y>160</y>
+     <x>316</x>
+     <y>212</y>
     </hint>
     <hint type="destinationlabel">
      <x>695</x>
      <y>-14</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>arrowheadsCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toggleArrowheads(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>137</x>
+     <y>115</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>173</x>
+     <y>90</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>levelSetsCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toggleLevelSets(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>223</x>
+     <y>118</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>372</x>
+     <y>288</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>startXSelector</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>startXChanged(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>230</x>
+     <y>141</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>373</x>
+     <y>270</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>startYSelector</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>startYChanged(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>324</x>
+     <y>146</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>374</x>
+     <y>235</y>
     </hint>
    </hints>
   </connection>
@@ -248,5 +391,9 @@
   <slot>powEpsEditingFinished()</slot>
   <slot>multiMethodChanged(int)</slot>
   <slot>screenshot()</slot>
+  <slot>toggleArrowheads(bool)</slot>
+  <slot>toggleLevelSets(bool)</slot>
+  <slot>startXChanged(double)</slot>
+  <slot>startYChanged(double)</slot>
  </slots>
 </ui>

@@ -169,6 +169,33 @@ public:
 		return sstream.str();
 	}
 
+	std::tuple<Vector<T>, Vector<T>, Vector<T>> canonicalCoordSys() const
+	{
+		auto [a, b, c, d, e] = get2d_coefs();
+		auto f = this->c;
+
+		auto center = Vector<T>{2 * c * d - b * e, 2 * a * e - d * b} / (b * b - 4 * a * c);
+		f += d * center[0] + e * center[1];
+		f += a * square(center[0]) + b * center[0] * center[1] + c * square(center[1]);
+
+		auto [tan1, tan2] = solveSquare(1.0, 2 * (a - c) / b, -1.0);
+		auto tan_alpha = tan1 > 0 ? tan1 : tan2, tan2_alpha = square(tan_alpha);
+		auto cos2_alpha = 1 / (1 + tan2_alpha), sin2_alpha = 1 - cos2_alpha, sincos_alpha = tan_alpha * cos2_alpha;
+
+		std::tie(a, c) = std::make_pair(
+			a * cos2_alpha + c * sin2_alpha + b * sincos_alpha,
+			a * sin2_alpha + c * cos2_alpha - b * sincos_alpha
+		);
+		a /= -f;
+		c /= -f;
+
+		auto v1 = Vector<T>{1, tan_alpha};
+		v1 /= len(v1);
+		auto v2 = Vector<T>{-v1[1], v1[0]};
+
+		return {center, v1 / sqrt(a), v2 / sqrt(c)};
+	}
+
 	template<typename Random>
 	static QuadraticFunction2d Rand(Random const& r)
 	{

@@ -4,16 +4,16 @@
 
 #include <QtGui/QMouseEvent>
 #include <QtCharts/QValueAxis>
+#include <QGraphicsBlurEffect>
 
 #include "opt-methods/util/Charting.hpp"
 
-QT_CHARTS_USE_NAMESPACE
+using namespace QtCharts;
 
-using std::pow;
-
-NavigableChartView::NavigableChartView(QWidget *parent)
+NavigableChartView::NavigableChartView(QWidget* parent)
 		: QChartView(parent), left_bt_pressed(false)
 {
+	setRenderHint(QPainter::Antialiasing);
 }
 
 QPointF NavigableChartView::calc_posf(QPointF pos)
@@ -23,6 +23,9 @@ QPointF NavigableChartView::calc_posf(QPointF pos)
 
 void NavigableChartView::wheelEvent(QWheelEvent *event)
 {
+	using std::pow;
+	QChartView::wheelEvent(event);
+
 	QPointF mposf = calc_posf(event->
 	// to be compatible with qt < 5.14
 // #if QT_VERSION >= 0x050E00
@@ -32,35 +35,32 @@ void NavigableChartView::wheelEvent(QWheelEvent *event)
 // #endif
 		);
 	int delta = event->angleDelta().y() / 120;
-
 	qreal fac = pow(ZOOM_FACTOR, delta);
 
 	QRectF screen = chart()->plotArea();
 	QSizeF size = screen.size();
-
 	{
 		using namespace Charting;
-		if (qreal s = std::min(getAxisRange(axisX<QValueAxis>(chart())), getAxisRange(axisY<QValueAxis>(chart()))) * fac;
-				s < MIN_SCALE)
-			fac = MIN_SCALE / s;
+		qreal curScale = std::min(getAxisRange(axisX<QValueAxis>(chart())), getAxisRange(axisY<QValueAxis>(chart())));
+		if (curScale * fac < MIN_SCALE)
+			fac = MIN_SCALE / curScale;
 		if (fac == 1) return;
 	}
-
 	screen.moveTopLeft({screen.left() + (1 - fac) * screen.width() * mposf.x(),
 											screen.top() + (1 - fac) * screen.height() * mposf.y()});
 	screen.setSize(size * fac);
-
 	chart()->zoomIn(screen);
 
-	QChartView::wheelEvent(event);
+	for (auto c : chartItems)
+		c->updateGeometry();
 }
 
-static void resolveScale(QSizeF s, QtCharts::QChart* chart)
+static void resolveScale(QSizeF s, QChart* chart)
 {
 	QPointF ratio(1, 1);
 
-	auto xaxis = Charting::axisX<QtCharts::QValueAxis>(chart);
-	auto yaxis = Charting::axisY<QtCharts::QValueAxis>(chart);
+	auto xaxis = Charting::axisX<QValueAxis>(chart);
+	auto yaxis = Charting::axisY<QValueAxis>(chart);
 	auto xrange = Charting::getAxisRange(xaxis);
 	auto yrange = Charting::getAxisRange(yaxis);
 
@@ -79,6 +79,9 @@ void NavigableChartView::resizeEvent(QResizeEvent *event)
 	QChartView::resizeEvent(event);
 
 	resolveScale(chart()->plotArea().size(), chart());
+
+	for (auto c : chartItems)
+		c->updateGeometry();
 }
 
 void NavigableChartView::mousePressEvent(QMouseEvent *event)
@@ -88,10 +91,9 @@ void NavigableChartView::mousePressEvent(QMouseEvent *event)
 		left_bt_pressed = true;
 		last_mouse_pos = event->pos();
 		setCursor(Qt::ClosedHandCursor);
-		event->accept();
 	}
-	else
-		event->ignore();
+
+	QChartView::mousePressEvent(event);
 }
 
 void NavigableChartView::mouseMoveEvent(QMouseEvent *event)
@@ -102,10 +104,11 @@ void NavigableChartView::mouseMoveEvent(QMouseEvent *event)
 		QPointF mdposf = pt - last_mouse_pos;
 		chart()->scroll(-mdposf.x(), mdposf.y());
 		last_mouse_pos = pt;
-		event->accept();
+		for (auto c : chartItems)
+			c->updateGeometry();
 	}
-	else
-		event->ignore();
+
+	QChartView::mouseMoveEvent(event);
 }
 
 void NavigableChartView::mouseReleaseEvent(QMouseEvent *event)
@@ -114,24 +117,28 @@ void NavigableChartView::mouseReleaseEvent(QMouseEvent *event)
 	{
 		left_bt_pressed = false;
 		setCursor(Qt::ArrowCursor);
-		event->accept();
 	}
-	else
-		event->ignore();
+
+	QChartView::mouseReleaseEvent(event);
 }
 
-void NavigableChartView::setChart(QtCharts::QChart *chart, double tickInterval)
+void NavigableChartView::setChart(QChart* chart_)
 {
-	using namespace QtCharts;
-	QChartView::setChart(chart);
-	auto *x = Charting::axisX<QValueAxis>(chart);
-	auto *y = Charting::axisY<QValueAxis>(chart);
-	x->setTickAnchor(0);
-	x->setTickInterval(tickInterval);
-	x->setTickType(QtCharts::QValueAxis::TicksDynamic);
-	y->setTickAnchor(0);
-	y->setTickInterval(tickInterval);
-	y->setTickType(QtCharts::QValueAxis::TicksDynamic);
+	chartItems.clear();
 
-	resolveScale(chart->plotArea().size(), chart);
+	auto oldChart = chart();
+	QChartView::setChart(chart_);
+	if (oldChart != nullptr)
+		delete oldChart;
+	chart_->setAcceptHoverEvents(true);
+	resolveScale(chart_->plotArea().size(), chart_);
+	this->setMouseTracking(true);
+}
+
+void NavigableChartView::addItem(ChartItem* item)
+{
+	scene()->addItem(item);
+	item->setChart(chart());
+	chartItems.push_back(item);
+	item->updateGeometry();
 }

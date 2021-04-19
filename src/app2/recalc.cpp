@@ -7,19 +7,22 @@
 #include <QCheckBox>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QLineSeries>
+#include <QtCharts/QSplineSeries>
 #include <QtCharts/QLegendMarker>
+#include <QtCharts/QValueAxis>
 
 #include <iostream>
+#include <numbers>
 
-void MainWindow::addVisual(MApprox& desc, std::vector<double>& ys, std::vector<QtCharts::QLineSeries*>& serieses)
+using namespace QtCharts;
+
+void MainWindow::addVisual(MApprox& desc, Vector<double> start, std::vector<std::pair<double, std::string>>& ys)
 {
-	if (auto iter = gradientTogglers.find(desc.name()); iter == gradientTogglers.end() || !iter->second->isChecked())
-		return;
-	Vector<double> startFrom = {1, 1};
-	auto series = new QtCharts::QLineSeries();
-	*series << QPointF{startFrom[0], startFrom[1]};
-	ys.push_back(bifunc(startFrom));
-	auto gen = desc(bifunc, {startFrom, 10});
+	auto &traj = name2trajectory[desc.name()];
+
+	ys.push_back({bifunc(start), desc.name()});
+	traj.addPoint(start);
+	auto gen = desc(bifunc, {start, 10});
 	int i = 0;
 	while (gen.next())
 	{
@@ -30,57 +33,62 @@ void MainWindow::addVisual(MApprox& desc, std::vector<double>& ys, std::vector<Q
 		}
 		auto res = gen.getValue();
 		auto p = res.p;
-		ys.push_back(bifunc(p));
+		ys.push_back({bifunc(p), desc.name()});
 		assert(p.size() == 2);
-		*series << QPointF{p[0], p[1]};
+		traj.addPoint(p);
 	}
-	series->setName(desc.name());
-	serieses.push_back(series);
+	traj.setName(desc.name());
 }
 
 void MainWindow::recalc()
 {
+	name2trajectory.clear();
+
 	struct Smth {};
 	const int onedimIndex = ui->methodSelector->currentIndex();
 	double eps = ui->epsSelector->value() * pow(10, ui->powSelector->value());
+	Vector<double> start = {ui->startXSelector->value(), ui->startYSelector->value()};
 
-	auto oldFlusher = std::unique_ptr<QtCharts::QChart>(chart);
-	chart = new QtCharts::QChart();
+	std::optional<QRectF> oldChartScreen;
+
+	if (chart != nullptr) {
+		auto *x = Charting::axisX<QValueAxis>(chart), *y = Charting::axisY<QValueAxis>(chart);
+		oldChartScreen = QRectF{x->min(), y->min(), Charting::getAxisRange(x), Charting::getAxisRange(y)};
+	}
+
+	chart = new QChart();
 
 	auto erasedProvider = [&]() { return factories[onedimIndex].first(eps); };
-	std::vector<double> levels;
-	std::vector<QtCharts::QLineSeries*> serieses;
+	std::vector<std::pair<double, std::string>> levels;
 	{
 		auto desc = MApprox(TypeTag<GradientDescent<Vector<double>, double>>{}, eps);
-		addVisual(desc, levels, serieses);
+		addVisual(desc, start, levels);
 	}
 	{
 		auto desc = MApprox(TypeTag<SteepestDescent<Vector<double>, double, ErasedApproximator<double, double>>>{}, eps, erasedProvider());
-		addVisual(desc, levels, serieses);
+		addVisual(desc, start, levels);
 	}
 	{
 		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double, QuadraticFunction2d<double>>>{}, eps);
-		addVisual(desc, levels, serieses);
+		addVisual(desc, start, levels);
 	}
 
-	auto addLevel = [&](double delta, double colCoef) {
+	auto addLevel = [&](Trajectory& traj, double delta, double colCoef) {
 		auto copy = bifunc.shift(-delta);
-		auto [f, t] = copy.zeroDescrYAt();
-		if (std::isnan(f) || std::isinf(f))
-			return;
-		if (f > t)
-			std::swap(f, t);
-		auto bounds = RangeBounds<double>{f, t};
-		auto series = Charting::plotCircular<QtCharts::QLineSeries>(
-				[&](auto const& x) { return copy.evalYPls(x); },
-				[&](auto const& x) { return copy.evalYNeg(x); },
-				bounds,
-				(size_t)std::lerp(300.0, 300.0, std::clamp((bounds.r - bounds.l) * 10, 0.0, 1.0)),
-				"");
-		series->setColor(QColor((1 - colCoef) * 255, colCoef * 255, 0));
-		chart->addSeries(series);
-		for (auto *a : chart->legend()->markers(series))
-			a->setVisible(false);
+		auto [center, vx, vy] = copy.canonicalCoordSys();
+		auto series = Charting::plotParametric<QSplineSeries>(
+			[&](auto t) {
+				return center + vx * cos(t) + vy * sin(t);
+			},
+			RangeBounds<double>{0.0, 2 * std::numbers::pi},
+			20,
+			"");
+		// series->setColor();
+		auto pen = series->pen();
+		pen.setWidth(2);
+		pen.setBrush(QBrush(QColor((1 - colCoef) * 255, colCoef * 255, 0)));
+		series->setPen(pen);
+		traj.addLevel(series);
 	};
 
 	if (!levels.empty())
@@ -89,24 +97,39 @@ void MainWindow::recalc()
 		levels.erase(std::unique(levels.begin(), levels.end()), levels.end());
 		/// TODO change color distribution
 		double index = 0;
-		for (auto const& a : levels)
-			addLevel(a, std::pow(index++ / (levels.size() - 1), 4));
+		for (auto const& [a, str] : levels)
+			addLevel(name2trajectory[str], a, std::pow(index++ / (levels.size() - 1), 4));
 	}
-	
-	if (levels.size() == 0)
+
+	{
+		auto& defLevelSets = name2trajectory[defaultTrajName];
+		defLevelSets.setName(defaultTrajName);
 		for (int i = 0; i <= 100; i++)
-			addLevel(i, i / 100.0);
-	for (auto ser : serieses)
-		chart->addSeries(ser);
-	serieses.clear();
+			addLevel(defLevelSets, i, i / 100.0);
+		for (auto& [str, t] : name2trajectory)
+			t.addToChart(chart);
+		defLevelSets.setVisible(false);
+	}
+
 	// add function to legend
 	{
-		auto add = new QtCharts::QLineSeries();
+		auto add = new QLineSeries();
 		add->setName(QString::fromStdString((std::string)bifunc));
 		add->setColor(QColor(255, 0, 0));
 		chart->addSeries(add);
 	}
 	chart->createDefaultAxes();
-	ui->visualChartView->setChart(chart, 0.1);
+	if (oldChartScreen.has_value())
+	{
+		auto *x = Charting::axisX<QValueAxis>(chart), *y = Charting::axisY<QValueAxis>(chart);
+		x->setRange(oldChartScreen->left(), oldChartScreen->right());
+		y->setRange(oldChartScreen->top(), oldChartScreen->bottom());
+	}
+	ui->visualChartView->setChart(chart);
+	for (auto &[str, t] : name2trajectory)
+		t.addToChartView(ui->visualChartView);
+
+	toggleArrowheads(ui->arrowheadsCheckBox->isChecked());
+	toggleLevelSets(ui->levelSetsCheckBox->isChecked());
 }
 

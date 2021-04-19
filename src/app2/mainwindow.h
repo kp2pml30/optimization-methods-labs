@@ -3,6 +3,8 @@
 #include <vector>
 
 #include <QMainWindow>
+#include <QtCharts/QLegendMarker>
+#include <QGraphicsItem>
 
 #include "opt-methods/solvers/Erased.hpp"
 #include "opt-methods/math/BisquareFunction.hpp"
@@ -10,6 +12,8 @@
 
 #include "opt-methods/approximators/all.hpp"
 #include "opt-methods/solvers/BaseApproximatorDraw.hpp"
+
+#include "NavigableChartView.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -41,6 +45,10 @@ public slots:
 	void epsChanged(double);
 	void powChanged(int);
 	void screenshot();
+	void toggleArrowheads(bool);
+	void toggleLevelSets(bool);
+	void startXChanged(double);
+	void startYChanged(double);
 
 private:
 	using Approx = ErasedApproximator<double, double>;
@@ -48,14 +56,44 @@ private:
 
 	std::map<std::string, QCheckBox*> gradientTogglers;
 
-	double lastEps = 0;
-	int lastPow    = 0;
+	static inline std::string defaultTrajName = "Default level sets";
 
-	QuadraticFunction2d<double> bifunc = QuadraticFunction2d<double>(8, 1, 1, 0, 0, -1);
+	QuadraticFunction2d<double> bifunc = QuadraticFunction2d<double>(2.5, 3, 4, 0.1, -0.5, 0);
 
 	QtCharts::QChart* chart = nullptr;
+	class Trajectory
+	{
+	private:
+		std::vector<ChartItem*> arrows;
+		QtCharts::QLineSeries* lines = new QtCharts::QLineSeries();
+		std::vector<QtCharts::QLineSeries*> levelSets;
+
+		bool arrowheadVisibility = true, levelSetsVisibility = true;
+		std::optional<QPointF> lastP;
+		QtCharts::QChart* chart = nullptr;
+		NavigableChartView* view = nullptr;
+
+		static QPolygonF createArrowHead(QPointF from, QPointF to);
+		void setVisibleArrowheads(bool visible);
+		void setVisibleLevelSets(bool visible);
+
+	public:
+		Trajectory();
+		void setName(const std::string &name);
+		void addPoint(Vector<double> p_);
+		void addLevel(QtCharts::QLineSeries *levelSet);
+		void setVisible(bool visible);
+		bool isVisible() const;
+		void toggleArrowheads(bool visible);
+		void toggleLevelSets(bool visible);
+		void addToChart(QtCharts::QChart* chart);
+		void addToChartView(NavigableChartView *view);
+		~Trajectory();
+	};
+	std::unordered_map<std::string, Trajectory> name2trajectory;
 
 	using OneDimFactoryT = std::pair<std::function<Approx(double)>, std::string>;
+	using MultiDimFactoryT = std::pair<std::function<MApprox(double)>, std::string>;
 
 	template<Approximator<double, double> Approximator>
 	static OneDimFactoryT getFactory()
@@ -71,7 +109,7 @@ private:
 	template<typename P, typename V>
 	using FibonacciSizeTApproximator = FibonacciApproximator<P, V>; // for MSVC to match template template-parameter
 
-	void addVisual(MApprox& approx, std::vector<double>& pointZts, std::vector<QtCharts::QLineSeries*>& series);
+	void addVisual(MApprox& approx, Vector<double> start, std::vector<std::pair<double, std::string>>& pointZts);
 
 	static inline std::vector<OneDimFactoryT> factories = getFactories<DichotomyApproximator,
 																																		 FibonacciSizeTApproximator,

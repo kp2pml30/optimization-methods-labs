@@ -4,6 +4,7 @@ using namespace Charting;
 
 void Charting::addToChart(QtCharts::QChart *chart, QtCharts::QAbstractSeries *s)
 {
+	s->setUseOpenGL();
 	chart->addSeries(s);
 	s->attachAxis(axisX(chart));
 	s->attachAxis(axisY(chart));
@@ -24,14 +25,8 @@ void Charting::createNaturalSequenceAxes(QtCharts::QChart* chart, int n)
 	auto* x = axisX<QtCharts::QValueAxis>(chart);
 	auto* y = axisY<QtCharts::QValueAxis>(chart);
 
-	x->setTickAnchor(1);
-	x->setTickInterval(1);
-	x->setTickCount(n);
-
+	growAxisRange(x, 0.01);
 	x->setLabelFormat("%i");
 	growAxisRange(y, 0.01);
-	y->setTickAnchor(0);
-	y->setTickInterval(getAxisRange(y) / 10);
-	y->setTickType(QtCharts::QValueAxis::TicksDynamic);
 }
 

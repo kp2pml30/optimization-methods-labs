@@ -32,6 +32,25 @@ namespace Charting
 		return plot;
 	}
 
+	template<std::derived_from<QtCharts::QAbstractSeries> SeriesT = QtCharts::QLineSeries, typename P, std::invocable<P> Func>
+	SeriesT* plotParametric(Func&& func, RangeBounds<P> r, std::size_t nOfPoints, std::string const& name)
+	{
+		assert(nOfPoints != 0);
+		auto plot = new SeriesT();
+		for (std::size_t i = 0; i < nOfPoints; i++)
+		{
+			using std::lerp;
+			auto t = lerp(r.l, r.r, i * 1.0 / (nOfPoints - 1));
+			Vector<P> p = func(t);
+			assert(p.size() == 2);
+			if (!std::isnan(p[0]) && !std::isnan(p[1]))
+				*plot << QPointF{static_cast<qreal>(p[0]), static_cast<qreal>(p[1])};
+		}
+		if (!name.empty())
+			plot->setName(name.c_str());
+		return plot;
+	}
+
 	template<std::derived_from<QtCharts::QAbstractSeries> SeriesT = QtCharts::QLineSeries, typename P>
 	SeriesT* plotCircular(std::invocable<P> auto&& func1, std::invocable<P> auto&& func2, RangeBounds<P> r, std::size_t nOfPoints, std::string const& name)
 	{

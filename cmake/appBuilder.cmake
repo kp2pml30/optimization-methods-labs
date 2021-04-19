@@ -5,10 +5,12 @@ macro(appBuilder name)
 
 	file(GLOB_RECURSE SRC "*.cpp")
 	file(GLOB_RECURSE UI "*.ui")
+	file(GLOB_RECURSE RES "*.qrc")
 
 	add_executable(${name}
 		${SRC}
 		${UI}
+		${RES}
 	)
 
 	# target_include_directories(${name} PRIVATE "${CMAKE_SOURCE_DIR}/include/opt-methods/widgets")

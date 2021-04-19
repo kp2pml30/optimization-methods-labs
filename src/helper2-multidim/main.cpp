@@ -247,7 +247,6 @@ int main(int argc, char* argv[])
 		saveToFiles(tag);
 	};
 
-	/*
 	{
 		std::cout << "cond table\n";
 		auto const& addResult = [&](int storage_id, std::string const& approxName, Info const& info, Report const& r) {
@@ -272,11 +271,11 @@ int main(int argc, char* argv[])
 		parallelTestTable(tasks, "cond", addResult);
 	}
 
+#if 0
 	graphs.clear();
 	for (auto &el : graphsStorage)
 		el.clear();
 	std::cout << '\n';
-	*/
 
 	{
 		std::cout << "dims table\n";
@@ -301,6 +300,7 @@ int main(int argc, char* argv[])
 		TaskQueue<std::pair<int, int>> tasks(tasksStg, nThreads);
 		parallelTestTable(tasks, "dims", addResult);
 	}
+#endif /* 0 */
 
 	return 0;
 }
