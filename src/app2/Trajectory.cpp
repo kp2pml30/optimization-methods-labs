@@ -35,12 +35,21 @@ void MainWindow::Trajectory::setName(const std::string &name)
 	lines->setName(name.c_str());
 }
 
+namespace
+{
+	QFont defaultFont = QFont("", 6, QFont::Bold);
+	QBrush defaultBrush(QColorConstants::Black);
+	QPen nullPen(defaultBrush, 0);
+}
+
 void MainWindow::Trajectory::addPoint(Vector<double> p_)
 {
-	auto font = QFont("", 6, QFont::Bold);
-	QFontMetrics metrics(font);
-	auto pen = QPen();
-	pen.setWidth(0);
+	{
+		static auto dummy = []() {
+			nullPen.setWidth(0);
+			return 0;
+		}();
+	}
 
 	auto p = QPointF{p_[0], p_[1]};
 	*lines << p;
@@ -48,14 +57,14 @@ void MainWindow::Trajectory::addPoint(Vector<double> p_)
 	if (lastP.has_value())
 	{
 		auto scale = QLineF{*lastP, p}.length();
-		auto arrow = new QGraphicsPolygonItem(createArrowHead(*lastP - p, QPointF{0, 0}), nullptr);
-		arrow->setPen(pen);
-		arrow->setBrush(QColorConstants::Black);
+		auto arrow = new QGraphicsPolygonItem(createArrowHead(*lastP - p, QPointF{0, 0}));
+		arrow->setPen(nullPen);
+		arrow->setBrush(defaultBrush);
 		arrows.push_back(new ChartItem(arrow, p, 300 / scale));
 		auto label = new QGraphicsTextItem();
 		label->setHtml(QString::fromStdString("<div style='background:rgba(255, 255, 255, 50%);'>x<sub>" +
 																					std::to_string(arrows.size() / 2 + 1) + "</sub></div>"));
-		label->setFont(font);
+		label->setFont(defaultFont);
 		label->setTransform(QTransform::fromScale(1, -1));
 		label->setScale(scale / 150);
 		arrows.push_back(new ChartItem(label, p, 300 / scale));
@@ -138,13 +147,13 @@ MainWindow::Trajectory::~Trajectory()
 	{
 		// no one has taken ownerwhip of these items
 		delete lines;
-		for (auto *s : levelSets)
+		for (auto* s : levelSets)
 			delete s;
 	}
 	if (view == nullptr)
 	{
 		// no one has taken ownerwhip of these items
-		for (auto *a : arrows)
+		for (auto* a : arrows)
 			delete a;
 	}
 }

@@ -130,9 +130,7 @@ void NavigableChartView::setChart(QChart* chart_)
 	QChartView::setChart(chart_);
 	if (oldChart != nullptr)
 		delete oldChart;
-	chart_->setAcceptHoverEvents(true);
 	resolveScale(chart_->plotArea().size(), chart_);
-	this->setMouseTracking(true);
 }
 
 void NavigableChartView::addItem(ChartItem* item)
