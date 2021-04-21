@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <tuple>
 
 #include "./def.hpp"
 #include "./Vector.hpp"
@@ -174,7 +175,8 @@ public:
 		auto [a, b, c, d, e] = get2d_coefs();
 		auto f = this->c;
 
-		auto center = Vector<T>{2 * c * d - b * e, 2 * a * e - d * b} / (b * b - 4 * a * c);
+		auto center = Vector<T>({2 * c * d - b * e, 2 * a * e - d * b});
+		center /= (b * b - 4 * a * c);
 		f += d * center[0] + e * center[1];
 		f += a * square(center[0]) + b * center[0] * center[1] + c * square(center[1]);
 
@@ -191,7 +193,7 @@ public:
 
 		auto v1 = Vector<T>{1, tan_alpha};
 		v1 /= len(v1);
-		auto v2 = Vector<T>{-v1[1], v1[0]};
+		auto v2 = Vector<T>({-v1[1], v1[0]});
 
 		return {center, v1 / sqrt(a), v2 / sqrt(c)};
 	}

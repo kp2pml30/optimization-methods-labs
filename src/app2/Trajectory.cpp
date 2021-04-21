@@ -45,7 +45,7 @@ namespace
 void MainWindow::Trajectory::addPoint(Vector<double> p_)
 {
 	{
-		static auto dummy = []() {
+		[[maybe_unused]] static auto dummy = []() {
 			nullPen.setWidth(0);
 			return 0;
 		}();

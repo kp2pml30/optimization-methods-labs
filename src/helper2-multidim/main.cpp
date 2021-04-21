@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 
 		const std::vector<int> ns = {10, 100, 1'000, 10'000};
 		constexpr int kBegin = 1, kEnd = 2001, kStride = 100;
-		constexpr int kN = (kEnd - kBegin) / kStride;
+		// constexpr int kN = (kEnd - kBegin) / kStride;
 
 		std::vector<std::pair<int, int>> tasksStg;
 		for (int k = kBegin; k <= kEnd; k += kStride)

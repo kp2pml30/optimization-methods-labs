@@ -23,7 +23,6 @@ MainWindow::MainWindow(QWidget* parent)
 		box->setText(name.c_str());
 		box->setChecked(true);
 		connect(box, &QCheckBox::stateChanged, [&, name](int state) {
-			bool wasEmpty = name2trajectory[defaultTrajName].isVisible();
 			name2trajectory[name].setVisible(state == Qt::Checked);
 			if (state == Qt::Checked)
 				name2trajectory[defaultTrajName].setVisible(false);
