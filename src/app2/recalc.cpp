@@ -38,7 +38,6 @@ void MainWindow::addVisual(QuadraticFunction2d<double> const& bifunc, MApprox& d
 		assert(p.size() == 2);
 		traj.addPoint(p);
 	}
-	std::cout << desc.name() << ":" << i << std::endl;
 	traj.setName(desc.name());
 	traj.setColor(color);
 }
