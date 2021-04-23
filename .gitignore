@@ -80,3 +80,5 @@ CMakeSettings.json
 
 .*
 
+*.user
+

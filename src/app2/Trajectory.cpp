@@ -73,6 +73,11 @@ void MainWindow::Trajectory::addPoint(Vector<double> p_)
 	lastP = p;
 }
 
+void MainWindow::Trajectory::setColor(QColor color)
+{
+	lines->setColor(color);
+}
+
 void MainWindow::Trajectory::addLevel(QLineSeries *levelSet)
 {
 	levelSets.push_back(levelSet);

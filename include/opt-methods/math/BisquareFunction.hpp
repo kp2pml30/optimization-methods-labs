@@ -166,7 +166,7 @@ public:
 		next(x, "x");
 		next(y, "y");
 		last(this->c);
-		sstream << " = 0";
+		sstream << " = z";
 		return sstream.str();
 	}
 
@@ -180,8 +180,14 @@ public:
 		f += d * center[0] + e * center[1];
 		f += a * square(center[0]) + b * center[0] * center[1] + c * square(center[1]);
 
-		auto [tan1, tan2] = solveSquare(1.0, 2 * (a - c) / b, -1.0);
-		auto tan_alpha = tan1 > 0 ? tan1 : tan2, tan2_alpha = square(tan_alpha);
+		T tan_alpha = 0, tan2_alpha = 0;
+
+		if (b != 0)
+		{
+			auto [tan1, tan2] = solveSquare(1.0, 2 * (a - c) / b, -1.0);
+			tan_alpha = tan1 > 0 ? tan1 : tan2;
+			tan2_alpha = square(tan_alpha);
+		}
 		auto cos2_alpha = 1 / (1 + tan2_alpha), sin2_alpha = 1 - cos2_alpha, sincos_alpha = tan_alpha * cos2_alpha;
 
 		std::tie(a, c) = std::make_pair(

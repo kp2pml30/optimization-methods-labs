@@ -49,6 +49,7 @@ public slots:
 	void toggleLevelSets(bool);
 	void startXChanged(double);
 	void startYChanged(double);
+	void functionChanged(int);
 
 private:
 	using Approx = ErasedApproximator<double, double>;
@@ -58,7 +59,12 @@ private:
 
 	static inline std::string defaultTrajName = "Default level sets";
 
-	QuadraticFunction2d<double> bifunc = QuadraticFunction2d<double>(2.5, 3, 4, 0.1, -0.5, 0);
+	const std::vector<QuadraticFunction2d<double>> bifuncs = {
+		QuadraticFunction2d<double>(2.5, 3, 4, 0.1, -0.5, 10),
+		QuadraticFunction2d<double>(8, 1, 1, 0, 0, -1),
+		QuadraticFunction2d<double>(3, 2.5, 4, 0.1, -0.5, 0),
+		QuadraticFunction2d<double>(1, 0, 1, -0.5, 0, 0),
+	};
 
 	QtCharts::QChart* chart = nullptr;
 	class Trajectory
@@ -81,6 +87,7 @@ private:
 		Trajectory();
 		void setName(const std::string &name);
 		void addPoint(Vector<double> p_);
+		void setColor(QColor color);
 		void addLevel(QtCharts::QLineSeries *levelSet);
 		void setVisible(bool visible);
 		bool isVisible() const;
@@ -109,7 +116,8 @@ private:
 	template<typename P, typename V>
 	using FibonacciSizeTApproximator = FibonacciApproximator<P, V>; // for MSVC to match template template-parameter
 
-	void addVisual(MApprox& approx, Vector<double> start, std::vector<std::pair<double, std::string>>& pointZts);
+	void addVisual(QuadraticFunction2d<double> const& func, MApprox& approx, Vector<double> start,
+								 std::vector<std::pair<double, std::string>>& pointZts, QColor color);
 
 	static inline std::vector<OneDimFactoryT> factories = getFactories<DichotomyApproximator,
 																																		 FibonacciSizeTApproximator,
@@ -120,4 +128,5 @@ private:
 	void recalc();
 
 	std::unique_ptr<Ui::MainWindow> ui;
+	bool isInit = false;
 };

@@ -14,8 +14,6 @@ MainWindow::MainWindow(QWidget* parent)
 {
 	ui->setupUi(this);
 
-	ui->function->setText(QString::fromStdString(static_cast<std::string>(bifunc)));
-
 	for (auto const& a : factories)
 		ui->methodSelector->addItem(QString::fromStdString(a.second));
 	auto const& addCheckbox = [&](std::string name) {
@@ -36,6 +34,17 @@ MainWindow::MainWindow(QWidget* parent)
 	addCheckbox("gradient descent");
 	addCheckbox("steepest descent");
 	addCheckbox("conjugate gradient descent");
+
+	auto toString = [](QuadraticFunction2d<double> const& func) {
+		[[maybe_unused]] auto [center, vx, vy] = func.shift(func.c >= -0.1 ? -2 * func.c - 1 : 0).canonicalCoordSys();
+		auto l1 = len2(vx), l2 = len2(vy), cond = std::max(l1, l2) / std::min(l1, l2);
+		return QString::fromStdString((std::string)func + "\t(cond(A) = " + std::to_string(cond) + ")");
+	};
+
+	for (auto const& a : bifuncs)
+		ui->functionComboBox->addItem(toString(a));
+
+	isInit = true;
 	recalc();
 }
 
@@ -47,6 +56,7 @@ void MainWindow::toggleArrowheads(bool val) { for (auto &traj : name2trajectory)
 void MainWindow::toggleLevelSets(bool val) { for (auto &traj : name2trajectory) traj.second.toggleLevelSets(val); }
 void MainWindow::startXChanged(double) { recalc(); }
 void MainWindow::startYChanged(double) { recalc(); }
+void MainWindow::functionChanged(int) { recalc(); }
 
 void MainWindow::paintEvent(QPaintEvent* ev)
 {

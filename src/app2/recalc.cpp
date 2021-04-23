@@ -16,7 +16,8 @@
 
 using namespace QtCharts;
 
-void MainWindow::addVisual(MApprox& desc, Vector<double> start, std::vector<std::pair<double, std::string>>& ys)
+void MainWindow::addVisual(QuadraticFunction2d<double> const& bifunc, MApprox& desc, Vector<double> start,
+													 std::vector<std::pair<double, std::string>>& ys, QColor color)
 {
 	auto &traj = name2trajectory[desc.name()];
 
@@ -37,17 +38,22 @@ void MainWindow::addVisual(MApprox& desc, Vector<double> start, std::vector<std:
 		assert(p.size() == 2);
 		traj.addPoint(p);
 	}
+	std::cout << desc.name() << ":" << i << std::endl;
 	traj.setName(desc.name());
+	traj.setColor(color);
 }
 
 void MainWindow::recalc()
 {
+	if (!isInit) return;
+
 	name2trajectory.clear();
 
 	struct Smth {};
 	const int onedimIndex = ui->methodSelector->currentIndex();
 	double eps = ui->epsSelector->value() * pow(10, ui->powSelector->value());
 	Vector<double> start = {ui->startXSelector->value(), ui->startYSelector->value()};
+	auto& bifunc = bifuncs[ui->functionComboBox->currentIndex()];
 
 	std::optional<QRectF> oldChartScreen;
 
@@ -62,15 +68,15 @@ void MainWindow::recalc()
 	std::vector<std::pair<double, std::string>> levels;
 	{
 		auto desc = MApprox(TypeTag<GradientDescent<Vector<double>, double>>{}, eps);
-		addVisual(desc, start, levels);
+		addVisual(bifunc, desc, start, levels, QColorConstants::Red);
 	}
 	{
 		auto desc = MApprox(TypeTag<SteepestDescent<Vector<double>, double, ErasedApproximator<double, double>>>{}, eps, erasedProvider());
-		addVisual(desc, start, levels);
+		addVisual(bifunc, desc, start, levels, QColorConstants::DarkGreen);
 	}
 	{
 		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double, QuadraticFunction2d<double>>>{}, eps);
-		addVisual(desc, start, levels);
+		addVisual(bifunc, desc, start, levels, QColorConstants::Blue);
 	}
 
 	auto addLevel = [&](Trajectory& traj, double delta, double colCoef) {
@@ -128,6 +134,17 @@ void MainWindow::recalc()
 	ui->visualChartView->setChart(chart);
 	for (auto &[str, t] : name2trajectory)
 		t.addToChartView(ui->visualChartView);
+
+	bool selected = false;
+	for (auto& [name, traj] : name2trajectory)
+		if (name != defaultTrajName)
+		{
+			bool isChecked = gradientTogglers[name]->isChecked();
+			name2trajectory[name].setVisible(isChecked);
+			selected |= isChecked;
+		}
+	if (selected)
+		name2trajectory[defaultTrajName].setVisible(false);
 
 	toggleArrowheads(ui->arrowheadsCheckBox->isChecked());
 	toggleLevelSets(ui->levelSetsCheckBox->isChecked());

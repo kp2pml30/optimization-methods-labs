@@ -38,9 +38,9 @@ public:
 			auto grad = gradf(x);
 			if (len2(grad) < epsilon2)
 				break;
-			P y;
-			V fy;
-			while (true)
+			P y = x;
+			V fy = fx;
+			while (alpha > 0)
 			{
 				y = x - alpha * grad;
 				fy = func(y);
