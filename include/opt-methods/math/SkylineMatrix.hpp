@@ -19,12 +19,8 @@ private:
 	/// skyline information (ia[k] -- start of k-th row (column) in al (au))
 	std::vector<int> ia = {0};
 
-	int skyline_start(int i) const noexcept {
+	int skylineStart(int i) const noexcept {
 		return i - (ia[i + 1] - ia[i]);
-	}
-
-	int skyline_end(int i) const noexcept {
-		return i;
 	}
 
 	friend struct RowProxy;
@@ -32,19 +28,18 @@ private:
 		friend class SkylineMatrix;
 	private:
 		const SkylineMatrix* const enclosing;
-		int y, start, end;
+		int y, start;
 
 		RowProxy(const SkylineMatrix* enclosing, int y) noexcept
 		: enclosing(enclosing)
 		, y(y)
-		, start(enclosing->skyline_start(y))
-		, end(enclosing->skyline_end(y))
+		, start(enclosing->skylineStart(y))
 		{}
 
-		T get_row_element(int y, int dx) const noexcept {
+		T getRowElement(int y, int dx) const noexcept {
 			return enclosing->al[enclosing->ia[y] + dx];
 		}
-		T get_col_element(int x, int dy) const noexcept {
+		T getColElement(int x, int dy) const noexcept {
 			return enclosing->au[enclosing->ia[x] + dy];
 		}
 
@@ -53,15 +48,15 @@ private:
 			assert(x >= 0 && x < enclosing->dims());
 			if (int dx = x - start; dx < 0)
 				return {};
-			else if (x < end) [[likely]]
-				return get_row_element(y, dx);
-			else if (x == end)
+			else if (x < y) [[likely]]
+				return getRowElement(y, dx);
+			else if (x == y)
 				return enclosing->di[y];
 			else [[unlikely]]
-				if (int dy = y - enclosing->skyline_start(x); dy < 0)
+				if (int dy = y - enclosing->skylineStart(x); dy < 0)
 					return {};
 				else
-					return get_col_element(x, dy);
+					return getColElement(x, dy);
 		}
 	};
 
