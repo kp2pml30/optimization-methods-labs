@@ -1,15 +1,17 @@
 #pragma once
 
-#include "./ShiftedView.hpp"
+#include "./Vector.hpp"
 
-#include <vector>
-#include <tuple>
 #include <iostream>
+#include <tuple>
+#include <vector>
 
 template<typename T>
 class SkylineMatrix
 {
 private:
+	static const inline T zero{};
+
 	/// diagonal storage
 	std::vector<T> di;
 	/// lower triangle storage (by rows)
@@ -19,44 +21,101 @@ private:
 	/// skyline information (ia[k] -- start of k-th row (column) in al (au))
 	std::vector<int> ia = {0};
 
-	int skylineStart(int i) const noexcept {
+	int skylineStart(int i) const noexcept
+	{
 		return i - (ia[i + 1] - ia[i]);
 	}
 
-	friend struct RowProxy;
-	struct RowProxy {
-		friend class SkylineMatrix;
-	private:
-		const SkylineMatrix* const enclosing;
-		int y, start;
+	template<auto data>
+	friend struct LineProxy;
 
-		RowProxy(const SkylineMatrix* enclosing, int y) noexcept
+	template<auto data>
+	struct LineProxy
+	{
+		friend class SkylineMatrix;
+
+	private:
+		SkylineMatrix const* const enclosing;
+		int index, start;
+
+		LineProxy(const SkylineMatrix* enclosing, int index) noexcept
 		: enclosing(enclosing)
-		, y(y)
-		, start(enclosing->skylineStart(y))
+		, index(index)
+		, start(enclosing->skylineStart(index))
 		{}
 
-		T getRowElement(int y, int dx) const noexcept {
-			return enclosing->al[enclosing->ia[y] + dx];
+		T const& getLineElement(int index, int dOffset) const noexcept
+		{
+			return (enclosing->*data)[enclosing->ia[index] + dOffset];
 		}
-		T getColElement(int x, int dy) const noexcept {
-			return enclosing->au[enclosing->ia[x] + dy];
+		T const& getPerpElement(int offset, int dIndex) const noexcept
+		{
+			constexpr auto swapped = data == &SkylineMatrix::au ? &SkylineMatrix::al : &SkylineMatrix::au;
+			return (enclosing->*swapped)[enclosing->ia[offset] + dIndex];
 		}
 
+		struct Iterator
+		{
+			friend struct LineProxy;
+		private:
+			LineProxy const* line;
+			int offset;
+
+			Iterator(LineProxy const* line, int offset) noexcept
+			: line(line)
+			, offset(offset)
+			{}
+
+		public:
+			T const& operator*() const noexcept
+			{
+				return (*line)[offset];
+			}
+			T const* operator->() const noexcept
+			{
+				return &operator*();
+			}
+			Iterator& operator++() noexcept
+			{
+				++offset;
+				return *this;
+			}
+			Iterator operator++(int) noexcept
+			{
+				return Iterator(line, offset++);
+			}
+
+			bool operator==(const Iterator &rhs) const = default;
+			bool operator!=(const Iterator &rhs) const = default;
+		};
+
 	public:
-		T operator[](int x) const noexcept {
-			assert(x >= 0 && x < enclosing->dims());
-			if (int dx = x - start; dx < 0)
-				return {};
-			else if (x < y) [[likely]]
-				return getRowElement(y, dx);
-			else if (x == y)
-				return enclosing->di[y];
-			else [[unlikely]]
-				if (int dy = y - enclosing->skylineStart(x); dy < 0)
-					return {};
-				else
-					return getColElement(x, dy);
+		T const& operator[](int offset) const noexcept
+		{
+			assert(offset >= 0 && offset < enclosing->dims());
+			if (int dOffset = offset - start; dOffset < 0)
+				return zero;
+			else if (offset < index) [[likely]]
+				return getLineElement(index, dOffset);
+			else if (offset == index)
+				return enclosing->di[index];
+			else [[unlikely]] if (int dIndex = index - enclosing->skylineStart(offset); dIndex < 0)
+				return zero;
+			else
+				return getPerpElement(offset, dIndex);
+		}
+
+		Iterator iteratorAt(int offset) const noexcept
+		{
+			return Iterator(this, offset);
+		}
+		Iterator begin() const noexcept
+		{
+			return iteratorAt(0);
+		}
+		Iterator end() const noexcept
+		{
+			return iteratorAt(enclosing->dims());
 		}
 	};
 
@@ -67,23 +126,38 @@ public:
 	{
 		return (int)ia.size() - 1;
 	}
-	auto operator[](int y) const noexcept
+	auto row(int y) const& noexcept
 	{
 		assert(y >= 0 && y < dims());
-		return RowProxy(this, y);
+		return LineProxy<&SkylineMatrix::al>(this, y);
 	}
+	auto col(int x) const& noexcept
+	{
+		assert(x >= 0 && x < dims());
+		return LineProxy<&SkylineMatrix::au>(this, x);
+	}
+	auto operator[](int y) const& noexcept
+	{
+		return row(y);
+	}
+
+	SkylineMatrix&& LU() &&;
+
+	Vector<T> solveSystem(const Vector<T>& b) &&;
 
 private:
 	template<typename TT>
-	static std::ostream& writeVector(std::ostream& o, const std::vector<TT>& v) {
-		for (auto &el : v)
+	static std::ostream& writeVector(std::ostream& o, const std::vector<TT>& v)
+	{
+		for (auto& el : v)
 			o << el << ' ';
 		return o;
 	}
 
 	template<typename TT>
-	static void readVector(std::istream& i, std::vector<TT>& v) {
-		for (auto &el : v)
+	static void readVector(std::istream& i, std::vector<TT>& v)
+	{
+		for (auto& el : v)
 			i >> el;
 	}
 
@@ -113,6 +187,7 @@ private:
 		writeVector(o, al) << '\n';
 		writeVector(o, au);
 	}
+
 public:
 	static SkylineMatrix ReadFrom(std::istream& i)
 	{
@@ -146,3 +221,5 @@ std::ostream& PrintDense(std::ostream& o, SkylineMatrix<T> const& m)
 	}
 	return o;
 }
+
+#include "LU.hpp"
