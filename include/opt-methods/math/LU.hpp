@@ -13,12 +13,11 @@ SkylineMatrix<T>&& SkylineMatrix<T>::LU() &&
 	{
 		for (int jO = 0; jO < ia[i + 1] - ia[i]; jO++)
 		{
-			int j = skylineStart(i) + jO;  // j < i
+			int j = skylineStart(i) + jO, nonzeroOff = std::min(jO, ia[j + 1] - ia[j]); // j < i
+			int iBegin = ia[i] + jO - nonzeroOff, jBegin = ia[j] + jO - nonzeroOff;
 
-			al[ia[i] + jO] -=
-			    std::transform_reduce(al.begin() + ia[i], al.begin() + ia[i] + jO, au.begin() + ia[j], zero);
-			au[ia[i] + jO] -=
-			    std::transform_reduce(au.begin() + ia[i], au.begin() + ia[i] + jO, al.begin() + ia[j], zero);
+			al[ia[i] + jO] -= std::transform_reduce(al.begin() + iBegin, al.begin() + ia[i] + jO, au.begin() + jBegin, zero);
+			au[ia[i] + jO] -= std::transform_reduce(au.begin() + iBegin, au.begin() + ia[i] + jO, al.begin() + jBegin, zero);
 			au[ia[i] + jO] /= di[j];
 		}
 		di[i] -= std::transform_reduce(al.begin() + ia[i], al.begin() + ia[i + 1], au.begin() + ia[i], zero);

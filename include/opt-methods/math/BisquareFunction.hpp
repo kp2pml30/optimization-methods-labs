@@ -73,7 +73,7 @@ class QuadraticFunction2d : public QuadraticFunction<T>
 {
 public:
 	QuadraticFunction2d(T x2, T xy, T y2, T x, T y, T c)
-	: QuadraticFunction<T>(DenseMatrix<T>{{x2 * 2, xy, xy, y2 * 2}}, Vector<T>{x, y}, c)
+	: QuadraticFunction<T>(DenseMatrix<T>{2, {x2 * 2, xy, xy, y2 * 2}}, Vector<T>{x, y}, c)
 	{}
 
 	std::tuple<T, T, T, T, T> get2d_coefs() const

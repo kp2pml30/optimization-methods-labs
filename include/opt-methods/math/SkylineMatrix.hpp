@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./Vector.hpp"
+#include "./Matrix.hpp"
 
 #include <iostream>
 #include <tuple>
@@ -145,65 +146,49 @@ public:
 
 	Vector<T> solveSystem(const Vector<T>& b) &&;
 
-private:
-	template<typename TT>
-	static std::ostream& writeVector(std::ostream& o, const std::vector<TT>& v)
-	{
-		for (auto& el : v)
-			o << el << ' ';
-		return o;
-	}
-
-	template<typename TT>
-	static void readVector(std::istream& i, std::vector<TT>& v)
-	{
-		for (auto& el : v)
-			i >> el;
-	}
-
-	void ReadFromHelp(std::istream& i)
-	{
-		int n;
-		i >> n;
-
-		ia.resize(n + 1);
-		readVector(i, ia);
-
-		di.resize(n);
-		al.resize(ia.back());
-		au.resize(ia.back());
-
-		readVector(i, di);
-		readVector(i, al);
-		readVector(i, au);
-	}
-
-	void WriteTo(std::ostream& o) const
+	operator DenseMatrix<T>() const
 	{
 		int n = dims();
-		o << n << '\n';
-		writeVector(o, ia) << '\n';
-		writeVector(o, di) << '\n';
-		writeVector(o, al) << '\n';
-		writeVector(o, au);
+		std::valarray<T> data(zero, n * n);
+		std::copy_n(di.begin(), n, util::StridedIterator(std::begin(data), n + 1));
+		for (int i = 0; i < n; i++)
+		{
+			std::copy(al.data() + ia[i], al.data() + ia[i + 1], std::begin(data) + n * i + skylineStart(i));
+			std::copy(au.begin() + ia[i],
+			          au.begin() + ia[i + 1],
+			          util::StridedIterator(std::begin(data), n, skylineStart(i), i, n));
+		}
+		return DenseMatrix<T>(n, data);
+	}
+
+private:
+	void ReadFromHelp(std::istream& iIa, std::istream& iDi, std::istream& iAl, std::istream& iAu)
+	{
+		ia.clear();
+		di.clear();
+		al.clear();
+		au.clear();
+
+		util::ReadVector(iIa, ia);
+		util::ReadVector(iDi, di);
+		util::ReadVector(iAl, al);
+		util::ReadVector(iAu, au);
 	}
 
 public:
-	static SkylineMatrix ReadFrom(std::istream& i)
+	static SkylineMatrix ReadFrom(std::istream& iIa, std::istream& iDi, std::istream& iAl, std::istream& iAu)
 	{
 		SkylineMatrix ret;
-		ret.ReadFromHelp(i);
+		ret.ReadFromHelp(iIa, iDi, iAl, iAu);
 		return ret;
 	}
-	friend std::istream& operator>>(std::istream& i, SkylineMatrix m)
+
+	void WriteTo(std::ostream& oIa, std::ostream& oDi, std::ostream& oAl, std::ostream& oAu) const
 	{
-		m.ReadFromHelp(i);
-		return i;
-	}
-	friend std::ostream& operator<<(std::ostream& o, SkylineMatrix const& m)
-	{
-		m.WriteTo(o);
-		return o;
+		util::WriteVector(oIa, ia) << '\n';
+		util::WriteVector(oDi, di) << '\n';
+		util::WriteVector(oAl, al) << '\n';
+		util::WriteVector(oAu, au) << '\n';
 	}
 };
 
