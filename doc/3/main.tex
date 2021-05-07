@@ -1,0 +1,136 @@
+\documentclass[russian, english]{article}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\usepackage{graphicx}
+\usepackage{csvsimple}
+\usepackage{hyperref}
+
+\inputencoding{utf8}
+\def\code#1{\texttt{#1}}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+	{\scshape\LARGE Методы оптимизации \par}
+	\vspace{1cm}
+	{\scshape\Large Лабораторная работа №3\par}
+	\vspace{2cm}
+	{\Large\itshape Дмитрий Проценко M3234 \par
+	Кирилл Прокопенко M3236 \par
+	Николай Холявин M3238 \par}
+	\vfill
+	ИТМО y2019
+	\vfill
+	{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Цели}
+\begin{itemize}
+	\item реализовать $LU$ разложение и решение систем линейных уравнений на его основе
+	\item оценить зависимость погрешности от числа обусловленности, размерности (на сгенерированных с диагональным преобладанием, матрицах Гильберта)
+	\item сравнить с другими методами (Гаусса)
+	\item реализовать профильный формат хранения матрицы
+	\item (бонус)!!!
+\end{itemize}
+\section{Теория}
+\subsection{Профильный формат матрицы}
+Отдельно хранится главная диагональ и 2 треугольника, при этом треугольники хранятся в следующем формате: нжний левый хранится по строкам, верхний правый по столбцам, индексы первых элементов соответствующийх линий совпадают. Для улучшения кэширования и уменьшения фрагментации памяти каждый треугольник имеет общую память.\\
+Это может выглядеть, например, так:
+
+\newcommand*{\GridSize}{8}
+
+\newcommand*{\ColorCells}[1]{% #1 = list of x/y/color
+	\foreach \x/\y/\color in {#1} {
+		\node [fill=\color, draw=none, thick, minimum size=1cm] 
+			at (\x-.5,\GridSize+0.5-\y) {};
+	}
+}
+
+\newcommand*{\ColorCellsdxdy}[4]{% #4 = list of x/y/color
+	\foreach \myi in {1,2,...,#1}{
+		\foreach \x/\y/\color in {#4} {
+			\node [fill=\color, draw=none, thick, minimum size=1cm] 
+				at (\myi*#2-#2+\x-.5,\myi*#3-#3+\GridSize+0.5-\y) {};
+		}
+	}
+}
+\begin{center}
+\begin{tikzpicture}[scale=1]
+	\begin{scope}[thick,local bounding box=name]
+		% \ColorCells{1/1/blue, 2/3/red, 3/2/green, 4/4/yellow}
+		\ColorCellsdxdy{\GridSize}{1}{-1}{1/1/red}
+		\ColorCellsdxdy{3}{1}{0}{2/5/blue}
+		\ColorCellsdxdy{3}{0}{-1}{5/2/blue}
+		\ColorCellsdxdy{5}{1}{0}{1/6/green}
+		\ColorCellsdxdy{5}{0}{-1}{6/1/green}
+		\ColorCellsdxdy{2}{1}{0}{6/8/purple}
+		\ColorCellsdxdy{2}{0}{-1}{8/6/purple}
+		\draw (0, 0) grid (\GridSize, \GridSize);
+	\end{scope}
+\end{tikzpicture}
+\end{center}
+Белые клетки --- нули, красные --- диагональ, одинакоые цвета показывают соответсвующие профили матрицы.\par
+Данное представление хорошо подходит для $LU$ разложения, поскольку в его алгоритме вычисляются скалярные произведения строк на столбцы с равными индексами. Такой формат минимизирует число перемножений нулей и является оптимальным по кэшу для описанной операции.
+
+\subsection{LU разложение}
+
+\def\opn#1{\operatorname{#1}}
+\newcommand{\mtop}[1]{%
+\begin{tikzpicture}[#1]%
+\draw (0,1.5ex) -- (1.5ex,0);%
+\draw (1.5ex,0) -- (1.5ex,1.5ex);%
+\draw (0,1.5ex) -- (1.5ex,1.5ex);%
+\end{tikzpicture}%
+}
+
+\newcommand{\mbottom}[1]{%
+\begin{tikzpicture}[#1]%
+\draw (0,0) -- (1.5ex,0);%
+\draw (1.5ex,0) -- (0,1.5ex);%
+\draw (0,0) -- (0,1.5ex);%
+\end{tikzpicture}%
+}
+
+$A=LU$\\
+$U = \mtop{}$, \textbf{не} включает дагональ\\
+$L = \mbottom{}$, включает диагональ\\
+$L_{1, 1} = A_{1, 1}$\\
+$\forall i:\; U_{i, i} = 1$\\
+$\forall i\in\overline{2\dots n}: \forall j\in\overline{1\dots i-1}:$
+$\begin{cases}
+L_{i,j} = A_{i, j} - \left\langle\opn{row}_L(i), \opn{col}_U(j)\right\rangle\\
+U_{j,i} = \frac{A_{i, j} - \left\langle\opn{row}_L(j), \opn{col}_U(i)\right\rangle}{L_{j, j}}\\
+\end{cases}$\\
+
+Для оптимизации объема выделяемой памяти результат складывается в матрицу $A$. Это возможно, поскольку на каждом шаге мы используем только ``старые'' значения матриц $L$ и $U$ и текущее значение матрицы $A$. Профильный формат хранения матрицы позволяет ``обрезать'' нули по краям строк и столбцов.
+
+\section{Исследование погрешности}
+Исследуем зависимость погрешности от числа обусловленности ($k$) и размерности пространства ($n$). Для этого будем генерировать матрицы коэффициентов за счет изменени диагонального преобладания для систем вида $A_kx_k=f_k$ следующим образом:\\
+$\forall i\neq j:\; A_{i, j}\in\left\{0, -1, -2, -3, -4\right\}$\\
+$A_{i,i}=\begin{cases}
+-\sum_{i\neq j}A_{i, j} & i > 1\\
+-\sum_{i\neq j}A_{i, j} + 10^{-k} & i = 1\\
+\end{cases}$\\
+Для оценки погрешности будем генерировать системы с заранее известным ответом: $f_k=A\cdot (1,\dots,n)^T$
+\section{Скачкообразная погрешность}
+\section{Матрицы Гильберта}
+$\forall i,j\in\overline{1\dots n}:\; A_{i,j}=\frac{1}{i+j-1}$
+
+\section{Вывод}
+
+\newpage
+\appendix
+\section{Код}
+Код матриц, $LU$ разложения и вся математика находится в директории \texttt{include/math} под говорящими названиями.
+\subsection{Ссылки}
+\url{https://github.com/kp2pml30/optimization-methods-labs}
+\end{document}
+

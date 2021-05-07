@@ -10,7 +10,7 @@
 using namespace QtCharts;
 
 ChartItem::ChartItem(QGraphicsItem* item, QPointF translate, qreal maxScale, QChart* parent)
-: item(item), maxScale(maxScale), translate(std::move(translate)), chart(parent)
+: item(item), translate(std::move(translate)), maxScale(maxScale), chart(parent)
 {
 	setZValue(11);
 	setFlag(QGraphicsItem::ItemClipsChildrenToShape);
