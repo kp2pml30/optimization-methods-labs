@@ -129,7 +129,7 @@ int main()
 	table.names[1] = "Δ";
 	table.names[2] = "ε";
 	table.Add(0, 10, 1);
-	table.Add(30.0, 12.3, 0.5);
+	table.Add(30, 12.3, 0.5);
 	std::cout << table << std::flush;
 	return 0;
 }
