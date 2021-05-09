@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
 			std::cout << a.first << std::endl;
 	}
 
-	auto const& saveToFiles = [&](std::string dir) {
+	[[maybe_unused]] auto const& saveToFiles = [&](std::string dir) {
 		for (auto const& g : graphs)
 		{
 			namespace fs = std::filesystem;
@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 		}
 	};
 
-	auto parallelTestTable = [&]<OnedimProvider T>(TaskQueue<TaskT<T>>& tasks, auto &addResult) {
+	[[maybe_unused]] auto parallelTestTable = [&]<OnedimProvider T>(TaskQueue<TaskT<T>>& tasks, auto &addResult) {
 		std::vector<std::thread> factory;
 		for (int i = 0; i < nThreads; i++)
 			factory.push_back(std::thread(testTable, i, std::ref(tasks), std::ref(addResult)));

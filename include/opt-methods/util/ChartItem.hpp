@@ -1,6 +1,7 @@
 #pragma once
 
 #include <numbers>
+#include <memory>
 
 #include <QtGui/QPainter>
 #include <QtCharts/QChart>

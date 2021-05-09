@@ -43,9 +43,9 @@ namespace util
 	template<typename T, Matrix<T> M>
 	M DiagonallyDominant(MatrixGenerator<T, M> &&gen, size_t n, T dominance,
 		                   std::initializer_list<ptrdiff_t> selectedDiagonals,
-		                   std::invocable<std::default_random_engine&> auto&& aijDistribution) noexcept;
+		                   std::invocable<std::default_random_engine&> auto&& aijDistribution);
 
 	template<typename T, Matrix<T> M>
 	M Hilbert(MatrixGenerator<T, M> &&gen, size_t n,
-		        std::initializer_list<ptrdiff_t> selectedDiagonals) noexcept;
+		        std::initializer_list<ptrdiff_t> selectedDiagonals);
 } // namespace util

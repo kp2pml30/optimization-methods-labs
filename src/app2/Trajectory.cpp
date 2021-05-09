@@ -38,7 +38,7 @@ void MainWindow::Trajectory::setName(const std::string &name)
 namespace
 {
 	QFont defaultFont = QFont("", 6, QFont::Bold);
-	QBrush defaultBrush(QColorConstants::Black);
+	QBrush defaultBrush(QColor("black"));
 	QPen nullPen(defaultBrush, 0);
 }
 

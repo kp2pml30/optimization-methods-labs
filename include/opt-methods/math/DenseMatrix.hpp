@@ -115,7 +115,7 @@ namespace util
 	                                  size_t n,
 	                                  T dominance,
 	                                  std::initializer_list<ptrdiff_t> selectedDiagonals,
-	                                  std::function<T(std::default_random_engine&)> const& aijDistribution) noexcept
+	                                  std::function<T(std::default_random_engine&)> const& aijDistribution)
 	{
 		return static_cast<DenseMatrix<T>>(DiagonallyDominant(
 		    static_cast<MatrixGenerator<T, SkylineMatrix<T>>>(gen), n, dominance, selectedDiagonals, aijDistribution));
@@ -124,7 +124,7 @@ namespace util
 	template<typename T>
 	DenseMatrix<T> Hilbert(MatrixGenerator<T, DenseMatrix<T>>&& gen,
 	                       size_t n,
-	                       std::initializer_list<ptrdiff_t> selectedDiagonals) noexcept
+	                       std::initializer_list<ptrdiff_t> selectedDiagonals)
 	{
 		return static_cast<DenseMatrix<T>>(
 		    Hilbert(static_cast<MatrixGenerator<T, SkylineMatrix<T>>>(gen), n, selectedDiagonals));

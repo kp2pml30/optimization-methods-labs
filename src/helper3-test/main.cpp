@@ -8,17 +8,6 @@
 
 int main()
 {
-	auto printVector = [](std::ostream& o, Vector<double> const& vec) {
-		o << '{';
-		for (int i = 0; i < (int)vec.size(); i++)
-		{
-			o << vec[i];
-			if (i != (int)vec.size() - 1)
-				o << ", ";
-		}
-		o << '}';
-	};
-
 	using namespace std::literals;
 
 	/*
@@ -45,8 +34,8 @@ int main()
 	PrintDense(std::cout, A);
 	std::cout << "A (dense):\n";
 	auto a_dense = static_cast<DenseMatrix<double>>(A);
-	for (int i = 0; i < a_dense.Dims(); i++, std::cout << '\n')
-		for (int j = 0; j < a_dense.Dims(); j++, std::cout << '\t')
+	for (int i = 0; i < (int)a_dense.Dims(); i++, std::cout << '\n')
+		for (int j = 0; j < (int)a_dense.Dims(); j++, std::cout << '\t')
 			std::cout << *a_dense.IteratorAt(i, j);
 	using namespace util;
 	std::cout << "b: " << b << "\n\n";

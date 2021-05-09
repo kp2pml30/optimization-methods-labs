@@ -17,20 +17,11 @@ class SkylineMatrix;
 
 namespace util
 {
-	template<typename T>
-	SkylineMatrix<T> Generate(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
-	                          SkylineMatrix<T>& m,
-	                          size_t n,
-	                          std::initializer_list<ptrdiff_t> selectedDiagonals,
-	                          std::invocable<std::default_random_engine&, size_t, size_t> auto&& aijGenerator,
-	                          std::invocable<std::default_random_engine&, size_t> auto&& diGenerator) noexcept;
-	template<typename T>
-	SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
-	                                    size_t n,
-	                                    T dominance,
-	                                    std::initializer_list<ptrdiff_t> selectedDiagonals,
-	                                    std::invocable<std::default_random_engine&> auto&& aijDistribution) noexcept;
+	struct SkylineMatrixGeneratorImpl;
 }
+
+template<typename T>
+Vector<T> operator*(SkylineMatrix<T> const& m, Vector<T> const& x);
 
 template<typename T>
 class SkylineMatrix
@@ -217,23 +208,109 @@ public:
 		util::WriteVector(oAu, au) << '\n';
 	}
 
-	template<typename TT>
-	friend SkylineMatrix<TT> util::Generate(
-	    MatrixGenerator<TT, SkylineMatrix<TT>>&& gen,
-	    SkylineMatrix<TT>& m,
-	    size_t n,
-	    std::initializer_list<ptrdiff_t> selectedDiagonals,
-	    std::invocable<std::default_random_engine&, size_t, size_t> auto&& aijGenerator,
-	    std::invocable<std::default_random_engine&, size_t> auto&& diGenerator) noexcept;
-
-	template<typename TT>
-	friend SkylineMatrix<TT> util::DiagonallyDominant(
-	    MatrixGenerator<TT, SkylineMatrix<TT>>&& gen,
-	    size_t n,
-	    TT dominance,
-	    std::initializer_list<ptrdiff_t> selectedDiagonals,
-	    std::invocable<std::default_random_engine&> auto&& aijDistribution) noexcept;
+	friend Vector<T> operator*<T>(SkylineMatrix<T> const& m, Vector<T> const& x);
+	friend struct util::SkylineMatrixGeneratorImpl;
 };
+
+namespace util
+{
+	struct SkylineMatrixGeneratorImpl
+	{
+		template<typename T>
+		static SkylineMatrix<T> GenerateM(
+		    MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+		    SkylineMatrix<T>& m,
+		    size_t n,
+		    std::initializer_list<ptrdiff_t> selectedDiagonals,
+		    /* std::invocable<std::default_random_engine&, size_t, size_t> */ auto&& aijGenerator,
+		    /* std::invocable<std::default_random_engine&, size_t> */ auto&& diGenerator)
+		{
+			m.ia.resize(n + 1);
+			m.ia[0]         = 0;
+			auto [min, max] = std::minmax_element(selectedDiagonals.begin(), selectedDiagonals.end());
+			int skyline     = (int)std::max(std::abs(*min), std::abs(*max));
+			for (int i = 1, val = 0; i < (int)n + 1; i++, val += skyline)
+				m.ia[i] = m.ia[i - 1] + std::min(val, i - 1);
+			m.al.resize(m.ia.back());
+			m.au.resize(m.ia.back());
+			m.di.resize(n);
+
+			for (auto diag : selectedDiagonals)
+			{
+				if (diag > 0)
+					for (int i = (int)diag; i < (int)n; i++)
+						m.al[m.ia[i + 1] - diag] = aijGenerator(gen.engine, i, i - diag);
+				else
+					for (int i = (int)(-diag); i < (int)n; i++)
+						m.au[m.ia[i + 1] + diag] = aijGenerator(gen.engine, i + diag, i);
+			}
+			for (int i = 0; i < (int)n; i++)
+				m.di[i] = diGenerator(gen.engine, i);
+
+			return m;
+		}
+
+		template<typename T>
+		static SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+		                                           size_t n,
+		                                           T dominance,
+		                                           std::initializer_list<ptrdiff_t> selectedDiagonals,
+		                                           std::invocable<std::default_random_engine&> auto&& aijDistribution)
+		{
+			SkylineMatrix<T> m;
+			return GenerateM<T>(
+			    std::move(gen),
+			    m,
+			    n,
+			    selectedDiagonals,
+			    [&](auto& gen, size_t, size_t) { return aijDistribution(gen); },
+			    [&, isFirst = true, sum = SkylineMatrix<T>::zero](auto&, size_t) mutable {
+				    if (isFirst)
+				    {
+					    sum     = std::reduce(m.al.begin(), m.al.end()) + std::reduce(m.au.begin(), m.au.end());
+					    isFirst = false;
+					    return -sum + dominance;
+				    }
+				    return -sum;
+			    });
+		}
+
+		template<typename T>
+		static SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+		                                size_t n,
+		                                std::initializer_list<ptrdiff_t> selectedDiagonals)
+		{
+			SkylineMatrix<T> m;
+			return GenerateM<T>(
+			    std::move(gen),
+			    m,
+			    n,
+			    selectedDiagonals,
+			    [&](auto&, size_t i, size_t j) { return T{1} / (i + j + 1); },
+			    [&](auto&, size_t i) mutable { return T{1} / (i + i + 1); });
+		}
+	};
+
+	template<typename T>
+	SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	                                    size_t n,
+	                                    T dominance,
+	                                    std::initializer_list<ptrdiff_t> selectedDiagonals,
+	                                    std::invocable<std::default_random_engine&> auto&& aijDistribution)
+	{
+		return SkylineMatrixGeneratorImpl::DiagonallyDominant<T>(
+		    std::move(gen), n, dominance, selectedDiagonals, std::forward<decltype(aijDistribution)>(aijDistribution));
+	}
+
+	template<typename T>
+	SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	                         size_t n,
+	                         std::initializer_list<ptrdiff_t> selectedDiagonals)
+	{
+		return SkylineMatrixGeneratorImpl::Hilbert<T>(
+		    std::move(gen), n, selectedDiagonals);
+	}
+} // namespace util
 
 template<typename T>
 std::ostream& PrintDense(std::ostream& o, SkylineMatrix<T> const& m)
@@ -251,92 +328,21 @@ std::ostream& PrintDense(std::ostream& o, SkylineMatrix<T> const& m)
 }
 
 template<typename T>
-Vector<T> operator*(SkylineMatrix<T> const& l, Vector<T> const& r)
+Vector<T> operator*(SkylineMatrix<T> const& m, Vector<T> const& x)
 {
-	assert(l.Dims() == r.size());
-	Vector<T> res(l.Dims());
-	for (size_t i = 0; i < l.Dims(); i++)
+	assert(m.Dims() == (int)x.size());
+	Vector<T> y(m.Dims());
+	for (int i = 0; i < m.Dims(); i++)
 	{
-		auto row = l.Row((int)i);
-		res[i] = std::transform_reduce(row.begin(), row.end(), std::begin(r), T{});
+		y[i] += m.di[i] * x[i];
+		y[i] += std::transform_reduce(m.al.begin() + m.ia[i], m.al.begin() + m.ia[i + 1], std::begin(x) + m.SkylineStart(i), T{});
+		std::transform(m.au.begin() + m.ia[i],
+		               m.au.begin() + m.ia[i + 1],
+		               std::begin(y) + m.SkylineStart(i),
+		               std::begin(y) + m.SkylineStart(i),
+		               [fac = x[i]](T const& lhs, T const& rhs) { return rhs + fac * lhs; });
 	}
-	return res;
+	return y;
 }
 
 #include "LU.hpp"
-
-namespace util
-{
-	template<typename T>
-	SkylineMatrix<T> Generate(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
-	                          SkylineMatrix<T>& m,
-	                          size_t n,
-	                          std::initializer_list<ptrdiff_t> selectedDiagonals,
-	                          std::invocable<std::default_random_engine&, size_t, size_t> auto&& aijGenerator,
-	                          std::invocable<std::default_random_engine&, size_t> auto&& diGenerator) noexcept
-	{
-		m.ia.resize(n + 1);
-		m.ia[0]         = 0;
-		auto [min, max] = std::minmax_element(selectedDiagonals.begin(), selectedDiagonals.end());
-		int skyline     = (int)std::max(std::abs(*min), std::abs(*max));
-		for (int i = 1, val = 0; i < n + 1; i++, val += skyline)
-			m.ia[i] = m.ia[i - 1] + std::min(val, i - 1);
-		m.al.resize(m.ia.back());
-		m.au.resize(m.ia.back());
-		m.di.resize(n);
-
-		for (auto diag : selectedDiagonals)
-		{
-			if (diag > 0)
-				for (int i = (int)diag; i < n; i++)
-					m.al[m.ia[i + 1] - diag] = aijGenerator(gen.engine, i, i - diag);
-			else
-				for (int i = (int)(-diag); i < n; i++)
-					m.au[m.ia[i + 1] + diag] = aijGenerator(gen.engine, i + diag, i);
-		}
-		for (int i = 0; i < n; i++)
-			m.di[i] = diGenerator(gen.engine, i);
-
-		return m;
-	}
-
-	template<typename T>
-	SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
-	                                    size_t n,
-	                                    T dominance,
-	                                    std::initializer_list<ptrdiff_t> selectedDiagonals,
-	                                    std::invocable<std::default_random_engine&> auto&& aijDistribution) noexcept
-	{
-		SkylineMatrix<T> m;
-		return Generate(
-		    std::move(gen),
-		    m,
-		    n,
-		    selectedDiagonals,
-		    [&](auto& gen, size_t, size_t) { return aijDistribution(gen); },
-		    [&, isFirst = true, sum = SkylineMatrix<T>::zero](auto& gen, size_t) mutable {
-			    if (isFirst)
-			    {
-				    sum = std::reduce(m.al.begin(), m.al.end()) + std::reduce(m.au.begin(), m.au.end());
-				    isFirst = false;
-				    return -sum + dominance;
-			    }
-			    return -sum;
-		    });
-	}
-
-	template<typename T>
-	SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
-	                         size_t n,
-	                         std::initializer_list<ptrdiff_t> selectedDiagonals) noexcept
-	{
-		SkylineMatrix<T> m;
-		return Generate(
-		    std::move(gen),
-		    m,
-		    n,
-		    selectedDiagonals,
-		    [&](auto& gen, size_t i, size_t j) { return T{1} / (i + j + 1); },
-		    [&](auto& gen, size_t i) mutable { return T{1} / (i + i + 1); });
-	}
-} // namespace util

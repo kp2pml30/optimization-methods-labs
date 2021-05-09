@@ -30,7 +30,7 @@ template<typename T>
 Vector<T> SkylineMatrix<T>::SolveSystem(const Vector<T>& b) &&
 {
 	std::move(*this).LU();
-	assert(Dims() == b.size());
+	assert(Dims() == (int)b.size());
 
 	Vector<T> y;
 	y.resize(Dims());

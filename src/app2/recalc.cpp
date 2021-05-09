@@ -67,15 +67,15 @@ void MainWindow::recalc()
 	std::vector<std::pair<double, std::string>> levels;
 	{
 		auto desc = MApprox(TypeTag<GradientDescent<Vector<double>, double>>{}, eps);
-		addVisual(bifunc, desc, start, levels, QColorConstants::Red);
+		addVisual(bifunc, desc, start, levels, QColor("red"));
 	}
 	{
 		auto desc = MApprox(TypeTag<SteepestDescent<Vector<double>, double, ErasedApproximator<double, double>>>{}, eps, erasedProvider());
-		addVisual(bifunc, desc, start, levels, QColorConstants::DarkGreen);
+		addVisual(bifunc, desc, start, levels, QColor("darkgreen"));
 	}
 	{
 		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double, QuadraticFunction2d<double>>>{}, eps);
-		addVisual(bifunc, desc, start, levels, QColorConstants::Blue);
+		addVisual(bifunc, desc, start, levels, QColor("blue"));
 	}
 
 	auto addLevel = [&](Trajectory& traj, double delta, double colCoef) {
