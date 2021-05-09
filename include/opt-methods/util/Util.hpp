@@ -3,6 +3,7 @@
 #include <iterator>
 #include <vector>
 #include <span>
+#include <random>
 
 namespace util
 {
@@ -82,8 +83,8 @@ namespace util
 		PermutedStridedIterator(
 		    It iter, size_t n, size_t startI, size_t startJ, size_t stride, std::span<int> permutation) noexcept
 		: StridedIterator<It>(iter, n, permutation[startI], startJ, stride)
-		, i(startI)
 		, permutation(permutation)
+		, i(startI)
 		{}
 
 		PermutedStridedIterator& operator++() noexcept

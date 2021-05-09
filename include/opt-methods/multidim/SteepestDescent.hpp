@@ -35,7 +35,7 @@ public:
 		while (true)
 		{
 			auto grad = gradf(x);
-			if (len2(grad) < epsilon2) break;
+			if (Len2(grad) < epsilon2) break;
 
 			auto curfunc = [=](Scalar<P> const& lambda) {
 				return func(x - lambda * grad);

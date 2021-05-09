@@ -7,13 +7,13 @@
 template<typename T>
 SkylineMatrix<T>&& SkylineMatrix<T>::LU() &&
 {
-	int n = dims();
+	int n = Dims();
 
 	for (int i = 0; i < n; i++)
 	{
 		for (int jO = 0; jO < ia[i + 1] - ia[i]; jO++)
 		{
-			int j = skylineStart(i) + jO, nonzeroOff = std::min(jO, ia[j + 1] - ia[j]); // j < i
+			int j = SkylineStart(i) + jO, nonzeroOff = std::min(jO, ia[j + 1] - ia[j]); // j < i
 			int iBegin = ia[i] + jO - nonzeroOff, jBegin = ia[j] + jO - nonzeroOff;
 
 			al[ia[i] + jO] -= std::transform_reduce(al.begin() + iBegin, al.begin() + ia[i] + jO, au.begin() + jBegin, zero);
@@ -27,24 +27,24 @@ SkylineMatrix<T>&& SkylineMatrix<T>::LU() &&
 }
 
 template<typename T>
-Vector<T> SkylineMatrix<T>::solveSystem(const Vector<T>& b) &&
+Vector<T> SkylineMatrix<T>::SolveSystem(const Vector<T>& b) &&
 {
 	std::move(*this).LU();
-	assert(dims() == b.size());
+	assert(Dims() == b.size());
 
 	Vector<T> y;
-	y.resize(dims());
+	y.resize(Dims());
 
-	for (int i = 0; i < dims(); i++)
-		y[i] = (b[i] - std::transform_reduce(al.begin() + ia[i], al.begin() + ia[i + 1], std::begin(y) + skylineStart(i), zero)) /
+	for (int i = 0; i < Dims(); i++)
+		y[i] = (b[i] - std::transform_reduce(al.begin() + ia[i], al.begin() + ia[i + 1], std::begin(y) + SkylineStart(i), zero)) /
 		       di[i];
 
 	Vector<T> x;
-	x.resize(dims());
-	for (int i = dims() - 1; i >= 0; i--)
+	x.resize(Dims());
+	for (int i = Dims() - 1; i >= 0; i--)
 	{
-		auto r = row(i);
-		x[i]   = y[i] - std::transform_reduce(r.iteratorAt(i + 1), r.end(), std::begin(x) + (i + 1), zero);
+		auto r = Row(i);
+		x[i]   = y[i] - std::transform_reduce(r.IteratorAt(i + 1), r.end(), std::begin(x) + (i + 1), zero);
 	}
 
 	return x;

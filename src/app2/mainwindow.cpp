@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 	auto toString = [](QuadraticFunction2d<double> const& func) {
 		[[maybe_unused]] auto [center, vx, vy] = func.shift(func.c >= -0.1 ? -2 * func.c - 1 : 0).canonicalCoordSys();
-		auto l1 = len2(vx), l2 = len2(vy), cond = std::max(l1, l2) / std::min(l1, l2);
+		auto l1 = Len2(vx), l2 = Len2(vy), cond = std::max(l1, l2) / std::min(l1, l2);
 		return QString::fromStdString((std::string)func + "\t(cond(A) = " + std::to_string(cond) + ")");
 	};
 

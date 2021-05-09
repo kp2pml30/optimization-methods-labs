@@ -59,26 +59,26 @@ public:
 
 		while (true)
 		{
-			if (len2(gradx) < epsilon2)
+			if (Len2(gradx) < epsilon2)
 				break;
 
 			/*
-			auto app = dot(A * p, p);
-			alpha = -dot(A * gradx, p) / app;
+			auto app = Dot(A * p, p);
+			alpha = -Dot(A * gradx, p) / app;
 			x += alpha * p;
 			gradx = grad(x);
-			beta = dot(A * gradx, p) / app;
+			beta = Dot(A * gradx, p) / app;
 			p = -gradx + beta * p;
 			*/
 
 			auto ap = A * p;
-			auto app = dot(ap, p);
-			Scalar<P> alpha = len2(gradx) / app;
+			auto app = Dot(ap, p);
+			Scalar<P> alpha = Len2(gradx) / app;
 
 			x += alpha * p;
 			decltype(gradx) next_gradx = gradx + alpha * ap;
 
-			Scalar<P> beta = len2(next_gradx) / len2(gradx);
+			Scalar<P> beta = Len2(next_gradx) / Len2(gradx);
 			gradx = next_gradx;
 			p = -gradx + beta * p;
 

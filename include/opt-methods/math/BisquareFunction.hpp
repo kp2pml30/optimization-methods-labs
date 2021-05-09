@@ -8,6 +8,7 @@
 #include "./def.hpp"
 #include "./Vector.hpp"
 #include "./Matrix.hpp"
+#include "./DenseMatrix.hpp"
 
 template<typename T, Matrix<T> MatrixImpl = DenseMatrix<T>>
 class QuadraticFunction
@@ -22,7 +23,7 @@ public:
 	, b(std::move(b))
 	, c(std::move(c))
 	{
-		assert(this->A.dims() == this->b.size());
+		assert(this->A.Dims() == this->b.size());
 	}
 
 	QuadraticFunction swap() const noexcept
@@ -30,13 +31,13 @@ public:
 		/// TEST ME
 		Vector<T> b_rev = b;
 		std::reverse(std::begin(b_rev), std::end(b_rev));
-		return QuadraticFunction(A.transpose(), b_rev, c);
+		return QuadraticFunction(A.Transpose(), b_rev, c);
 	}
 
 	T operator()(Vector<T> const& v) const
 	{
-		assert(v.size() == A.dims());
-		return dot(A * v, v) / 2 + dot(b, v) + c;
+		assert(v.size() == A.Dims());
+		return Dot(A * v, v) / 2 + Dot(b, v) + c;
 	}
 
 public:
@@ -54,7 +55,7 @@ public:
 	public:
 		Vector<T> operator()(Vector<T> const& v) const
 		{
-			assert(v.size() == A.dims());
+			assert(v.size() == A.Dims());
 			return A * v + b;
 		}
 	};
@@ -198,7 +199,7 @@ public:
 		c /= -f;
 
 		auto v1 = Vector<T>{1, tan_alpha};
-		v1 /= len(v1);
+		v1 /= Len(v1);
 		auto v2 = Vector<T>({-v1[1], v1[0]});
 
 		return {center, v1 / sqrt(a), v2 / sqrt(c)};

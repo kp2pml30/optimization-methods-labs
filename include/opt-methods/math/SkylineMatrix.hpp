@@ -2,10 +2,35 @@
 
 #include "./Vector.hpp"
 #include "./Matrix.hpp"
+#include "../util/Util.hpp"
 
 #include <iostream>
 #include <tuple>
 #include <vector>
+#include <functional>
+
+template<typename T>
+class DenseMatrix;
+
+template<typename T>
+class SkylineMatrix;
+
+namespace util
+{
+	template<typename T>
+	SkylineMatrix<T> Generate(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	                          SkylineMatrix<T>& m,
+	                          size_t n,
+	                          std::initializer_list<ptrdiff_t> selectedDiagonals,
+	                          std::invocable<std::default_random_engine&, size_t, size_t> auto&& aijGenerator,
+	                          std::invocable<std::default_random_engine&, size_t> auto&& diGenerator) noexcept;
+	template<typename T>
+	SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	                                    size_t n,
+	                                    T dominance,
+	                                    std::initializer_list<ptrdiff_t> selectedDiagonals,
+	                                    std::invocable<std::default_random_engine&> auto&& aijDistribution) noexcept;
+}
 
 template<typename T>
 class SkylineMatrix
@@ -22,7 +47,7 @@ private:
 	/// skyline information (ia[k] -- start of k-th row (column) in al (au))
 	std::vector<int> ia = {0};
 
-	int skylineStart(int i) const noexcept
+	int SkylineStart(int i) const noexcept
 	{
 		return i - (ia[i + 1] - ia[i]);
 	}
@@ -42,14 +67,14 @@ private:
 		LineProxy(const SkylineMatrix* enclosing, int index) noexcept
 		: enclosing(enclosing)
 		, index(index)
-		, start(enclosing->skylineStart(index))
+		, start(enclosing->SkylineStart(index))
 		{}
 
-		T const& getLineElement(int index, int dOffset) const noexcept
+		T const& GetLineElement(int index, int dOffset) const noexcept
 		{
 			return (enclosing->*data)[enclosing->ia[index] + dOffset];
 		}
-		T const& getPerpElement(int offset, int dIndex) const noexcept
+		T const& GetPerpElement(int offset, int dIndex) const noexcept
 		{
 			constexpr auto swapped = data == &SkylineMatrix::au ? &SkylineMatrix::al : &SkylineMatrix::au;
 			return (enclosing->*swapped)[enclosing->ia[offset] + dIndex];
@@ -58,6 +83,7 @@ private:
 		struct Iterator
 		{
 			friend struct LineProxy;
+
 		private:
 			LineProxy const* line;
 			int offset;
@@ -86,77 +112,77 @@ private:
 				return Iterator(line, offset++);
 			}
 
-			bool operator==(const Iterator &rhs) const = default;
-			bool operator!=(const Iterator &rhs) const = default;
+			bool operator==(const Iterator& rhs) const = default;
+			bool operator!=(const Iterator& rhs) const = default;
 		};
 
 	public:
 		T const& operator[](int offset) const noexcept
 		{
-			assert(offset >= 0 && offset < enclosing->dims());
+			assert(offset >= 0 && offset < enclosing->Dims());
 			if (int dOffset = offset - start; dOffset < 0)
 				return zero;
 			else if (offset < index) [[likely]]
-				return getLineElement(index, dOffset);
+				return GetLineElement(index, dOffset);
 			else if (offset == index)
 				return enclosing->di[index];
-			else [[unlikely]] if (int dIndex = index - enclosing->skylineStart(offset); dIndex < 0)
+			else [[unlikely]] if (int dIndex = index - enclosing->SkylineStart(offset); dIndex < 0)
 				return zero;
 			else
-				return getPerpElement(offset, dIndex);
+				return GetPerpElement(offset, dIndex);
 		}
 
-		Iterator iteratorAt(int offset) const noexcept
+		Iterator IteratorAt(int offset) const noexcept
 		{
 			return Iterator(this, offset);
 		}
 		Iterator begin() const noexcept
 		{
-			return iteratorAt(0);
+			return IteratorAt(0);
 		}
 		Iterator end() const noexcept
 		{
-			return iteratorAt(enclosing->dims());
+			return IteratorAt(enclosing->Dims());
 		}
 	};
 
 public:
 	SkylineMatrix() = default;
 
-	int dims() const noexcept
+	int Dims() const noexcept
 	{
 		return (int)ia.size() - 1;
 	}
-	auto row(int y) const& noexcept
+	auto Row(int y) const& noexcept
 	{
-		assert(y >= 0 && y < dims());
+		assert(y >= 0 && y < Dims());
 		return LineProxy<&SkylineMatrix::al>(this, y);
 	}
-	auto col(int x) const& noexcept
+	auto Col(int x) const& noexcept
 	{
-		assert(x >= 0 && x < dims());
+		assert(x >= 0 && x < Dims());
 		return LineProxy<&SkylineMatrix::au>(this, x);
 	}
 	auto operator[](int y) const& noexcept
 	{
-		return row(y);
+		return Row(y);
 	}
 
 	SkylineMatrix&& LU() &&;
 
-	Vector<T> solveSystem(const Vector<T>& b) &&;
+	Vector<T> SolveSystem(const Vector<T>& b) &&;
 
 	operator DenseMatrix<T>() const
 	{
-		int n = dims();
+		int n = Dims();
 		std::valarray<T> data(zero, n * n);
 		std::copy_n(di.begin(), n, util::StridedIterator(std::begin(data), n + 1));
 		for (int i = 0; i < n; i++)
 		{
-			std::copy(al.data() + ia[i], al.data() + ia[i + 1], std::begin(data) + n * i + skylineStart(i));
+			std::copy(al.data() + ia[i], al.data() + ia[i + 1], std::begin(data) + n * i + SkylineStart(i));
 			std::copy(au.begin() + ia[i],
 			          au.begin() + ia[i + 1],
-			          util::StridedIterator(std::begin(data), n, skylineStart(i), i, n));
+			          util::StridedIterator(std::begin(data), n, SkylineStart(i), i, n));
 		}
 		return DenseMatrix<T>(n, data);
 	}
@@ -190,21 +216,127 @@ public:
 		util::WriteVector(oAl, al) << '\n';
 		util::WriteVector(oAu, au) << '\n';
 	}
+
+	template<typename TT>
+	friend SkylineMatrix<TT> util::Generate(
+	    MatrixGenerator<TT, SkylineMatrix<TT>>&& gen,
+	    SkylineMatrix<TT>& m,
+	    size_t n,
+	    std::initializer_list<ptrdiff_t> selectedDiagonals,
+	    std::invocable<std::default_random_engine&, size_t, size_t> auto&& aijGenerator,
+	    std::invocable<std::default_random_engine&, size_t> auto&& diGenerator) noexcept;
+
+	template<typename TT>
+	friend SkylineMatrix<TT> util::DiagonallyDominant(
+	    MatrixGenerator<TT, SkylineMatrix<TT>>&& gen,
+	    size_t n,
+	    TT dominance,
+	    std::initializer_list<ptrdiff_t> selectedDiagonals,
+	    std::invocable<std::default_random_engine&> auto&& aijDistribution) noexcept;
 };
 
 template<typename T>
 std::ostream& PrintDense(std::ostream& o, SkylineMatrix<T> const& m)
 {
-	o << m.dims() << '\n';
-	for (int y = 0; y < m.dims(); y++)
+	o << m.Dims() << '\n';
+	for (int y = 0; y < m.Dims(); y++)
 	{
-		if (m.dims() > 0)
+		if (m.Dims() > 0)
 			o << m[y][0];
-		for (int x = 1; x < m.dims(); x++)
+		for (int x = 1; x < m.Dims(); x++)
 			o << '\t' << m[y][x];
 		o << '\n';
 	}
 	return o;
 }
 
+template<typename T>
+Vector<T> operator*(SkylineMatrix<T> const& l, Vector<T> const& r)
+{
+	assert(l.Dims() == r.size());
+	Vector<T> res(l.Dims());
+	for (size_t i = 0; i < l.Dims(); i++)
+	{
+		auto row = l.Row((int)i);
+		res[i] = std::transform_reduce(row.begin(), row.end(), std::begin(r), T{});
+	}
+	return res;
+}
+
 #include "LU.hpp"
+
+namespace util
+{
+	template<typename T>
+	SkylineMatrix<T> Generate(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	                          SkylineMatrix<T>& m,
+	                          size_t n,
+	                          std::initializer_list<ptrdiff_t> selectedDiagonals,
+	                          std::invocable<std::default_random_engine&, size_t, size_t> auto&& aijGenerator,
+	                          std::invocable<std::default_random_engine&, size_t> auto&& diGenerator) noexcept
+	{
+		m.ia.resize(n + 1);
+		m.ia[0]         = 0;
+		auto [min, max] = std::minmax_element(selectedDiagonals.begin(), selectedDiagonals.end());
+		int skyline     = (int)std::max(std::abs(*min), std::abs(*max));
+		for (int i = 1, val = 0; i < n + 1; i++, val += skyline)
+			m.ia[i] = m.ia[i - 1] + std::min(val, i - 1);
+		m.al.resize(m.ia.back());
+		m.au.resize(m.ia.back());
+		m.di.resize(n);
+
+		for (auto diag : selectedDiagonals)
+		{
+			if (diag > 0)
+				for (int i = (int)diag; i < n; i++)
+					m.al[m.ia[i + 1] - diag] = aijGenerator(gen.engine, i, i - diag);
+			else
+				for (int i = (int)(-diag); i < n; i++)
+					m.au[m.ia[i + 1] + diag] = aijGenerator(gen.engine, i + diag, i);
+		}
+		for (int i = 0; i < n; i++)
+			m.di[i] = diGenerator(gen.engine, i);
+
+		return m;
+	}
+
+	template<typename T>
+	SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	                                    size_t n,
+	                                    T dominance,
+	                                    std::initializer_list<ptrdiff_t> selectedDiagonals,
+	                                    std::invocable<std::default_random_engine&> auto&& aijDistribution) noexcept
+	{
+		SkylineMatrix<T> m;
+		return Generate(
+		    std::move(gen),
+		    m,
+		    n,
+		    selectedDiagonals,
+		    [&](auto& gen, size_t, size_t) { return aijDistribution(gen); },
+		    [&, isFirst = true, sum = SkylineMatrix<T>::zero](auto& gen, size_t) mutable {
+			    if (isFirst)
+			    {
+				    sum = std::reduce(m.al.begin(), m.al.end()) + std::reduce(m.au.begin(), m.au.end());
+				    isFirst = false;
+				    return -sum + dominance;
+			    }
+			    return -sum;
+		    });
+	}
+
+	template<typename T>
+	SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	                         size_t n,
+	                         std::initializer_list<ptrdiff_t> selectedDiagonals) noexcept
+	{
+		SkylineMatrix<T> m;
+		return Generate(
+		    std::move(gen),
+		    m,
+		    n,
+		    selectedDiagonals,
+		    [&](auto& gen, size_t i, size_t j) { return T{1} / (i + j + 1); },
+		    [&](auto& gen, size_t i) mutable { return T{1} / (i + i + 1); });
+	}
+} // namespace util

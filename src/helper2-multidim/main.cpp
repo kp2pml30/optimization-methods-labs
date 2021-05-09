@@ -3,6 +3,7 @@
 #include "opt-methods/solvers/BaseApproximatorDraw.hpp"
 #include "opt-methods/util/Charting.hpp"
 #include "opt-methods/solvers/Erased.hpp"
+#include "opt-methods/math/DiagonalMatrix.hpp"
 
 #include <fstream>
 #include <iostream>

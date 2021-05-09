@@ -36,7 +36,7 @@ public:
 		while (true)
 		{
 			auto grad = gradf(x);
-			if (len2(grad) < epsilon2)
+			if (Len2(grad) < epsilon2)
 				break;
 			P y = x;
 			V fy = fx;
