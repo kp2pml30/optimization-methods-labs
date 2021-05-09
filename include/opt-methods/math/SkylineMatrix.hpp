@@ -35,7 +35,7 @@ namespace util
 template<typename T>
 class SkylineMatrix
 {
-private:
+public:
 	static const inline T zero{};
 
 	/// diagonal storage
