@@ -1,9 +1,62 @@
+#include <array>
+#include <string>
+#include <vector>
 #include <tuple>
 #include <functional>
 #include <cmath>
+#include <ostream>
 
 namespace
 {
+	template<std::size_t e, std::size_t b = 0, std::size_t s = 1>
+	struct CompiletimeLoop
+	{
+	public:
+		template<typename T>
+		static void Go(T const& func)
+		{
+			if constexpr (b < e)
+			{
+				func(std::integral_constant<std::size_t, b>{});
+				CompiletimeLoop<e, b + s, s>::Go(func);
+			}
+		}
+	};
+	template<typename ...Args>
+	struct Table
+	{
+		static constexpr std::size_t nCols = sizeof...(Args);
+		std::array<std::string, nCols> names;
+		std::vector<std::tuple<Args...>> rows;
+
+
+		template<typename ...A>
+		void Add(A&&... a)
+		{
+			rows.emplace_back(std::forward<A>(a)...);
+		}
+	
+		friend std::ostream& operator<<(std::ostream& o, Table const& table)
+		{
+			CompiletimeLoop<nCols>::Go([&]<std::size_t i>(std::integral_constant<std::size_t, i>) {
+						if constexpr (i != 0)
+							o << '\t';
+						o << table.names[i];
+					});
+			o << '\n';
+			for (auto const& r : table.rows)
+			{
+				CompiletimeLoop<nCols>::Go([&]<std::size_t i>(std::integral_constant<std::size_t, i>) {
+							if constexpr (i != 0)
+								o << '\t';
+							o << std::get<i>(r);
+						});
+				o << '\n';
+			}
+			return o;
+		}
+	};
+
 	template<typename T>
 	using Modifier = std::function<T(T const&)>;
 
@@ -34,9 +87,8 @@ namespace
 	void GetStatsVectorizedAdvance(std::function<void(Args const&...)> test, std::tuple<Args...> begins, std::function<bool(Args&...)> const& modifiers)
 	{
 		do
-		{
 			std::apply(test, begins);
-		} while (std::apply(modifiers, begins));
+		while (std::apply(modifiers, begins));
 	}
 
 	template<typename ...Args>
@@ -71,5 +123,13 @@ int main()
 				e = std::exp(i);
 				return true;
 			}));
+	std::cout << " -= table =-\n";
+	auto table = Table<int, double, double>();
+	table.names[0] = "Int!";
+	table.names[1] = "Δ";
+	table.names[2] = "ε";
+	table.Add(0, 10, 1);
+	table.Add(30.0, 12.3, 0.5);
+	std::cout << table << std::flush;
 	return 0;
 }
