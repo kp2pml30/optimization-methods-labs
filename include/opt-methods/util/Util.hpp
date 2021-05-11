@@ -4,10 +4,11 @@
 #include <vector>
 #include <span>
 #include <random>
+#include <ranges>
 
 namespace util
 {
-	template<typename TT>
+	template<std::ranges::range TT> requires std::is_class_v<TT>
 	static std::ostream& WriteVector(std::ostream& o, TT const& v)
 	{
 		for (auto& el : v)
@@ -16,11 +17,24 @@ namespace util
 	}
 
 	template<typename TT>
-	static void ReadVector(std::istream& i, std::vector<TT>& v)
+	static std::istream& ReadVector(std::istream& i, std::vector<TT>& v)
 	{
 		TT el{};
 		while (i >> el)
 			v.push_back(el);
+		return i;
+	}
+
+	template<std::ranges::range TT> requires std::is_class_v<TT>
+	std::ostream& operator<<(std::ostream& o, TT const& v)
+	{
+		return WriteVector(o, v);
+	}
+
+	template<typename TT>
+	std::istream& operator>>(std::istream& i, std::vector<TT>& v)
+	{
+		return ReadVector(i, v);
 	}
 
 	template<typename It> requires std::forward_iterator<It>

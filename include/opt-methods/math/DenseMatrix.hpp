@@ -19,8 +19,9 @@ private:
 	using VectorIterator = decltype(std::begin(std::declval<Vector<T>>()));
 public:
 	std::valarray<T> data;
-	const size_t n;
+	size_t n;
 
+	DenseMatrix() = default;
 	DenseMatrix(size_t n, std::valarray<T> data)
 	: data(std::move(data))
 	, n(n)
@@ -96,6 +97,22 @@ public:
 			           At(pi[k - 1], k - 1);
 		return x;
 	}
+
+	void WriteTo(std::filesystem::path const& p) const
+	{
+		using namespace util;
+		std::ofstream o(p / "data.txt");
+		o << n << '\n' << data << '\n';
+	}
+
+	static DenseMatrix<T> ReadFrom(std::filesystem::path const& p)
+	{
+		using namespace util;
+		std::ifstream i(p / "data.txt");
+		DenseMatrix<T> res;
+		i >> res.n >> res.data;
+		return res;
+	}
 };
 
 template<typename T>
@@ -111,18 +128,18 @@ Vector<T> operator*(DenseMatrix<T> const& l, Vector<T> const& r)
 namespace util
 {
 	template<typename T>
-	DenseMatrix<T> DiagonallyDominant(MatrixGenerator<T, DenseMatrix<T>>&& gen,
+	DenseMatrix<T> DiagonallyDominant(MatrixGenerator<T, DenseMatrix<T>> const& gen,
 	                                  size_t n,
 	                                  T dominance,
 	                                  std::initializer_list<ptrdiff_t> selectedDiagonals,
-	                                  std::function<T(std::default_random_engine&)> const& aijDistribution)
+	                                  std::invocable<std::default_random_engine&> auto&& aijDistribution)
 	{
 		return static_cast<DenseMatrix<T>>(DiagonallyDominant(
 		    static_cast<MatrixGenerator<T, SkylineMatrix<T>>>(gen), n, dominance, selectedDiagonals, aijDistribution));
 	}
 
 	template<typename T>
-	DenseMatrix<T> Hilbert(MatrixGenerator<T, DenseMatrix<T>>&& gen,
+	DenseMatrix<T> Hilbert(MatrixGenerator<T, DenseMatrix<T>> const& gen,
 	                       size_t n,
 	                       std::initializer_list<ptrdiff_t> selectedDiagonals)
 	{

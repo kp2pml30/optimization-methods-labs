@@ -42,7 +42,7 @@ namespace util
 	}
 
 	template<typename TT>
-	std::istream& operator>>(std::istream& i, Vector<TT> const& v)
+	std::istream& operator>>(std::istream& i, Vector<TT>& v)
 	{
 		std::vector<TT> data;
 		ReadVector(i, data);

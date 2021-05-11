@@ -8,6 +8,8 @@
 #include <tuple>
 #include <vector>
 #include <functional>
+#include <filesystem>
+#include <fstream>
 
 template<typename T>
 class DenseMatrix;
@@ -26,7 +28,7 @@ Vector<T> operator*(SkylineMatrix<T> const& m, Vector<T> const& x);
 template<typename T>
 class SkylineMatrix
 {
-public:
+private:
 	static const inline T zero{};
 
 	/// diagonal storage
@@ -186,10 +188,11 @@ private:
 		al.clear();
 		au.clear();
 
-		util::ReadVector(iIa, ia);
-		util::ReadVector(iDi, di);
-		util::ReadVector(iAl, al);
-		util::ReadVector(iAu, au);
+		using namespace util;
+		iIa >> ia;
+		iDi >> di;
+		iAl >> al;
+		iAu >> au;
 	}
 
 public:
@@ -202,10 +205,27 @@ public:
 
 	void WriteTo(std::ostream& oIa, std::ostream& oDi, std::ostream& oAl, std::ostream& oAu) const
 	{
-		util::WriteVector(oIa, ia) << '\n';
-		util::WriteVector(oDi, di) << '\n';
-		util::WriteVector(oAl, al) << '\n';
-		util::WriteVector(oAu, au) << '\n';
+		using namespace util;
+		oIa << ia << '\n';
+		oDi << di << '\n';
+		oAl << al << '\n';
+		oAu << au << '\n';
+	}
+
+	static SkylineMatrix ReadFrom(std::filesystem::path const& p)
+	{
+		SkylineMatrix ret;
+		auto ia = std::ifstream(p / "ia.txt"), di = std::ifstream(p / "di.txt"), al = std::ifstream(p / "al.txt"),
+		     au = std::ifstream(p / "au.txt");
+		ret.ReadFromHelp(ia, di, al, au);
+		return ret;
+	}
+
+	void WriteTo(std::filesystem::path const& p) const
+	{
+		auto ia = std::ofstream(p / "ia.txt"), di = std::ofstream(p / "di.txt"), al = std::ofstream(p / "al.txt"),
+		     au = std::ofstream(p / "au.txt");
+		WriteTo(ia, di, al, au);
 	}
 
 	friend Vector<T> operator*<T>(SkylineMatrix<T> const& m, Vector<T> const& x);
@@ -218,7 +238,7 @@ namespace util
 	{
 		template<typename T>
 		static SkylineMatrix<T> GenerateM(
-		    MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+		    MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 		    SkylineMatrix<T>& m,
 		    size_t n,
 		    std::initializer_list<ptrdiff_t> selectedDiagonals,
@@ -251,7 +271,7 @@ namespace util
 		}
 
 		template<typename T>
-		static SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+		static SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 		                                           size_t n,
 		                                           T dominance,
 		                                           std::initializer_list<ptrdiff_t> selectedDiagonals,
@@ -259,7 +279,7 @@ namespace util
 		{
 			SkylineMatrix<T> m;
 			return GenerateM<T>(
-			    std::move(gen),
+			    gen,
 			    m,
 			    n,
 			    selectedDiagonals,
@@ -276,13 +296,13 @@ namespace util
 		}
 
 		template<typename T>
-		static SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+		static SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 		                                size_t n,
 		                                std::initializer_list<ptrdiff_t> selectedDiagonals)
 		{
 			SkylineMatrix<T> m;
 			return GenerateM<T>(
-			    std::move(gen),
+			    gen,
 			    m,
 			    n,
 			    selectedDiagonals,
@@ -292,23 +312,23 @@ namespace util
 	};
 
 	template<typename T>
-	SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 	                                    size_t n,
 	                                    T dominance,
 	                                    std::initializer_list<ptrdiff_t> selectedDiagonals,
 	                                    std::invocable<std::default_random_engine&> auto&& aijDistribution)
 	{
 		return SkylineMatrixGeneratorImpl::DiagonallyDominant<T>(
-		    std::move(gen), n, dominance, selectedDiagonals, std::forward<decltype(aijDistribution)>(aijDistribution));
+		    gen, n, dominance, selectedDiagonals, std::forward<decltype(aijDistribution)>(aijDistribution));
 	}
 
 	template<typename T>
-	SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>>&& gen,
+	SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 	                         size_t n,
 	                         std::initializer_list<ptrdiff_t> selectedDiagonals)
 	{
 		return SkylineMatrixGeneratorImpl::Hilbert<T>(
-		    std::move(gen), n, selectedDiagonals);
+		    gen, n, selectedDiagonals);
 	}
 } // namespace util
 
