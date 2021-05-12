@@ -165,6 +165,11 @@ public:
 
 	Vector<T> SolveSystem(const Vector<T>& b) &&;
 
+	auto ExtractData() &&
+	{
+		return std::make_tuple(std::move(ia), std::move(di), std::move(al), std::move(au));
+	}
+
 	operator DenseMatrix<T>() const
 	{
 		int n = Dims();
@@ -237,13 +242,13 @@ namespace util
 	struct SkylineMatrixGeneratorImpl
 	{
 		template<typename T>
-		static SkylineMatrix<T> GenerateM(
+		static SkylineMatrix<T>& GenerateM(
 		    MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 		    SkylineMatrix<T>& m,
 		    size_t n,
 		    std::vector<ptrdiff_t> const& selectedDiagonals,
-		    /* std::invocable<std::default_random_engine&, size_t, size_t> */ auto&& aijGenerator,
-		    /* std::invocable<std::default_random_engine&, size_t> */ auto&& diGenerator)
+		    std::invocable<std::default_random_engine&, size_t, size_t> auto&& aijGenerator,
+		    std::invocable<std::default_random_engine&, size_t> auto&& diGenerator)
 		{
 			m.ia.resize(n + 1);
 			m.ia[0]         = 0;
@@ -266,7 +271,6 @@ namespace util
 			}
 			for (int i = 0; i < (int)n; i++)
 				m.di[i] = diGenerator(gen.engine, i);
-
 			return m;
 		}
 
