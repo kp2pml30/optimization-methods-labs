@@ -10,7 +10,7 @@ private:
 	std::span<const T> view;
 	int start;
 	int end;
-	T zero{};
+
 public:
 	ShiftedView(std::span<const T> view, int start, int end) noexcept
 	: view(std::move(view))
@@ -23,7 +23,7 @@ public:
 		assert(index >= 0 && index < end);
 		int ni = index - start;
 		if (ni < 0 || ni >= (int)view.size())
-			return zero;
+			return util::zero<T>;
 		return view[ni];
 	}
 };

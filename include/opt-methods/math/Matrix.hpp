@@ -50,10 +50,10 @@ namespace util
 
 	template<typename T, Matrix<T> M>
 	M DiagonallyDominant(MatrixGenerator<T, M> const& gen, size_t n, T dominance,
-		                   std::initializer_list<ptrdiff_t> selectedDiagonals,
+		                   std::vector<ptrdiff_t> const& selectedDiagonals,
 		                   std::invocable<std::default_random_engine&> auto&& aijDistribution);
 
 	template<typename T, Matrix<T> M>
 	M Hilbert(MatrixGenerator<T, M> const& gen, size_t n,
-		        std::initializer_list<ptrdiff_t> selectedDiagonals);
+		        std::vector<ptrdiff_t> const& selectedDiagonals);
 } // namespace util

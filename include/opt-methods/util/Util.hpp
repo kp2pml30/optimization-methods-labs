@@ -8,6 +8,9 @@
 
 namespace util
 {
+	template<typename T>
+	inline const T zero = {};
+
 	template<std::ranges::range TT> requires std::is_class_v<TT>
 	static std::ostream& WriteVector(std::ostream& o, TT const& v)
 	{

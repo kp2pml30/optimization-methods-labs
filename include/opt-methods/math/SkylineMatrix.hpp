@@ -114,13 +114,13 @@ private:
 		{
 			assert(offset >= 0 && offset < enclosing->Dims());
 			if (int dOffset = offset - start; dOffset < 0)
-				return zero;
+				return util::zero<T>;
 			else if (offset < index) [[likely]]
 				return GetLineElement(index, dOffset);
 			else if (offset == index)
 				return enclosing->di[index];
 			else [[unlikely]] if (int dIndex = index - enclosing->SkylineStart(offset); dIndex < 0)
-				return zero;
+				return util::zero<T>;
 			else
 				return GetPerpElement(offset, dIndex);
 		}
@@ -168,7 +168,7 @@ public:
 	operator DenseMatrix<T>() const
 	{
 		int n = Dims();
-		std::valarray<T> data(zero, n * n);
+		std::valarray<T> data(util::zero<T>, n * n);
 		std::copy_n(di.begin(), n, util::StridedIterator(std::begin(data), n + 1));
 		for (int i = 0; i < n; i++)
 		{
@@ -241,7 +241,7 @@ namespace util
 		    MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 		    SkylineMatrix<T>& m,
 		    size_t n,
-		    std::initializer_list<ptrdiff_t> selectedDiagonals,
+		    std::vector<ptrdiff_t> const& selectedDiagonals,
 		    /* std::invocable<std::default_random_engine&, size_t, size_t> */ auto&& aijGenerator,
 		    /* std::invocable<std::default_random_engine&, size_t> */ auto&& diGenerator)
 		{
@@ -274,7 +274,7 @@ namespace util
 		static SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 		                                           size_t n,
 		                                           T dominance,
-		                                           std::initializer_list<ptrdiff_t> selectedDiagonals,
+		                                           std::vector<ptrdiff_t> const& selectedDiagonals,
 		                                           std::invocable<std::default_random_engine&> auto&& aijDistribution)
 		{
 			SkylineMatrix<T> m;
@@ -284,7 +284,7 @@ namespace util
 			    n,
 			    selectedDiagonals,
 			    [&](auto& gen, size_t, size_t) { return aijDistribution(gen); },
-			    [&, isFirst = true, sum = SkylineMatrix<T>::zero](auto&, size_t) mutable {
+			    [&, isFirst = true, sum = util::zero<T>](auto&, size_t) mutable {
 				    if (isFirst)
 				    {
 					    sum     = std::reduce(m.al.begin(), m.al.end()) + std::reduce(m.au.begin(), m.au.end());
@@ -298,7 +298,7 @@ namespace util
 		template<typename T>
 		static SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 		                                size_t n,
-		                                std::initializer_list<ptrdiff_t> selectedDiagonals)
+		                                std::vector<ptrdiff_t> const& selectedDiagonals)
 		{
 			SkylineMatrix<T> m;
 			return GenerateM<T>(
@@ -315,7 +315,7 @@ namespace util
 	SkylineMatrix<T> DiagonallyDominant(MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 	                                    size_t n,
 	                                    T dominance,
-	                                    std::initializer_list<ptrdiff_t> selectedDiagonals,
+	                                    std::vector<ptrdiff_t> const& selectedDiagonals,
 	                                    std::invocable<std::default_random_engine&> auto&& aijDistribution)
 	{
 		return SkylineMatrixGeneratorImpl::DiagonallyDominant<T>(
@@ -325,7 +325,7 @@ namespace util
 	template<typename T>
 	SkylineMatrix<T> Hilbert(MatrixGenerator<T, SkylineMatrix<T>> const& gen,
 	                         size_t n,
-	                         std::initializer_list<ptrdiff_t> selectedDiagonals)
+	                         std::vector<ptrdiff_t> const& selectedDiagonals)
 	{
 		return SkylineMatrixGeneratorImpl::Hilbert<T>(
 		    gen, n, selectedDiagonals);

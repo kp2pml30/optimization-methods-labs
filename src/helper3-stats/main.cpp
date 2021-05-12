@@ -158,19 +158,33 @@ namespace
 	constexpr inline TypesTag<Args...> typesTag;
 
 	auto genDiag = []<SLESolver<double> M>(TypesTag<M>, int const& n, int const& k) -> M {
+		std::vector<ptrdiff_t> diags;
+		diags.reserve(2 * n - 2);
+		for (int i = 1; i < n; i++)
+		{
+			diags.push_back(i);
+			diags.push_back(-i);
+		}
 		return util::DiagonallyDominant(
 				util::MatrixGenerator<double, M>(),
 				n,
 				pow(10, -k),
-				{-1, -2, -3, -4, 1, 2, 3, 4},
+				diags,
 				std::function<double(std::default_random_engine&)>(std::uniform_int_distribution<int>(-4, 0)));
 	};
 
 	auto genHilbert = []<SLESolver<double> M>(TypesTag<M>, int const& n) -> M {
+		std::vector<ptrdiff_t> diags;
+		diags.reserve(2 * n - 2);
+		for (int i = 1; i < n; i++)
+		{
+			diags.push_back(i);
+			diags.push_back(-i);
+		}
 		return util::Hilbert(
 				util::MatrixGenerator<double, M>(),
 				n,
-				{-1, -2, -3, -4, 1, 2, 3, 4});
+				diags);
 	};
 }
 
@@ -199,7 +213,7 @@ auto GenTestsTest(std::filesystem::path const& parentDir, Gen const& gen,
 
 		CompiletimeLoop<sizeof...(Ms)>::Go([&]<std::size_t i>(std::integral_constant<std::size_t, i>) {
 			using M = std::tuple_element_t<i, std::tuple<Ms...>>;
-			std::filesystem::path classDir = testDir / GetClassDir<M>();
+			std::filesystem::path classDir = testDir / classToName(typesTag<M>);
 			std::filesystem::create_directories(classDir);
 
 			auto matrix = gen(typesTag<M>, args...);
@@ -244,7 +258,7 @@ auto RunTests(std::vector<std::pair<std::tuple<Args...>, std::filesystem::path>>
 		CompiletimeLoop<sizeof...(Ms)>::Go([&]<std::size_t i>(std::integral_constant<std::size_t, i>) {
 			std::apply(testFn,
 			           std::tuple_cat(std::make_tuple(std::tuple_element_t<i, std::tuple<Ms...>>::ReadFrom(
-			                              path / GetClassDir<std::tuple_element_t<i, std::tuple<Ms...>>>())),
+			                              path / classToName(typesTag<std::tuple_element_t<i, std::tuple<Ms...>>>))),
 			                          args));
 		});
 }
@@ -253,9 +267,9 @@ template<SLESolver<double> M>
 std::string classToName(TypesTag<M>)
 {
 	if constexpr (std::is_same_v<SkylineMatrix<double>, M>)
-		return "skyline";
+		return "LU";
 	else
-		return "dense";
+		return "Gauss";
 };
 
 template<SLESolver<double>... Ms, typename... Args, typename Gen, typename... TableArgs, typename TestFn>
@@ -350,7 +364,7 @@ int main()
 	    std::make_tuple("n"s, "k"s, "Δ"s, "ε"s),
 	    genDiag,
 	    std::make_tuple(10, 0),
-	    std::make_tuple(1000, 1000),
+	    std::make_tuple(1281, 1000),
 	    std::make_tuple([](int const& n) -> int { return (int)(n * 2); }, [](int const& k) -> int { return k + 300; }),
 	    testDiffTableK);
 	Test<SkylineMatrix<double>, DenseMatrix<double>>(
@@ -358,7 +372,7 @@ int main()
 	    std::make_tuple("n"s, "Δ"s, "ε"s),
 	    genHilbert,
 	    std::make_tuple(10),
-	    std::make_tuple(1000),
+	    std::make_tuple(1281),
 	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.5); }),
 	    testDiffTable);
 

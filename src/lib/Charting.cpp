@@ -18,7 +18,7 @@ void Charting::growAxisRange(QtCharts::QValueAxis *axis, double coef)
 	axis->setRange(axis->min() - r * coef, axis->max() + r * coef);
 }
 
-void Charting::createNaturalSequenceAxes(QtCharts::QChart* chart, int n)
+void Charting::createNaturalSequenceAxes(QtCharts::QChart* chart, [[maybe_unused]] int n)
 {
 	using namespace QtCharts;
 	chart->createDefaultAxes();
