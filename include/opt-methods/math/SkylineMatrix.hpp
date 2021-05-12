@@ -254,8 +254,8 @@ namespace util
 			m.ia[0]         = 0;
 			auto [min, max] = std::minmax_element(selectedDiagonals.begin(), selectedDiagonals.end());
 			int skyline     = (int)std::max(std::abs(*min), std::abs(*max));
-			for (int i = 1, val = 0; i < (int)n + 1; i++, val += skyline)
-				m.ia[i] = m.ia[i - 1] + std::min(val, i - 1);
+			for (int i = 1; i < (int)n + 1; i++)
+				m.ia[i] = m.ia[i - 1] + std::min(skyline, std::min(i - 1, (int)n - i));
 			m.al.resize(m.ia.back());
 			m.au.resize(m.ia.back());
 			m.di.resize(n);
@@ -310,8 +310,8 @@ namespace util
 			    m,
 			    n,
 			    selectedDiagonals,
-			    [&](auto&, size_t i, size_t j) { return T{1} / (i + j + 1); },
-			    [&](auto&, size_t i) mutable { return T{1} / (i + i + 1); });
+			    [](auto&, size_t i, size_t j) { return T(1) / (i + j + 1); },
+			    [](auto&, size_t i) { return T(1) / (i + i + 1); });
 		}
 	};
 

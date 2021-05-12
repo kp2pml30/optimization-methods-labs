@@ -120,12 +120,12 @@ template<typename T>
 std::ostream& PrintDense(std::ostream& o, DenseMatrix<T> const& m)
 {
 	o << m.Dims() << '\n';
-	for (int y = 0; y < m.Dims(); y++)
+	for (int y = 0; y < (int)m.Dims(); y++)
 	{
 		auto row = m[y];
 		if (m.Dims() > 0)
 			o << row[0];
-		for (int x = 1; x < m.Dims(); x++)
+		for (int x = 1; x < (int)m.Dims(); x++)
 			o << '\t' << row[x];
 		o << '\n';
 	}

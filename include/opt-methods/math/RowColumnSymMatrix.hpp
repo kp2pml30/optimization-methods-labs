@@ -49,7 +49,7 @@ public:
 		return (int)ia.size() - 1;
 	}
 
-	Vector<T> SolveSystem(const Vector<T>& b, T epsilon = 1e-7);
+	Vector<T> SolveSystem(const Vector<T>& b, T epsilon = 1e-7, int* outNIters = nullptr);
 
 	operator DenseMatrix<T>() const
 	{
@@ -69,7 +69,7 @@ public:
 	}
 
 private:
-	void ReadFromHelp(std::istream& iIa, std::istream& iDi, std::istream& iAl, std::istream& iAu)
+	void ReadFromHelp(std::istream& iIa, std::istream& iJa, std::istream& iDi, std::istream& iAl)
 	{
 		ia.clear();
 		ja.clear();
@@ -78,7 +78,7 @@ private:
 
 		using namespace util;
 		iIa >> ia;
-		iAu >> ja;
+		iJa >> ja;
 		iDi >> di;
 		iAl >> al;
 	}
@@ -103,16 +103,16 @@ public:
 	static RowColumnSymMatrix ReadFrom(std::filesystem::path const& p)
 	{
 		RowColumnSymMatrix ret;
-		auto ia = std::ifstream(p / "ia.txt"), di = std::ifstream(p / "ja.txt"), al = std::ifstream(p / "di.txt"),
-		     au = std::ifstream(p / "al.txt");
+		auto ia = std::ifstream(p / "ia.txt"), ja = std::ifstream(p / "ja.txt"), di = std::ifstream(p / "di.txt"),
+		     al = std::ifstream(p / "al.txt");
 		ret.ReadFromHelp(ia, ja, di, al);
 		return ret;
 	}
 
 	void WriteTo(std::filesystem::path const& p) const
 	{
-		auto ia = std::ofstream(p / "ia.txt"), di = std::ofstream(p / "ja.txt"), al = std::ofstream(p / "di.txt"),
-		     au = std::ofstream(p / "al.txt");
+		auto ia = std::ofstream(p / "ia.txt"), ja = std::ofstream(p / "ja.txt"), di = std::ofstream(p / "di.txt"),
+		     al = std::ofstream(p / "al.txt");
 		WriteTo(ia, ja, di, al);
 	}
 
@@ -129,7 +129,7 @@ namespace util
 		    MatrixGenerator<T, RowColumnSymMatrix<T>> const& gen,
 		    RowColumnSymMatrix<T>& m,
 		    size_t n,
-		    std::initializer_list<ptrdiff_t> selectedDiagonals,
+		    std::vector<ptrdiff_t> const& selectedDiagonals,
 		    std::invocable<std::default_random_engine&, size_t, size_t> auto&& aijGenerator,
 		    std::invocable<std::default_random_engine&, size_t> auto&& diGenerator)
 		{
@@ -139,17 +139,19 @@ namespace util
 			                                            n,
 			                                            selectedDiagonals,
 			                                            std::forward<decltype(aijGenerator)>(aijGenerator),
-			                                            std::forward<decltype(diGenerator)>(diGenerator));
+			                                            [](auto&, size_t) { return util::zero<T>; });
 			auto [ia, di, al, au] = std::move(temp).ExtractData();
 			m.ia = std::move(ia);
-			m.di = std::move(di);
 			m.al.resize(al.size());
 			m.ja.resize(al.size());
 			std::transform(
 			    al.begin(), al.end(), au.begin(), m.al.begin(), [](T const& lhs, T const& rhs) { return (lhs + rhs) / 2; });
-			for (int i = 0; i < n; i++)
+			for (int i = 0; i < (int)n; i++)
 				for (int skylineLen = m.ia[i + 1] - m.ia[i], skylineStart = i - skylineLen, j = 0; j < skylineLen; j++)
 					m.ja[m.ia[i] + j] = skylineStart + j;
+			m.di.resize(n);
+			for (int i = 0; i < (int)n; i++)
+				m.di[i] = diGenerator(gen.engine, i);
 			return m;
 		}
 
@@ -157,7 +159,7 @@ namespace util
 		static RowColumnSymMatrix<T> DiagonallyDominant(MatrixGenerator<T, RowColumnSymMatrix<T>> const& gen,
 		                                                size_t n,
 		                                                T dominance,
-		                                                std::initializer_list<ptrdiff_t> selectedDiagonals,
+		                                                std::vector<ptrdiff_t> const& selectedDiagonals,
 		                                                std::invocable<std::default_random_engine&> auto&& aijDistribution)
 		{
 			RowColumnSymMatrix<T> m;
@@ -181,7 +183,7 @@ namespace util
 		template<typename T>
 		static RowColumnSymMatrix<T> Hilbert(MatrixGenerator<T, RowColumnSymMatrix<T>> const& gen,
 		                                     size_t n,
-		                                     std::initializer_list<ptrdiff_t> selectedDiagonals)
+		                                     std::vector<ptrdiff_t> const& selectedDiagonals)
 		{
 			RowColumnSymMatrix<T> m;
 			return GenerateM<T>(
@@ -198,7 +200,7 @@ namespace util
 	RowColumnSymMatrix<T> DiagonallyDominant(MatrixGenerator<T, RowColumnSymMatrix<T>> const& gen,
 	                                         size_t n,
 	                                         T dominance,
-	                                         std::initializer_list<ptrdiff_t> selectedDiagonals,
+	                                         std::vector<ptrdiff_t> const& selectedDiagonals,
 	                                         std::invocable<std::default_random_engine&> auto&& aijDistribution)
 	{
 		return RowColumnSymMatrixGeneratorImpl::DiagonallyDominant<T>(
@@ -208,7 +210,7 @@ namespace util
 	template<typename T>
 	RowColumnSymMatrix<T> Hilbert(MatrixGenerator<T, RowColumnSymMatrix<T>> const& gen,
 	                              size_t n,
-	                              std::initializer_list<ptrdiff_t> selectedDiagonals)
+	                              std::vector<ptrdiff_t> const& selectedDiagonals)
 	{
 		return RowColumnSymMatrixGeneratorImpl::Hilbert<T>(
 		    gen, n, selectedDiagonals);
@@ -235,7 +237,7 @@ Vector<T> operator*(RowColumnSymMatrix<T> const& m, Vector<T> const& x)
 }
 
 template<typename T>
-Vector<T> RowColumnSymMatrix<T>::SolveSystem(const Vector<T>& b, T epsilon)
+Vector<T> RowColumnSymMatrix<T>::SolveSystem(const Vector<T>& b, T epsilon, int* outNIters)
 {
 	assert(Dims() == (int)b.size());
 	Vector<T>
@@ -254,6 +256,8 @@ Vector<T> RowColumnSymMatrix<T>::SolveSystem(const Vector<T>& b, T epsilon)
 		T new_r2 = Dot(r, r), beta = new_r2 / r2;
 		z = r + beta * z;
 		r2 = new_r2;
-	} while (nIters++ <= Dims() && Len2(r) / len2b >= eps2);
+	} while (++nIters <= 1000 * Dims() && Len2(r) / len2b >= eps2);
+	if (outNIters != nullptr)
+		*outNIters = nIters;
 	return x;
 }

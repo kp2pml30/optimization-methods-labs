@@ -141,6 +141,7 @@ namespace
 #include "opt-methods/math/Matrix.hpp"
 #include "opt-methods/math/DenseMatrix.hpp"
 #include "opt-methods/math/SkylineMatrix.hpp"
+#include "opt-methods/math/RowColumnSymMatrix.hpp"
 #include "opt-methods/math/Vector.hpp"
 #include "opt-methods/math/CountedFloat.hpp"
 
@@ -167,11 +168,29 @@ namespace
 			diags.push_back(-i);
 		}
 		return util::DiagonallyDominant(
-				util::MatrixGenerator<T, M>(),
-				n,
-				pow(10, -k),
-				diags,
-				std::function<T(std::default_random_engine&)>(std::uniform_int_distribution<int>(-4, 0)));
+		    util::MatrixGenerator<T, M>(),
+		    n,
+		    T{pow(10, -k)},
+		    diags,
+		    std::function<T(std::default_random_engine&)>(std::uniform_int_distribution<int>(-4, 0)));
+	};
+
+	auto genDiagSparse = []<typename T, SLESolver<T> M>(TypesTag<T, M>, int const& n) -> M {
+		return util::DiagonallyDominant(
+		    util::MatrixGenerator<T, M>(),
+		    n,
+		    T{1},
+		    {-1, -2, -3, -4, 1, 2, 3, 4},
+		    std::function<T(std::default_random_engine&)>(std::uniform_int_distribution<int>(-4, 0)));
+	};
+
+	auto genDiagRevSparse = []<typename T, SLESolver<T> M>(TypesTag<T, M>, int const& n) -> M {
+		return util::DiagonallyDominant(
+		    util::MatrixGenerator<T, M>(),
+		    n,
+		    T{1},
+		    {-1, -2, -3, -4, 1, 2, 3, 4},
+		    std::function<T(std::default_random_engine&)>(std::uniform_int_distribution<int>(0, 4)));
 	};
 
 	auto genHilbert = []<typename T, SLESolver<T> M>(TypesTag<T, M>, int const& n) -> M {
@@ -182,10 +201,7 @@ namespace
 			diags.push_back(i);
 			diags.push_back(-i);
 		}
-		return util::Hilbert(
-				util::MatrixGenerator<T, M>(),
-				n,
-				diags);
+		return util::Hilbert(util::MatrixGenerator<T, M>(), n, diags);
 	};
 }
 
@@ -281,8 +297,10 @@ std::string classToName(TypesTag<T, M>)
 {
 	if constexpr (std::is_same_v<SkylineMatrix<T>, M>)
 		return "LU";
-	else
+	else if constexpr (std::is_same_v<DenseMatrix<T>, M>)
 		return "Gauss";
+	else
+		return "ConjGrad";
 };
 
 template<typename... TableArgs>
@@ -376,7 +394,10 @@ int main()
 		Vector<T> x_star(T{0.0}, n);
 		std::iota(std::begin(x_star), std::end(x_star), 1);
 		Vector<T> b = A * x_star, x = std::move(A).SolveSystem(b);
-		return std::make_tuple(n, std::transform_reduce(T::stats.begin(), T::stats.end(), 0, std::plus<>{}, [](auto const& a) { return a.second; }));
+		return std::make_tuple(
+		    n, (int)std::transform_reduce(T::stats.begin(), T::stats.end(), size_t{0}, std::plus<>{}, [](auto const& a) {
+			    return a.second;
+		    }));
 	};
 
 	using CF = CountedFloat<double>;
@@ -388,5 +409,44 @@ int main()
 	    std::make_tuple(1281),
 	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.5); }),
 	    testDiffTableCF);
+
+	auto testConjTable = [&](TypesTag<double>, RowColumnSymMatrix<double>&& A, int n) {
+		Vector<double> x_star(0.0, n);
+		std::iota(std::begin(x_star), std::end(x_star), 1);
+		int nIters       = 0;
+		Vector<double> b = A * x_star, x = A.SolveSystem(b, 1e-7, &nIters);
+		auto [delta, eps] = std::make_tuple(Len(static_cast<Vector<double>>(x_star - x)),
+		                                    sqrt(Len2(static_cast<Vector<double>>(x_star - x)) / Len2(x_star)));
+		return std::make_tuple(n, nIters, delta, eps, eps / sqrt(Len2(static_cast<Vector<double>>(b - A * x)) / Len2(b)));
+	};
+
+	Test<double, RowColumnSymMatrix<double>>(
+	    "conj_diag",
+	    typesTag<int, int, double, double, double>,
+	    std::make_tuple("n"s, "iters"s, "Δ"s, "ε"s, "cond(A)"s),
+	    genDiagSparse,
+	    std::make_tuple(10),
+	    std::make_tuple(100'000),
+	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.3); }),
+	    testConjTable);
+	Test<double, RowColumnSymMatrix<double>>(
+	    "conj_diag_rev",
+	    typesTag<int, int, double, double, double>,
+	    std::make_tuple("n"s, "iters"s, "Δ"s, "ε"s, "cond(A)"s),
+	    genDiagRevSparse,
+	    std::make_tuple(10),
+	    std::make_tuple(100'000),
+	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.3); }),
+	    testConjTable);
+	Test<double, RowColumnSymMatrix<double>>(
+	    "conj_hilbert",
+	    typesTag<int, int, double, double, double>,
+	    std::make_tuple("n"s, "iters"s, "Δ"s, "ε"s, "cond(A)"s),
+	    genHilbert,
+	    std::make_tuple(10),
+	    std::make_tuple(1'000),
+	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.2); }),
+	    testConjTable);
+
 	return 0;
 }
