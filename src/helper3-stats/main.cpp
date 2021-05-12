@@ -142,6 +142,7 @@ namespace
 #include "opt-methods/math/DenseMatrix.hpp"
 #include "opt-methods/math/SkylineMatrix.hpp"
 #include "opt-methods/math/Vector.hpp"
+#include "opt-methods/math/CountedFloat.hpp"
 
 template<typename M>
 concept ReadWritable = requires(M const& ct, std::filesystem::path const& p) {
@@ -351,6 +352,7 @@ int main()
 	};
 
 	using namespace std::literals;
+
 	Test<double, SkylineMatrix<double>, DenseMatrix<double>>(
 	    "diag", typesTag<int, int, double, double>,
 	    std::make_tuple("n"s, "k"s, "Δ"s, "ε"s),
@@ -368,5 +370,23 @@ int main()
 	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.5); }),
 	    testDiffTable);
 
+
+	auto testDiffTableCF = []<typename T, SLESolver<T> M>(TypesTag<T>, M&& A, int n) {
+		T::stats.clear();
+		Vector<T> x_star(T{0.0}, n);
+		std::iota(std::begin(x_star), std::end(x_star), 1);
+		Vector<T> b = A * x_star, x = std::move(A).SolveSystem(b);
+		return std::make_tuple(n, std::transform_reduce(T::stats.begin(), T::stats.end(), 0, std::plus<>{}, [](auto const& a) { return a.second; }));
+	};
+
+	using CF = CountedFloat<double>;
+	Test<CF, SkylineMatrix<CF>, DenseMatrix<CF>>(
+	    "complexity", typesTag<int, int>,
+	    std::make_tuple("n"s, "i"s),
+	    genHilbert,
+	    std::make_tuple(10),
+	    std::make_tuple(1281),
+	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.5); }),
+	    testDiffTableCF);
 	return 0;
 }

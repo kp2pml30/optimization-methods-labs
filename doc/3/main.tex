@@ -2,19 +2,28 @@
 
 \usepackage[T2A]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage[english,russian]{babel}
+\usepackage[english, main=russian]{babel}
 \usepackage{amsmath}
 \usepackage{pgfplots}
 \usepackage{graphicx}
 \usepackage{csvsimple}
 \usepackage{hyperref}
+\usepackage{textgreek}
+
+\DeclareUnicodeCharacter{0394}{Delta}
+\DeclareUnicodeCharacter{03B5}{epsilon}
 
 \inputencoding{utf8}
 \def\code#1{\texttt{#1}}
 \newcommand{\mydot}[2]{\left\langle#1,#2\right\rangle}
 
-\begin{document}
+\newcommand{\FastTable}[1]{
+	\begin{center}
+	\csvautotabular[separator=tab]{#1}
+	\end{center}
+}
 
+\begin{document}
 \begin{titlepage}
 \centering
 	{\scshape\LARGE Методы оптимизации \par}
@@ -39,11 +48,12 @@
 	\item оценить зависимость погрешности от числа обусловленности, размерности (на сгенерированных с диагональным преобладанием, матрицах Гильберта)
 	\item сравнить с другими методами (Гаусса)
 	\item реализовать профильный формат хранения матрицы
-	\item (бонус)!!!
+	\item реализовать метод сопряженных градиентов для решения систем линейных уравнений
 \end{itemize}
 \section{Теория}
 \subsection{Обозначения}
-Рассматривается решение системы $Ax=f$
+Рассматривается решение системы $Ax=f$ \\
+$\|\cdot\|$ --- Евклидова норма
 \subsection{Профильный формат матрицы}
 Данный формат позволяет хранить квадратные матрицы: отдельно хранится главная диагональ и 2 треугольника, при этом треугольники хранятся в следующем формате: нжний левый хранится по строкам, верхний правый по столбцам, индексы первых элементов соответствующийх линий совпадают. Для улучшения кэширования и уменьшения фрагментации памяти каждый треугольник имеет общую память.\\
 Это может выглядеть, например, так:
@@ -116,17 +126,66 @@ $\begin{cases}
 Для оптимизации объема выделяемой памяти результат складывается в матрицу $A$. Это возможно, поскольку на каждом шаге мы используем только ``старые'' значения матриц $L$ и $U$ и текущее значение матрицы $A$. Профильный формат хранения матрицы позволяет ``обрезать'' нули по краям строк и столбцов.
 
 \section{Исследование погрешности}
+\subsection{Диагональное преобладание}
+\label{DiagonalPrMatrix0}
 Исследуем зависимость погрешности от числа обусловленности ($k$) и размерности пространства ($n$). Для этого будем генерировать матрицы коэффициентов за счет изменени диагонального преобладания для систем вида $A_kx_k=f_k$ следующим образом:\\
 $\forall i\neq j:\; A_{i, j}\in\left\{0, -1, -2, -3, -4\right\}$\\
 $A_{i,i}=\begin{cases}
 -\sum_{i\neq j}A_{i, j} & i > 1\\
 -\sum_{i\neq j}A_{i, j} + 10^{-k} & i = 1\\
 \end{cases}$\\
-Для оценки погрешности будем генерировать системы с заранее известным ответом: $f_k=A\cdot (1,\dots,n)^T$
-\section{Скачкообразная погрешность}
-\section{Матрицы Гильберта}
-\label{Gilbert}
+Для оценки погрешности будем генерировать системы с заранее известным ответом: $f_k=A\cdot (1,\dots,n)^T$\\
+
+\FastTable{test/out/diag/LU.tsv}
+
+Можно заметить что погрешность крайне мала, что неудивительно, ведь мы находим точное решение. Она практически не зависит от $k$: порядок числа не меняется, числа находятся в диапазоне минимальных представимых в использованных типах. С изменением размерности пространства погрешность растет более существенно, что связано просто с тем как работает дробная арифметика на ЭВМ, ведь периодические дроби непредставимы в типе \texttt{double}.
+\subsection{Скачкообразная погрешность}
+\subsection{Матрицы Гильберта}
+\label{Hilbert}
 $\forall i,j\in\overline{1\dots n}:\; A_{i,j}=\frac{1}{i+j-1}$
+
+Их число обусловленности растет как $O\left(\frac{(1+\sqrt{2})^{4n}}{\sqrt{n}}\right)$ согласно Википедии.\\
+
+%В данной работе из матрицы Гильберта берется несколько диагоналей (главная и восемь), поскольку так сказал делать преподаватель.
+
+\FastTable{test/out/hilbert/LU.tsv}
+
+Матрицы Гильберта плохо обусловленные, что влечет большую погрешность.
+
+\section{Метод Гаусса}
+\subsection{Диагональное преобладание}
+\hyperref[DiagonalPrMatrix0]{Определение было дано выше}.
+\FastTable{test/out/diag/Gauss.tsv}
+\subsection{Матрицы Гильберта}
+\hyperref[Hilbert]{Определение было дано выше}.
+\FastTable{test/out/hilbert/Gauss.tsv}
+
+\section{Сравнение количества действий}
+Для сравнения будем использовать плотные матрицы Гильберта, чтобы не было случайности и оптимизации из-за профильного формата хранения. Каждая операция считается за единицу, разное количество тактов не учитывается. Для замера был реализован класс, перед каждой операцией увиличивающий соответсвующий счетчик.
+
+
+\def\makePlots#1#2#3{
+	%\pgfplotstableread{#1}{\ratiosCsv}
+		\addplot+[mark=#3] table [x={n}, y={i}] {#1};
+		\addlegendentry{#2}
+}
+
+\begin{tikzpicture}[trim axis left]
+	\begin{axis}[
+		scale only axis,
+		width=\textwidth,
+		legend style={at={(0.5,-0.1)},anchor=north},
+		xlabel = {n},
+		ylabel = {число действий},
+	]
+		\makePlots{test/out/complexity/LU.tsv}{LU}{square}
+		\makePlots{test/out/complexity/Gauss.tsv}{Гаусс}{x}
+		\addplot[domain=0:1284] {x^3 * 0.670314};
+		\addlegendentry{$0.670314x^3$}
+	\end{axis}
+\end{tikzpicture}
+
+Между ними есть разница, но она минимальна (при $n = 1234$ менее десятой процента)
 
 \section{Метод сопряженных градиентов}
 \subsection{Алгоритм}
@@ -148,7 +207,7 @@ $\forall i,j\in\overline{1\dots n}:\; A_{i,j}=\frac{1}{i+j-1}$
 		\end{enumerate}
 \end{itemize}
 \subsection{Матрица с диагональным преобладанием, версия 1}
-\label{DiagonalPrMatrix1}
+\label{DiagonalPrMatrix}
 $\forall i\neq j:\; A_{i, j}\in\left\{0, -1, -2, -3, -4\right\}$\\
 $A_{i,i}=\begin{cases}
 -\sum_{i\neq j}A_{i, j}, & i > 1\\
@@ -157,10 +216,10 @@ $A_{i,i}=\begin{cases}
 $\operatorname{cond}(A) \ge \frac{\|x-x^*\|}{\|x^*\|}\div\frac{\|f-Ax\|}{\|f\|}$, первая дробь --- относительная погрешность, вторая --- невязка.
 
 \subsection{Матрица с диагональным преобладанием, версия 2}
-$\forall i\neq j:\;A_{i, j}\leftarrow -A_{i, j}$, из \hyperref[DiagonalPrMatrix1]{первой версии}.
+$\forall i\neq j:\;A_{i, j}\leftarrow -A_{i, j}$, из \hyperref[DiagonalPrMatrix]{первой версии}.
 
 \subsection{Плотная матрица Гильберта}
-Определение было дано \hyperref[Gilbert]{выше}.\\
+Определение было дано \hyperref[Hilbert]{выше}.\\
 
 \section{Вывод}
 

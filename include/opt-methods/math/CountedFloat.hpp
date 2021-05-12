@@ -1,16 +1,16 @@
 #pragma once
 
 #include <utility>
-#include <map>
+#include <unordered_map>
 #include <string>
 
 template<typename T>
 struct CountedFloat
 {
 	T data;
-	static inline std::map<std::string, std::size_t> stats;
+	static inline std::unordered_map<std::string, std::size_t> stats;
 
-	CountedFloat(T data)
+	CountedFloat(T data = 0)
 	: data(std::move(data))
 	{}
 #define MAKEBOP(op) \
@@ -38,4 +38,26 @@ struct CountedFloat
 	MAKEUOP(+)
 	MAKEUOP(-)
 #undef MAKEUOP
+
+	friend auto operator<=>(CountedFloat const& l ,CountedFloat const& r)
+	{
+		stats["<=>"]++;
+		return l.data <=> r.data;
+	}
+
+	friend CountedFloat abs(CountedFloat const& c)
+	{
+		if (c < 0)
+			return -c;
+		return c;
+	}
+
+	friend auto& operator<<(std::ostream& o, CountedFloat const& a)
+	{
+		return o << a.data;
+	}
+	friend auto& operator>>(std::istream& o, CountedFloat& a)
+	{
+		return o >> a.data;
+	}
 };

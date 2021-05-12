@@ -75,7 +75,8 @@ public:
 		{
 			auto [a_mk1, a_mk2] = std::minmax_element(util::PermutedStridedIterator(std::begin(data), n, k, k, n, pi),
 			                                          util::PermutedStridedIterator(std::begin(data), n, n, k, 0, pi));
-			size_t m  = std::abs(*a_mk1) > std::abs(*a_mk2) ? a_mk1.i : a_mk2.i;
+			using std::abs;
+			size_t m  = abs(*a_mk1) > abs(*a_mk2) ? a_mk1.i : a_mk2.i;
 			std::swap(pi[k], pi[m]);
 
 			for (size_t i = k + 1; i < n; i++)
