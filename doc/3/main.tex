@@ -164,9 +164,9 @@ $\forall i,j\in\overline{1\dots n}:\; A_{i,j}=\frac{1}{i+j-1}$
 Для сравнения будем использовать плотные матрицы Гильберта, чтобы не было случайности и оптимизации из-за профильного формата хранения. Каждая операция считается за единицу, разное количество тактов не учитывается. Для замера был реализован класс, перед каждой операцией увиличивающий соответсвующий счетчик.
 
 
-\def\makePlots#1#2#3{
+\def\makePlots#1#2{
 	%\pgfplotstableread{#1}{\ratiosCsv}
-		\addplot+[mark=#3] table [x={n}, y={i}] {#1};
+		\addplot+ table [x={n}, y={i}] {#1};
 		\addlegendentry{#2}
 }
 
@@ -178,14 +178,13 @@ $\forall i,j\in\overline{1\dots n}:\; A_{i,j}=\frac{1}{i+j-1}$
 		xlabel = {n},
 		ylabel = {число действий},
 	]
-		\makePlots{test/out/complexity/LU.tsv}{LU}{square}
-		\makePlots{test/out/complexity/Gauss.tsv}{Гаусс}{x}
+		\makePlots{test/out/complexity/LU.tsv}{LU}
+		\makePlots{test/out/complexity/Gauss.tsv}{Гаусс}
+		\makePlots{test/out/complexity/ConjGrad.tsv}{Метод сопряженных градиентов}
 		\addplot[domain=0:1284] {x^3 * 0.670314};
 		\addlegendentry{$0.670314x^3$}
 	\end{axis}
 \end{tikzpicture}
-
-Между ними есть разница, но она минимальна (при $n = 1234$ менее десятой процента)
 
 \section{Метод сопряженных градиентов}
 \subsection{Алгоритм}
@@ -214,12 +213,15 @@ $A_{i,i}=\begin{cases}
 -\sum_{i\neq j}A_{i, j} + 1, & i = 1\\
 \end{cases}$\\
 $\operatorname{cond}(A) \ge \frac{\|x-x^*\|}{\|x^*\|}\div\frac{\|f-Ax\|}{\|f\|}$, первая дробь --- относительная погрешность, вторая --- невязка.
+\FastTable{test/out/conj_diag/ConjGrad.tsv}
 
 \subsection{Матрица с диагональным преобладанием, версия 2}
 $\forall i\neq j:\;A_{i, j}\leftarrow -A_{i, j}$, из \hyperref[DiagonalPrMatrix]{первой версии}.
+\FastTable{test/out/conj_diag_rev/ConjGrad.tsv}
 
 \subsection{Плотная матрица Гильберта}
 Определение было дано \hyperref[Hilbert]{выше}.\\
+\FastTable{test/out/conj_hilbert/ConjGrad.tsv}
 
 \section{Вывод}
 

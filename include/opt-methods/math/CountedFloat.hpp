@@ -4,11 +4,10 @@
 #include <unordered_map>
 #include <string>
 
-template<typename T>
+template<typename T, typename Stat>
 struct CountedFloat
 {
 	T data;
-	static inline std::unordered_map<std::string, std::size_t> stats;
 
 	CountedFloat(T data = 0)
 	: data(std::move(data))
@@ -16,12 +15,12 @@ struct CountedFloat
 #define MAKEBOP(op) \
 	friend CountedFloat operator op(CountedFloat const& a, CountedFloat const& b) \
 	{ \
-		stats[#op]++; \
+		Stat{}(#op); \
 		return CountedFloat(a.data op b.data); \
 	} \
 	friend CountedFloat& operator op##=(CountedFloat& a, CountedFloat const& b) \
 	{ \
-		stats[#op]++; \
+		Stat{}(#op); \
 		a.data op##= b.data; \
 		return a;\
 	}
@@ -41,7 +40,7 @@ struct CountedFloat
 
 	friend auto operator<=>(CountedFloat const& l ,CountedFloat const& r)
 	{
-		stats["<=>"]++;
+		Stat{}("<=>");
 		return l.data <=> r.data;
 	}
 

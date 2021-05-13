@@ -145,6 +145,8 @@ namespace
 #include "opt-methods/math/Vector.hpp"
 #include "opt-methods/math/CountedFloat.hpp"
 
+#include "opt-methods/util/ScopeGuards.hpp"
+
 template<typename M>
 concept ReadWritable = requires(M const& ct, std::filesystem::path const& p) {
 	{ M::ReadFrom(p) } -> std::same_as<M>;
@@ -251,6 +253,18 @@ auto GenTestsTest(std::filesystem::path const& parentDir, Gen const& gen,
 	};
 }
 
+struct SimpleStat
+{
+public:
+	static std::size_t ops;
+
+	void operator()(char const*)
+	{
+		ops++;
+	}
+};
+std::size_t SimpleStat::ops = 0;
+
 template<typename T, SLESolver<T>... Ms, typename... Args, typename Gen>
   requires ((ReadWritable<Ms> && ...) && (RetInvocable<Gen, Ms, TypesTag<T, Ms>, Args const&...> && ...))
 auto GenTestsVectorizedAdvance(std::filesystem::path const& parentDir, Gen const& gen,
@@ -331,6 +345,14 @@ std::unordered_map<std::string, Table<TableArgs...>> Test(
 {
 	std::filesystem::path testDir = "doc/3/test";
 
+	std::cerr << "testing " << testName << "..." << std::endl;
+	SCOPE_GUARD_EX [start = std::chrono::system_clock::now()]() noexcept {
+		using namespace std::chrono;
+		std::cerr << " in " << duration_cast<milliseconds>(system_clock::now() - start).count() / 1000.0 << "s" << std::endl;
+	};
+	SCOPE_FAIL { std::cerr << "\tfail"; };
+	SCOPE_SUCCESS { std::cerr << "\tsuccess"; };
+
 	std::unordered_map<std::string, Table<TableArgs...>> tables;
 	CompiletimeLoop<sizeof...(TableArgs)>::Go([&]<std::size_t i>(std::integral_constant<std::size_t, i>) {
 		((tables[classToName(typesTag<T, Ms>)].names[i] = std::get<i>(tableNames)), ...);
@@ -349,11 +371,15 @@ std::unordered_map<std::string, Table<TableArgs...>> Test(
 	    typesTag<Args...>);
 
 	if (toSave)
+	{
+		std::cerr << "\tsaving " << testName << "..." << std::flush;
 		SaveTable(testDir / "out" / testName, tables);
+		std::cerr << " done" << std::endl;
+	}
 	return tables;
 }
 
-int main()
+static int run()
 {
 	auto testDiffTable = []<typename T, SLESolver<T> M>(TypesTag<T>, M&& A, int n) {
 		Vector<T> x_star(T{0.0}, n);
@@ -390,19 +416,16 @@ int main()
 
 
 	auto testDiffTableCF = []<typename T, SLESolver<T> M>(TypesTag<T>, M&& A, int n) {
-		T::stats.clear();
+		SimpleStat::ops = 0;
 		Vector<T> x_star(T{0.0}, n);
 		std::iota(std::begin(x_star), std::end(x_star), 1);
 		Vector<T> b = A * x_star, x = std::move(A).SolveSystem(b);
-		return std::make_tuple(
-		    n, (int)std::transform_reduce(T::stats.begin(), T::stats.end(), size_t{0}, std::plus<>{}, [](auto const& a) {
-			    return a.second;
-		    }));
+		return std::make_tuple(n, SimpleStat::ops);
 	};
 
-	using CF = CountedFloat<double>;
-	Test<CF, SkylineMatrix<CF>, DenseMatrix<CF>>(
-	    "complexity", typesTag<int, int>,
+	using CF = CountedFloat<double, SimpleStat>;
+	Test<CF, SkylineMatrix<CF>, DenseMatrix<CF>, RowColumnSymMatrix<CF>>(
+	    "complexity", typesTag<int, std::size_t>,
 	    std::make_tuple("n"s, "i"s),
 	    genHilbert,
 	    std::make_tuple(10),
@@ -449,4 +472,17 @@ int main()
 	    testConjTable);
 
 	return 0;
+}
+
+int main()
+{
+	// workaround for scope guards (no stack unwinding without catches)
+	try
+	{
+		return run();
+	}
+	catch (...)
+	{
+		throw;
+	}
 }
