@@ -14,7 +14,7 @@ SkylineMatrix<T>&& SkylineMatrix<T>::LU() &&
 		for (int jO = 0; jO < ia[i + 1] - ia[i]; jO++)
 		{
 			int j = SkylineStart(i) + jO, nonzeroOff = std::min(jO, ia[j + 1] - ia[j]); // j < i
-			int iBegin = ia[i] + jO - nonzeroOff, jBegin = ia[j] + jO - nonzeroOff;
+			int iBegin = ia[i] + jO - nonzeroOff, jBegin = ia[j + 1] - nonzeroOff;
 
 			al[ia[i] + jO] -= std::transform_reduce(al.begin() + iBegin, al.begin() + ia[i] + jO, au.begin() + jBegin, util::zero<T>);
 			au[ia[i] + jO] -= std::transform_reduce(au.begin() + iBegin, au.begin() + ia[i] + jO, al.begin() + jBegin, util::zero<T>);

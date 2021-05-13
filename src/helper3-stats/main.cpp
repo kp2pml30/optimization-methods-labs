@@ -425,9 +425,17 @@ static int run()
 
 	using CF = CountedFloat<double, SimpleStat>;
 	Test<CF, SkylineMatrix<CF>, DenseMatrix<CF>, RowColumnSymMatrix<CF>>(
-	    "complexity", typesTag<int, std::size_t>,
+	    "complexity_hilbert", typesTag<int, std::size_t>,
 	    std::make_tuple("n"s, "i"s),
 	    genHilbert,
+	    std::make_tuple(10),
+	    std::make_tuple(1281),
+	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.5); }),
+	    testDiffTableCF);
+	Test<CF, SkylineMatrix<CF>, DenseMatrix<CF>, RowColumnSymMatrix<CF>>(
+	    "complexity_sparse", typesTag<int, std::size_t>,
+	    std::make_tuple("n"s, "i"s),
+	    genDiagSparse,
 	    std::make_tuple(10),
 	    std::make_tuple(1281),
 	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.5); }),
