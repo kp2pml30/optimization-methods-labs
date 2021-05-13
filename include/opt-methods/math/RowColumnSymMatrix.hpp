@@ -225,12 +225,12 @@ Vector<T> operator*(RowColumnSymMatrix<T> const& m, Vector<T> const& x)
 	for (int r = 0; r < m.Dims(); r++)
 	{
 		y[r] += m.di[r] * x[r];
-		for (int j = 0; j < m.ia[r + 1] - m.ia[r]; j++)
+		for (int j = m.ia[r]; j < m.ia[r + 1]; j++)
 		{
-			int c = m.ja[m.ia[r] + j];
+			int c = m.ja[j];
 
-			y[r] += m.al[m.ia[r] + j] * x[c];
-			y[c] += m.al[m.ia[r] + j] * x[r];
+			y[r] += m.al[j] * x[c];
+			y[c] += m.al[j] * x[r];
 		}
 	}
 	return y;
@@ -256,7 +256,7 @@ Vector<T> RowColumnSymMatrix<T>::SolveSystem(const Vector<T>& b, T epsilon, int*
 		T new_r2 = Dot(r, r), beta = new_r2 / r2;
 		z = r + beta * z;
 		r2 = new_r2;
-	} while (++nIters <= 1000 * Dims() && Len2(r) / len2b >= eps2);
+	} while (++nIters <= 1000 * Dims() && r2 / len2b >= eps2);
 	if (outNIters != nullptr)
 		*outNIters = nIters;
 	return x;
