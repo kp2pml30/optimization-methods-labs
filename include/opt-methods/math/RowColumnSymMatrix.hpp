@@ -105,6 +105,10 @@ public:
 		RowColumnSymMatrix ret;
 		auto ia = std::ifstream(p / "ia.txt"), ja = std::ifstream(p / "ja.txt"), di = std::ifstream(p / "di.txt"),
 		     al = std::ifstream(p / "al.txt");
+		ia.precision(15);
+		ja.precision(15);
+		di.precision(15);
+		al.precision(15);
 		ret.ReadFromHelp(ia, ja, di, al);
 		return ret;
 	}
@@ -252,7 +256,10 @@ Vector<T> RowColumnSymMatrix<T>::SolveSystem(const Vector<T>& b, T epsilon, int*
 		Vector<T> Az = *this * z;
 		T alpha = r2 / Dot(Az, z);
 		x += alpha * z;
-		r -= alpha * Az;
+		if (nIters % 50 == 0)
+			r = b - *this * x;
+		else
+			r -= alpha * Az;
 		T new_r2 = Dot(r, r), beta = new_r2 / r2;
 		z = r + beta * z;
 		r2 = new_r2;

@@ -103,6 +103,7 @@ public:
 	{
 		using namespace util;
 		std::ofstream o(p / "data.txt");
+		o.precision(15);
 		o << n << '\n' << data << '\n';
 	}
 

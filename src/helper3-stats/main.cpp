@@ -381,6 +381,8 @@ std::unordered_map<std::string, Table<TableArgs...>> Test(
 
 static int run()
 {
+	std::cout.precision(15);
+
 	auto testDiffTable = []<typename T, SLESolver<T> M>(TypesTag<T>, M&& A, int n) {
 		Vector<T> x_star(T{0.0}, n);
 		std::iota(std::begin(x_star), std::end(x_star), 1);
@@ -448,7 +450,7 @@ static int run()
 		Vector<double> b = A * x_star, x = A.SolveSystem(b, 1e-7, &nIters);
 		auto [delta, eps] = std::make_tuple(Len(static_cast<Vector<double>>(x_star - x)),
 		                                    sqrt(Len2(static_cast<Vector<double>>(x_star - x)) / Len2(x_star)));
-		return std::make_tuple(n, nIters, delta, eps, eps / sqrt(Len2(static_cast<Vector<double>>(b - A * x)) / Len2(b)));
+		return std::make_tuple(n, nIters, delta, eps, eps * sqrt(Len2(b) / Len2(static_cast<Vector<double>>(b - A * x))));
 	};
 
 	Test<double, RowColumnSymMatrix<double>>(
@@ -469,6 +471,7 @@ static int run()
 	    std::make_tuple(100'000),
 	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.3); }),
 	    testConjTable);
+
 	Test<double, RowColumnSymMatrix<double>>(
 	    "conj_hilbert",
 	    typesTag<int, int, double, double, double>,
@@ -478,6 +481,16 @@ static int run()
 	    std::make_tuple(1'000),
 	    std::make_tuple([](int const& n) -> int { return (int)(n * 1.2); }),
 	    testConjTable);
+
+	using namespace std::placeholders;
+	Test<double, SkylineMatrix<double>, DenseMatrix<double>>(
+	  "diagSkak", typesTag<int, double, double>,
+	  std::make_tuple("n"s, "Δ"s, "ε"s),
+	  std::bind(genDiag, _1, _2, 0),
+	  std::make_tuple(10),
+	  std::make_tuple(1000),
+	  std::make_tuple([](int const& n) -> int { return n + 10; }),
+	  testDiffTable);
 
 	return 0;
 }

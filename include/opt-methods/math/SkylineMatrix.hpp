@@ -230,6 +230,10 @@ public:
 	{
 		auto ia = std::ofstream(p / "ia.txt"), di = std::ofstream(p / "di.txt"), al = std::ofstream(p / "al.txt"),
 		     au = std::ofstream(p / "au.txt");
+		ia.precision(15);
+		di.precision(15);
+		al.precision(15);
+		au.precision(15);
 		WriteTo(ia, di, al, au);
 	}
 
@@ -255,7 +259,7 @@ namespace util
 			auto [min, max] = std::minmax_element(selectedDiagonals.begin(), selectedDiagonals.end());
 			int skyline     = (int)std::max(std::abs(*min), std::abs(*max));
 			for (int i = 1; i < (int)n + 1; i++)
-				m.ia[i] = m.ia[i - 1] + std::min(skyline, std::min(i - 1, (int)n - i));
+				m.ia[i] = m.ia[i - 1] + std::min(skyline, i - 1);
 			m.al.resize(m.ia.back());
 			m.au.resize(m.ia.back());
 			m.di.resize(n);
