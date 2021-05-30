@@ -66,6 +66,81 @@ public:
 		return *IteratorAt(i, j);
 	}
 
+	T Det() &&
+	{
+		std::vector<int> pi(n + 1);
+		std::iota(pi.begin(), pi.end(), 0);
+
+		T res = 1;
+
+		for (size_t k = 0; k < n - 1; k++)
+		{
+			auto [a_mk1, a_mk2] = std::minmax_element(util::PermutedStridedIterator(std::begin(data), n, k, k, n, pi),
+			                                          util::PermutedStridedIterator(std::begin(data), n, n, k, 0, pi));
+			using std::abs;
+			size_t m  = abs(*a_mk1) > abs(*a_mk2) ? a_mk1.i : a_mk2.i;
+			if (k != m)
+			{
+				std::swap(pi[k], pi[m]);
+				res *= -1;
+			}
+
+			for (size_t i = k + 1; i < n; i++)
+			{
+				T t = At(pi[i], k) / At(pi[k], k);
+
+				std::transform(IteratorAt(pi[i], k + 1),
+				               IteratorAt(pi[i] + 1, k + 1),
+				               IteratorAt(pi[k], k + 1),
+				               IteratorAt(pi[i], k + 1),
+				               [&t](T const& lhs, T const& rhs) { return lhs - t * rhs; });
+			}
+		}
+		for (std::size_t i = 0; i < n; i++)
+			res *= data[pi[i] * n + i];
+		return res;
+	}
+
+	T Det() const&
+	{
+		auto copy = *this;
+		return std::move(copy).Det();
+	}
+
+	void MinorMatrixTo(DenseMatrix&& res, const std::size_t col, const std::size_t row) const
+	{
+		assert(res.Dims() == n - 1);
+		std::size_t ind = 0;
+		for (std::size_t y = 0; y < n; y++)
+		{
+			if (y == row)
+				continue;
+			for (std::size_t x = 0; x < n; x++)
+				if (x != col)
+					res.data[ind++] = data[y * n + x];
+		}
+	}
+	DenseMatrix MinorMatrix(const std::size_t col, const std::size_t row) const
+	{
+		auto answer = DenseMatrix(n - 1, std::valarray<T>((n - 1) * (n - 1)));
+		MinorMatrixTo(std::move(answer), col, row);
+		return answer;
+	}
+
+	DenseMatrix Inverse() const
+	{
+		auto res = DenseMatrix(n, std::valarray<T>(n * n));
+		auto minor = DenseMatrix(n - 1, std::valarray<T>((n - 1) * (n - 1)));
+		for (std::size_t y = 0; y < n; y++)
+			for (std::size_t x = 0; x < n; x++)
+			{
+				MinorMatrixTo(std::move(minor), y, x);
+				res.data[y * n + x] = ((int)(y + x) % 2 * -2 + 1) * std::move(minor).Det();
+			}
+		res.data /= Det();
+		return res;
+	}
+
 	Vector<T> SolveSystem(Vector<T> b) &&
 	{
 		std::vector<int> pi(n + 1);
@@ -131,6 +206,14 @@ std::ostream& PrintDense(std::ostream& o, DenseMatrix<T> const& m)
 		o << '\n';
 	}
 	return o;
+}
+
+template<typename T>
+DenseMatrix<T> operator+(DenseMatrix<T> l, DenseMatrix<T> const& r)
+{
+	assert(l.Dims() == r.Dims());
+	l.data += r.data;
+	return l;
 }
 
 template<typename T>

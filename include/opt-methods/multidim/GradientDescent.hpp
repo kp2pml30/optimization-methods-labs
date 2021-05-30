@@ -22,8 +22,7 @@ public:
 	: epsilon2(epsilon * epsilon)
 	{}
 
-	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
+	ApproxGenerator<P, V> operator()(Function<P, V> auto func, PointRegion<P> r)
 	{
 		BEGIN_APPROX_COROUTINE(data);
 

@@ -54,6 +54,7 @@ public:
 	R operator()(Args... args) const { return storage.desc->Invoke(&storage, std::forward<Args>(args)...); }
 
 	GetGradTypeT<R, Args...> grad() const { return storage.desc->Grad(&storage); }
+	GetHessTypeT<R, Args...> hessian() const { return storage.desc->Hessian(&storage); }
 
 	template<typename T>
 	T* target() noexcept

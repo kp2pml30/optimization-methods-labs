@@ -5,12 +5,13 @@
 #include <type_traits>
 
 #include "opt-methods/math/Scalar.hpp"
+#include "opt-methods/math/DenseMatrix.hpp"
 
 template<typename F>
 struct ErasedFunction;
 
 template<typename R, typename ...Args>
-struct GetGradType { using type = void; };
+struct GetGradType { using type = void; }; // generate error
 
 template<typename R, typename A>
 struct GetGradType<R, A> { using type = ErasedFunction<ScalarSubst<std::decay_t<A>, std::decay_t<R>>(A)>; };
@@ -21,6 +22,20 @@ using GetGradTypeT = typename GetGradType<T...>::type;
 template<typename T>
 concept HasGrad = requires(T const& t) {
 	{ t.grad() };
+};
+
+template<typename R, typename ...Args>
+struct GetHessType { using type = void; }; // generate error
+
+template<typename R, typename A>
+struct GetHessType<R, A> { using type = ErasedFunction<DenseMatrix<Scalar<std::decay_t<A>>>(A)>; };
+
+template<typename ...T>
+using GetHessTypeT = typename GetHessType<T...>::type;
+
+template<typename T>
+concept HasHessian = requires(T const& t) {
+	{ t.hessian() };
 };
 
 class bad_function_call : public std::exception
@@ -110,6 +125,7 @@ namespace function_helper
 		void (*Copy)(FunctionStorage* to, FunctionStorage const* from);
 		R (*Invoke)(FunctionStorage const* what, Args...);
 		GetGradTypeT<R, Args...> (*Grad)(FunctionStorage const* what);
+		GetHessTypeT<R, Args...> (*Hessian)(FunctionStorage const* what);
 	};
 
 	template<typename R, typename... Args>
@@ -121,7 +137,8 @@ namespace function_helper
 		    +[](FunctionStorage* to, FunctionStorage* from) { *to = *from; },
 		    +[](FunctionStorage* to, FunctionStorage const* from) { *to = *from; },
 		    +[](FunctionStorage const*, Args...) -> R { throw bad_function_call(); },
-		    +[](FunctionStorage const*) -> GetGradTypeT<R, Args...> { throw bad_function_call(); }};
+		    +[](FunctionStorage const*) -> GetGradTypeT<R, Args...> { throw bad_function_call(); },
+		    +[](FunctionStorage const*) -> GetHessTypeT<R, Args...> { throw bad_function_call(); }};
 		return &ret;
 	}
 
@@ -156,6 +173,12 @@ namespace function_helper
 					    return what->template SmallCast<T>()->grad();
 				    else
 					    throw bad_function_call();
+			    },
+			    +[](FunctionStorage const* what) -> GetHessTypeT<R, Args...> {
+				    if constexpr (HasHessian<T>)
+					    return what->template SmallCast<T>()->hessian();
+				    else
+					    throw bad_function_call();
 			    }};
 			return &ret;
 		}
@@ -186,6 +209,12 @@ namespace function_helper
 			    +[]([[maybe_unused]] const FunctionStorage* what) -> GetGradTypeT<R, Args...> {
 				    if constexpr (HasGrad<T>)
 					    return what->template BigCast<T>()->grad();
+				    else
+					    throw bad_function_call();
+			    },
+			    +[]([[maybe_unused]] const FunctionStorage* what) -> GetHessTypeT<R, Args...> {
+				    if constexpr (HasHessian<T>)
+					    return what->template BigCast<T>()->hessian();
 				    else
 					    throw bad_function_call();
 			    }};

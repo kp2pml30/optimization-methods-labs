@@ -40,7 +40,20 @@ public:
 		return Dot(A * v, v) / 2 + Dot(b, v) + c;
 	}
 
-public:
+	class HessianFunc
+	{
+	private:
+		MatrixImpl A;
+	public:
+		HessianFunc(MatrixImpl A)
+		: A(std::move(A))
+		{}
+
+		MatrixImpl operator()(Vector<T> const&) const noexcept
+		{
+			return A;
+		}
+	};
 	class GradientFunc
 	{
 	private:
@@ -63,6 +76,10 @@ public:
 	GradientFunc grad() const
 	{
 		return GradientFunc(A, b);
+	}
+	HessianFunc hessian() const
+	{
+		return {A};
 	}
 };
 
