@@ -1,0 +1,89 @@
+digraph Project {
+	node[shape=record];
+	rankdir="LR";
+	compound=true;
+	subgraph cluster_Math {
+		label = Математика;
+		color=blue;
+
+		valarray[label="std::valarray"];
+		valarray -> Vector;
+		valarray -> DenseMatrix [style="dotted"];
+		valarray -> DiagonalMatrix [style="dotted"];
+		QuadticFunction[label="QadricFunction|{Matrix|Vector|\<scalar\>}"];
+		QuadticFunction -> QuadticFunction2d;
+		QuadticFunction2d[label="QadricFunction2d|дополнительные функции для отрисовки|tostring|..."];
+		PointRegion[label="PointRegion|{\<vector\>|\<scalar\>}"];
+		Matrix -> DenseMatrix;
+		Matrix -> DiagonalMatrix;
+	}
+	subgraph cluster_Onedim {
+		label = "Одномерные методы";
+		color=blue;
+
+		Dichotomy;
+		Brent;
+		Fibonacci;
+		GoldenSection;
+		Parabolic;
+	}
+	subgraph cluster_Multidim {
+		label = "Многомерные методы";
+		color=blue;
+
+		GradientDescent;
+		SteepestGradient;
+		ConjugateGradientDescent;
+	}
+	subgraph cluster_Newton {
+		label = "методы Ньютона";
+		color=blue;
+
+		NewtonBase;
+		NewtonTraits [label="NewtonTraits|NewtonState|AdvanceP|FindAlpha"];
+		NewtonTraits -> NewtonBase [style=dotted];
+		NewtonBase -> Newton;
+		NewtonBase -> NewtonOnedim;
+		NewtonOnedim -> NewtonDirection;
+	}
+	subgraph cluster_Coroutines {
+		label = "Корутины";
+		color=blue;
+
+		Promise -> Generator [style="dotted"];
+		Generator -> ApproxGenerator;
+		Promise -> ApproxPromise;
+		ApproxPromise -> ApproxGenerator [style="dotted"];
+	}
+	subgraph cluster_Concepts {
+		label = "концепты";
+		color=blue;
+
+		Function[label="Function|call: (\<from\>) → \<to\>|grad: () → Function\<(\<from\>) → from.substitute_scalar_with(to)\>"];
+		Approximator[label="Approximator|<f1>call: (Fucntion, PointRegion) → ApproxGenerator|name?|drawable?"]
+	}
+	ApproxGenerator -> Approximator:f1;
+	Fibonacci -> SteepestGradient [ltail=cluster_Onedim];
+	Approximator -> Fibonacci [lhead=cluster_Onedim];
+	Approximator -> SteepestGradient [lhead=cluster_Multidim];
+	Approximator -> NewtonBase;
+	Fibonacci -> NewtonOnedim [ltail=cluster_Onedim];
+	subgraph cluster_Helpers {
+		label = "вспомогательные классы";
+		color=blue;
+
+		IterationalSolver[label="IterationalSolver|решает итеративно с условием|<f1>Approximator"];
+		IterationalSolverBuilder[label="IterationalSolverBuilder|векторный IterationalSolver|Approximator[]"];
+		IterationalSolver -> IterationalSolverBuilder [style="dotted"];
+	}
+	Approximator -> IterationalSolver:f1 [style="dotted"];
+	subgraph cluster_Erased {
+		label = "стертые типы для UI";
+		color=blue;
+
+		Function -> ErasedFunction;
+		ErasedFunction[label="ErasedFunction|grad: () → ErasedFunction\<(\<from\>) → from.substitute_scalar_with(to)\>|..."];
+		Approximator -> ErasedApproximator;
+		ErasedApproximator[label="ErasedApproximator|call: (ErasedFucntion, PointRegion) → ApproxGenerator|..."]
+	}
+}

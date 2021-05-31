@@ -1,0 +1,86 @@
+\documentclass[russian, english]{article}
+
+% \usepackage[margin=1in]{geometry}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\usepackage{graphicx}
+\usepackage{csvsimple}
+\usepackage{hyperref}
+\usepackage{verbatim}
+\usepackage[pdf]{graphviz}
+\usepackage[final]{pdfpages}
+
+\inputencoding{utf8}
+\def\code#1{\texttt{#1}}
+
+\newcommand{\mydot}[2]{\left\langle#1,#2\right\rangle}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+	{\scshape\LARGE Методы оптимизации \par}
+	\vspace{1cm}
+	{\scshape\Large Лабораторная работа №4\par Изучение алгоритмов метода Ньютона и его модификаций\par}
+	\vspace{2cm}
+	{\Large\itshape Дмитрий Проценко M3234 \par
+	Кирилл Прокопенко M3236 \par
+	Николай Холявин M3238 \par}
+	\vfill
+	ИТМО y2019
+	\vfill
+	{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Цель}
+Исследовать методы Ньютона:
+\begin{itemize}
+	\item обычный
+	\item с исчерпывающим спуском
+	\item с направлением
+\end{itemize}
+Проанализировать:
+\begin{itemize}
+	\item траектории методов
+	\item количество итераций
+\end{itemize}
+
+\section{Теория}
+\subsection{Метод Ньютона}
+Находит минимум унимодальной функции
+\begin{itemize}
+	\item[цикл] $x_{k+1} = x_{k} - \alpha p_{k}$
+	\item[$\alpha$] пока $f(x - \alpha p) > f(x)$ делаем $\alpha\leftarrow \frac{\alpha}{2}$ (как в градиентном спуске)
+	\item[$p$] $= H_f^{-1}(x)\cdot\operatorname{grad}_f(x)$
+	\item[остановка] когда $x_k - x_{k - 1} < \varepsilon$
+\end{itemize}
+Для ускорения работы лучше не искать обратную матрицу, а решать СЛАУ $H_f(x)\cdot p=\operatorname{grad}_f(x)$
+\subsection{С исчерпывающим спуском}
+Вместо наивной аппроксимации $\alpha$ делает минимизацию одномерной функции от $\alpha$
+\subsection{С направлением}
+Не использует гессиан, вместо этого выбирается начальное направление $p_0$, на каждой итерации делается проверка:\\
+$$
+p = \begin{cases}
+	p_0, & \mydot{p_0}{\operatorname{grad}_f(x)} > 0\\
+	\operatorname{grad}_f(x), & \text{иначе}
+\end{cases}
+$$
+
+\newpage
+\appendix
+\section{Код}
+Основан на предыдущих лабораторных.
+
+\section{Диаграмма классов}
+Из-за использования концептов doxygen не сгенерирует адекватную диаграмму. Граф, сгенерированный вручную, представлен ниже. \\
+\noindent\makebox[\textwidth]{\includegraphics[width=\paperwidth]{project.pdf}}
+%\setboolean{@twoside}{false}
+%\includepdf[pages=-,pagecommand={},width=\paperwidth]{project.pdf}
+
+\end{document}
