@@ -14,7 +14,6 @@ namespace impl
 			void Initialize(Scalar<From> eps) noexcept
 			{
 				this->epsilon2 = eps * eps;
-				this->AdvanceP();
 			}
 
 			bool Quits()

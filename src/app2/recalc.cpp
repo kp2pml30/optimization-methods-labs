@@ -87,7 +87,7 @@ void MainWindow::recalc()
 		addVisual(bifunc, desc, start, levels, QColor("magenta"));
 	}
 	{
-		auto desc = MApprox(TypeTag<NewtonDirection<Vector<double>, double>>{}, std::make_tuple(eps, Vector<double>{{-1, 0}}));
+		auto desc = MApprox(typeTag<NewtonDirection<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps, Vector<double>{{1, 0.1}}, erasedProvider()));
 		addVisual(bifunc, desc, start, levels, QColor("gray"));
 	}
 

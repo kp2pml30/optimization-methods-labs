@@ -13,12 +13,16 @@ namespace impl
 			OneDimApprox const* approx;
 			bool quits;
 
-			void Initialize(std::tuple<Scalar<From>, OneDimApprox> const& init) noexcept
+			void Initialize(Scalar<From> const& eps2, OneDimApprox const& oda) noexcept
 			{
 				quits = false;
-				this->epsilon2 = std::get<0>(init);
-				this->approx = &std::get<1>(init);
-				this->AdvanceP();
+				this->epsilon2 = eps2;
+				this->approx = &oda;
+			}
+
+			void Initialize(std::tuple<Scalar<From>, OneDimApprox> const& init) noexcept
+			{
+				Initialize(std::get<0>(init), std::get<1>(init));
 			}
 
 			void FindAlpha()

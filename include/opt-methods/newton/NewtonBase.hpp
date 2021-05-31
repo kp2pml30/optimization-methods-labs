@@ -91,14 +91,14 @@ public:
 
 		state.Initialize(static_cast<Initializer const&>(initializer)); // ensure not changed
 
-		while (!state.Quits())
+		do
 		{
 			state.AdvanceP();
 			state.FindAlpha();
 			state.x -= state.p * state.alpha;
 
 			co_yield {state.x, 0};
-		}
+		} while (!state.Quits());
 	}
 };
 
