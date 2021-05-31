@@ -67,23 +67,23 @@ void MainWindow::recalc()
 	auto erasedProvider = [&]() { return factories[onedimIndex].first(eps); };
 	std::vector<std::pair<double, std::string>> levels;
 	{
-		auto desc = MApprox(TypeTag<GradientDescent<Vector<double>, double>>{}, eps);
+		auto desc = MApprox(typeTag<GradientDescent<Vector<double>, double>>, eps);
 		addVisual(bifunc, desc, start, levels, QColor("red"));
 	}
 	{
-		auto desc = MApprox(TypeTag<SteepestDescent<Vector<double>, double, ErasedApproximator<double, double>>>{}, eps, erasedProvider());
+		auto desc = MApprox(typeTag<SteepestDescent<Vector<double>, double, ErasedApproximator<double, double>>>, eps, erasedProvider());
 		addVisual(bifunc, desc, start, levels, QColor("darkgreen"));
 	}
 	{
-		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double, QuadraticFunction2d<double>>>{}, eps);
+		auto desc = MApprox(typeTag<ConjugateGradientDescent<Vector<double>, double, QuadraticFunction2d<double>>>, eps);
 		addVisual(bifunc, desc, start, levels, QColor("blue"));
 	}
 	{
-		auto desc = MApprox(TypeTag<Newton<Vector<double>, double>>{}, eps);
+		auto desc = MApprox(typeTag<Newton<Vector<double>, double>>, eps);
 		addVisual(bifunc, desc, start, levels, QColor("cyan"));
 	}
 	{
-		auto desc = MApprox(TypeTag<NewtonOnedim<Vector<double>, double, ErasedApproximator<double, double>>>{}, std::make_tuple(eps, erasedProvider()));
+		auto desc = MApprox(typeTag<NewtonOnedim<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps, erasedProvider()));
 		addVisual(bifunc, desc, start, levels, QColor("magenta"));
 	}
 	{

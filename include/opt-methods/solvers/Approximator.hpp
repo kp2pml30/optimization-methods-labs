@@ -206,7 +206,7 @@ concept Drawable = requires(T& t, BoundsWithValues<P, V> bounds, QtCharts::QChar
  * most abstract Approximator concept
  */
 template<typename T, typename P, typename V>
-concept Approximator = requires(T& t, DummyFunc<P, V> func, PointRegion<P> bounds) {
+concept Approximator = requires(T& t, DummyFunc<P, V> &&func, PointRegion<P> bounds) {
 	// Function<P, V> func
 	requires HasPV<T, P, V>;
 	requires Drawable<T, P, V>;

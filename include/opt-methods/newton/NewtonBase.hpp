@@ -80,7 +80,8 @@ public:
 	: initializer(std::move(initializer))
 	{}
 
-	ApproxGenerator<P, V> operator()(Function<P, V> auto func, PointRegion<P> r)
+	template<Function<P, V> F>
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
 		requires NewtonStateTraits<traits<From, To, decltype(impl::DecomposeFuncTypes(func))>, From, To, decltype(impl::DecomposeFuncTypes(func)), Initializer>
 	{
 		BEGIN_APPROX_COROUTINE(data);
