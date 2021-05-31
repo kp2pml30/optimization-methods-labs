@@ -84,7 +84,7 @@ private:
 	: holder(new impl::ErasedApproximatorImplementation<P, V, Approx>(std::forward<Args>(a)...))
 	{}
 
-	ApproxGenerator<P, V> operator()(ErasedFunction<V(P const&)> func, PointRegion<P> bounds)
+	ApproxGenerator<P, V> operator()(ErasedFunction<V(P const&)> func, PointRegion<P> bounds) const
 	{
 		assert(holder != nullptr);
 		return (*holder)(std::move(func), std::move(bounds));

@@ -2,6 +2,7 @@
 #include "./mainwindow.h"
 
 #include "opt-methods/multidim/all.hpp"
+#include "opt-methods/newton/all.hpp"
 #include "opt-methods/util/Charting.hpp"
 
 #include <QCheckBox>
@@ -77,6 +78,14 @@ void MainWindow::recalc()
 		auto desc = MApprox(TypeTag<ConjugateGradientDescent<Vector<double>, double, QuadraticFunction2d<double>>>{}, eps);
 		addVisual(bifunc, desc, start, levels, QColor("blue"));
 	}
+	{
+		auto desc = MApprox(TypeTag<Newton<Vector<double>, double>>{}, eps);
+		addVisual(bifunc, desc, start, levels, QColor("cyan"));
+	}
+	{
+		auto desc = MApprox(TypeTag<NewtonOnedim<Vector<double>, double, ErasedApproximator<double, double>>>{}, std::make_tuple(eps, erasedProvider()));
+		addVisual(bifunc, desc, start, levels, QColor("magenta"));
+	}
 
 	auto addLevel = [&](Trajectory& traj, double delta, double colCoef) {
 		auto copy = bifunc.shift(-delta);
@@ -138,7 +147,8 @@ void MainWindow::recalc()
 	for (auto& [name, traj] : name2trajectory)
 		if (name != defaultTrajName)
 		{
-			bool isChecked = gradientTogglers[name]->isChecked();
+			auto* toggler = gradientTogglers[name];
+			bool isChecked = !toggler || toggler->isChecked();
 			name2trajectory[name].setVisible(isChecked);
 			selected |= isChecked;
 		}

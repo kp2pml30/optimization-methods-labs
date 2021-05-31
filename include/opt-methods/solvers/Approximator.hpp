@@ -70,7 +70,9 @@ concept Function = requires(T& t, From const& f) {
 template<typename P, typename V>
 struct DummyFunc
 {
-	V operator()(P const&) { return std::declval<V>(); }
+	V operator()(P const&) const { return std::declval<V>(); }
+	DummyFunc grad() const { return *this; }
+	DummyFunc hessian() const { return *this; }
 };
 
 template<typename P, typename V>

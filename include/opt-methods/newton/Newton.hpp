@@ -2,14 +2,12 @@
 
 #include "./NewtonBase.hpp"
 
-struct Void {};
-
 namespace impl
 {
-	template<typename From, typename To, typename F, typename FGrad, typename FHes>
+	template<typename From, typename To, typename FDec>
 	struct DefaultNewtonTraits
 	{
-		struct NewtonState : NewtonStateBase<From, To, F, FGrad, FHes>
+		struct NewtonState : NewtonStateBase<From, To, FDec>
 		{
 			Scalar<From> epsilon2;
 
@@ -26,7 +24,7 @@ namespace impl
 
 			void FindAlpha()
 			{
-				while (this->func(this->x) < this->func(this->x - this->p + this->alpha))
+				while (this->func(this->x) < this->func(this->x - this->p * this->alpha))
 					this->alpha /= 2;
 			}
 
