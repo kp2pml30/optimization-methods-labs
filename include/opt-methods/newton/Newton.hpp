@@ -17,12 +17,6 @@ namespace impl
 				this->AdvanceP();
 			}
 
-			void FindAlpha()
-			{
-				while (this->func(this->x) < this->func(this->x - this->p * this->alpha))
-					this->alpha /= 2;
-			}
-
 			bool Quits()
 			{
 				return Len2(this->p) * this->alpha * this->alpha <= epsilon2;

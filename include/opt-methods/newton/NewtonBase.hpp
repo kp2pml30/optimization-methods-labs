@@ -30,6 +30,13 @@ struct NewtonStateBase<From, To, DecomposedFuncTypes<F, FGrad, FHes>>
 	{
 		this->p = this->hess(this->x).Inverse() * this->grad(this->x);
 	}
+
+	/// use shadowing to override
+	void FindAlpha()
+	{
+		while (this->func(this->x) < this->func(this->x - this->p * this->alpha))
+			this->alpha /= 2;
+	}
 };
 
 template<typename This, typename From, typename To, typename FDec, typename Initializer>

@@ -86,6 +86,10 @@ void MainWindow::recalc()
 		auto desc = MApprox(TypeTag<NewtonOnedim<Vector<double>, double, ErasedApproximator<double, double>>>{}, std::make_tuple(eps, erasedProvider()));
 		addVisual(bifunc, desc, start, levels, QColor("magenta"));
 	}
+	{
+		auto desc = MApprox(TypeTag<NewtonDirection<Vector<double>, double>>{}, std::make_tuple(eps, Vector<double>{{-1, 0}}));
+		addVisual(bifunc, desc, start, levels, QColor("gray"));
+	}
 
 	auto addLevel = [&](Trajectory& traj, double delta, double colCoef) {
 		auto copy = bifunc.shift(-delta);
