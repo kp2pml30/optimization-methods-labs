@@ -24,6 +24,12 @@ struct NewtonStateBase<From, To, DecomposedFuncTypes<F, FGrad, FHes>>
 	FGrad grad;
 	FHes hess;
 	Scalar<From> findRange;
+
+	/// use shadowing to override
+	void AdvanceP()
+	{
+		this->p = this->hess(this->x).Inverse() * this->grad(this->x);
+	}
 };
 
 template<typename This, typename From, typename To, typename FDec, typename Initializer>

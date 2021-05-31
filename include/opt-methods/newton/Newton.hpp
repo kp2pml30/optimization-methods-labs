@@ -14,12 +14,7 @@ namespace impl
 			void Initialize(Scalar<From> eps) noexcept
 			{
 				this->epsilon2 = eps * eps;
-				AdvanceP();
-			}
-
-			void AdvanceP()
-			{
-				this->p = this->hess(this->x).Inverse() * this->grad(this->x);
+				this->AdvanceP();
 			}
 
 			void FindAlpha()

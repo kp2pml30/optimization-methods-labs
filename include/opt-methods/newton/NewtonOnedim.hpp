@@ -18,12 +18,7 @@ namespace impl
 				quits = false;
 				this->epsilon2 = std::get<0>(init);
 				this->approx = &std::get<1>(init);
-				AdvanceP();
-			}
-
-			void AdvanceP()
-			{
-				this->p = this->hess(this->x).Inverse() * this->grad(this->x);
+				this->AdvanceP();
 			}
 
 			void FindAlpha()
