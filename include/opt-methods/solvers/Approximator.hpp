@@ -186,7 +186,7 @@ class BaseApproximator; // forward declaration
  * Approximator implementation concept, must inherint BaseApproximator
  */
 template<typename T, typename P, typename V>
-concept ApproximatorImpl = requires(T& t, DummyFunc<P, V> func,
+concept ApproximatorImpl = requires(T const& t, DummyFunc<P, V> func,
 																		PointRegion<P> bounds) {
 	requires HasIterationData<T, P, V>;
 	requires Function<decltype(func), P, V>;
@@ -198,7 +198,7 @@ concept ApproximatorImpl = requires(T& t, DummyFunc<P, V> func,
  * concept for drawable with QChart objects
  */
 template<typename T, typename P, typename V>
-concept Drawable = requires(T& t, BoundsWithValues<P, V> bounds, QtCharts::QChart& chart) {
+concept Drawable = requires(T const& t, BoundsWithValues<P, V> bounds, QtCharts::QChart& chart) {
 	{ t.draw(bounds, std::declval<BaseIterationData<P, V>>(), chart) };
 };
 
@@ -206,7 +206,7 @@ concept Drawable = requires(T& t, BoundsWithValues<P, V> bounds, QtCharts::QChar
  * most abstract Approximator concept
  */
 template<typename T, typename P, typename V>
-concept Approximator = requires(T& t, DummyFunc<P, V> &&func, PointRegion<P> bounds) {
+concept Approximator = requires(T const& t, DummyFunc<P, V> &&func, PointRegion<P> bounds) {
 	// Function<P, V> func
 	requires HasPV<T, P, V>;
 	requires Drawable<T, P, V>;

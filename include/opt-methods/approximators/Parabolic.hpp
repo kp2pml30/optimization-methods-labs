@@ -60,7 +60,7 @@ public:
 	}
 
 	template<Function<P, V> F>
-	std::optional<std::tuple<P, V, P, V, P, V>> choosePoints(F func, PointRegion<P> r, std::size_t maxIter)
+	std::optional<std::tuple<P, V, P, V, P, V>> choosePoints(F func, PointRegion<P> r, std::size_t maxIter) const
 	{
 		using std::abs;
 
@@ -76,7 +76,7 @@ public:
 	}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r) const
 	{
 		BEGIN_APPROX_COROUTINE(data);
 

@@ -64,6 +64,7 @@ private:
 		QuadraticFunction2d<double>(8, 1, 1, 0, 0, -1),
 		QuadraticFunction2d<double>(3, 2.5, 4, 0.1, -0.5, 0),
 		QuadraticFunction2d<double>(1, 0, 1, -0.5, 0, 0),
+		QuadraticFunction2d<double>(1, -1.2, 1, 0, 0, 0),
 	};
 
 	QtCharts::QChart* chart = nullptr;

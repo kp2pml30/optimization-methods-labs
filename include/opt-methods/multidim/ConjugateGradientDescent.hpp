@@ -29,7 +29,7 @@ public:
 private:
 	template<QuadraticFunctionImpl<Scalar<From>> FuncHeadT,
 					 QuadraticFunctionImpl<Scalar<From>>... FuncTailT>
-	void getErasedTarget(ErasedFunction<V(P const &)> const& f, helper::FunctionAction<FuncTs...> auto action)
+	static void getErasedTarget(ErasedFunction<V(P const &)> const& f, helper::FunctionAction<FuncTs...> auto action)
 	{
 		auto func = f.template target<FuncHeadT>();
 		if (func != nullptr)
@@ -48,7 +48,7 @@ public:
 	{}
 
 	template<QuadraticFunctionImpl<Scalar<P>> F>
-	ApproxGenerator<P, V> implementQuadratic(F const& func, PointRegion<P> r) {
+	ApproxGenerator<P, V> implementQuadratic(F const& func, PointRegion<P> r) const {
 		BEGIN_APPROX_COROUTINE(data);
 
 		auto gradf = func.grad();
@@ -87,7 +87,7 @@ public:
 		}
 	}
 
-	ApproxGenerator<P, V> implementQuadratic(ErasedFunction<V(P const&)> const& func, PointRegion<P> r)
+	ApproxGenerator<P, V> implementQuadratic(ErasedFunction<V(P const&)> const& func, PointRegion<P> r) const
 	{
 		if constexpr (sizeof...(FuncTs) > 0)
 		{
@@ -101,7 +101,7 @@ public:
 
 	template<Function<P, V> F>
 		requires QuadraticFunctionImpl<F, Scalar<P>> || std::convertible_to<F, ErasedFunction<V(P const&)>>
-	ApproxGenerator<P, V> operator()(F func_, PointRegion<P> r)
+	ApproxGenerator<P, V> operator()(F func_, PointRegion<P> r) const
 	{
 		BEGIN_APPROX_COROUTINE(data);
 

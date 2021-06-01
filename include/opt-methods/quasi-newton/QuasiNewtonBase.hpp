@@ -14,15 +14,15 @@ namespace impl
 		{
 			using BaseT = BaseTraits::NewtonState;
 
-			double epsilon2;
+			Scalar<From> epsilon2;
 			DenseMatrix<Scalar<From>> G;
 			From curGrad, lastGrad, dGrad;
 			From lastX, dx;
 			bool isFirst;
 
-			void Initialize(double eps2) noexcept
+			void Initialize(Scalar<From> eps) noexcept
 			{
-				epsilon2 = eps2;
+				epsilon2 = eps * eps;
 
 				G = DenseMatrix<Scalar<From>>::Identity(this->x.size());
 				lastX = From(0.0, this->x.size());

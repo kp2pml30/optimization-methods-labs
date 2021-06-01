@@ -90,7 +90,7 @@ private:
 		return (*holder)(std::move(func), std::move(bounds));
 	}
 
-	void draw(BoundsWithValues<P, V> bounds, BaseIterationData<P, V> const& data, QtCharts::QChart& chart)
+	void draw(BoundsWithValues<P, V> bounds, BaseIterationData<P, V> const& data, QtCharts::QChart& chart) const
 	{
 		assert(holder != nullptr);
 		return holder->draw(std::move(bounds), data, chart);

@@ -27,17 +27,22 @@ public:
 		return static_cast<CRTP_Child&>(*this);
 	}
 
+	/*ApproximatorImpl<P, V>*/ auto& impl() const
+	{
+		return static_cast<CRTP_Child const&>(*this);
+	}
+
 	template<Function<P, V> F>
-	std::tuple<P, V, P, V> countBwV(F func, PointRegion<P> pr)
+	std::tuple<P, V, P, V> countBwV(F func, PointRegion<P> pr) const
 	{
 		auto l = pr.p - pr.r, r = pr.p + pr.r;
 		return {l, func(l), r, func(r)};
 	}
 
-	void draw(BoundsWithValues<P, V> r, [[maybe_unused]] IterationData const& data, QtCharts::QChart& chart);
+	void draw(BoundsWithValues<P, V> r, [[maybe_unused]] IterationData const& data, QtCharts::QChart& chart) const;
 
 	// template so that can postpone getting IterationData from CRTP child
-	auto preproc()
+	auto preproc() const
 	{
 		return std::make_unique<typename CRTP_Child::IterationData>();
 	}

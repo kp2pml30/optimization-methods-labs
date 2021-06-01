@@ -20,7 +20,7 @@ public:
 
 	P l;
 
-	std::tuple<FibT, FibT, int> countFibFromBounds(PointRegion<P> const& r)
+	std::tuple<FibT, FibT, int> countFibFromBounds(PointRegion<P> const& r) const
 	{
 		int n = 1;
 		FibT FLast = 1, FPrelast = 0;
@@ -35,7 +35,7 @@ public:
 		return {FLast, FPrelast, n};
 	}
 
-	P moveBackFib(FibT &FLast, FibT &FPrelast)
+	P moveBackFib(FibT &FLast, FibT &FPrelast) const
 	{
 		FibT prev = FLast - FPrelast;
 		FLast = FPrelast;
@@ -46,7 +46,7 @@ public:
 	FibonacciApproximator(P l) : l(l) {}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r) const
 	{
 		BEGIN_APPROX_COROUTINE(data);
 

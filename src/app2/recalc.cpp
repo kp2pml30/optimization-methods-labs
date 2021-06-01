@@ -92,11 +92,11 @@ void MainWindow::recalc()
 		addVisual(bifunc, desc, start, levels, QColor("gray"));
 	}
 	{
-		auto desc = MApprox(typeTag<QuasiNewtonBFS<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps * eps, erasedProvider()));
+		auto desc = MApprox(typeTag<QuasiNewtonBFS<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps, erasedProvider()));
 		addVisual(bifunc, desc, start, levels, QColor("gainsboro"));
 	}
 	{
-		auto desc = MApprox(typeTag<QuasiNewtonPowell<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps * eps, erasedProvider()));
+		auto desc = MApprox(typeTag<QuasiNewtonPowell<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps, erasedProvider()));
 		addVisual(bifunc, desc, start, levels, QColor("orchid"));
 	}
 

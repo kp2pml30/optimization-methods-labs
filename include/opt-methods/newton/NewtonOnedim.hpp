@@ -13,10 +13,10 @@ namespace impl
 			OneDimApprox const* approx;
 			bool quits;
 
-			void Initialize(Scalar<From> const& eps2, OneDimApprox const& oda) noexcept
+			void Initialize(Scalar<From> const& eps, OneDimApprox const& oda) noexcept
 			{
 				quits = false;
-				this->epsilon2 = eps2;
+				this->epsilon2 = eps * eps;
 				this->approx = &oda;
 			}
 

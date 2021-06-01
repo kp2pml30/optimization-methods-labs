@@ -67,14 +67,20 @@ public:
 				},
 				data);
 	}
-	/**
-	 * @param diff -- solve while possible
-	 */
+
 	template<Function<P, V> F>
 	BoundsEval solveUntilEnd(F&& func, Bounds bounds, SolveData& data) {
 		return solveWhile(
 				std::forward<F>(func),
 				std::move(bounds), [](...) { return true; },
+				data);
+	}
+
+	template<Function<P, V> F>
+	BoundsEval solveUntilEnd(F&& func, BoundsEval bounds, SolveData& data) {
+		return solveWhile(
+				std::forward<F>(func),
+				Bounds{bounds.p - bounds.r, bounds.p + bounds.r}, [](...) { return true; },
 				data);
 	}
 };
@@ -94,7 +100,9 @@ namespace impl
 }
 
 template<typename P, typename V, Approximator<P, V> ... A>
-class IterationalSolverBuilder {};
+class IterationalSolverBuilder {
+	static constexpr size_t size = 0;
+};
 
 template<typename P, typename V, Approximator<P, V> A, Approximator<P, V> ... Tail>
 class IterationalSolverBuilder<P, V, A, Tail...> : private IterationalSolverBuilder<P, V, Tail...>
@@ -103,6 +111,8 @@ private:
 	using Chained = IterationalSolverBuilder<P, V, Tail...>;
 	IterationalSolver<P, V, A> approximator;
 public:
+	static constexpr size_t size = sizeof...(Tail) + 1;
+
 	/**
 	 * ctor
 	 * @param tuples... -- arguments to constructors

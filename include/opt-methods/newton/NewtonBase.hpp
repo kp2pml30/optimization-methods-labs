@@ -81,7 +81,7 @@ public:
 	{}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r) const
 		requires NewtonStateTraits<traits<From, To, decltype(impl::DecomposeFuncTypes(func))>, From, To, decltype(impl::DecomposeFuncTypes(func)), Initializer>
 	{
 		BEGIN_APPROX_COROUTINE(data);

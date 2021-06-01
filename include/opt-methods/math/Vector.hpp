@@ -32,6 +32,18 @@ R Len(Vector<T> const& l)
 	return std::sqrt(static_cast<R>(Len2(l)));
 }
 
+template<std::floating_point T, typename R = T>
+R Len2(T x)
+{
+	return static_cast<R>(x * x);
+}
+
+template<std::floating_point T, typename R = T>
+R Len(T x)
+{
+	return static_cast<R>(std::abs(x));
+}
+
 namespace util
 {
 	template<typename TT>

@@ -5,7 +5,7 @@
 
 template<typename From, typename To, typename CRTP_Child>
 
-void BaseApproximator<From, To, CRTP_Child>::draw(BoundsWithValues<P, V> r, IterationData const& data, QtCharts::QChart& chart)
+void BaseApproximator<From, To, CRTP_Child>::draw(BoundsWithValues<P, V> r, IterationData const& data, QtCharts::QChart& chart) const
 {
 	using namespace QtCharts;
 

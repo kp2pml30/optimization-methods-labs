@@ -25,7 +25,7 @@ public:
 	{}
 
 	template<Function<P, V> F>
-	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r)
+	ApproxGenerator<P, V> operator()(F func, PointRegion<P> r) const
 	{
 		BEGIN_APPROX_COROUTINE(data);
 
