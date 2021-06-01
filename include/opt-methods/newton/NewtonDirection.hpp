@@ -9,25 +9,29 @@ namespace impl
 	{
 		struct NewtonState : NewtonOnedimTraits<From, To, OneDimApprox, FDec>::NewtonState
 		{
-			From p0;
+			using BaseT = NewtonOnedimTraits<From, To, OneDimApprox, FDec>::NewtonState;
+			bool isFirst;
 
 			void AdvanceP()
 			{
 				auto g = this->grad(this->x);
-				g /= Len(g);
-				if (Dot(p0, g) <= 1e-3)
+				if (isFirst)
+				{
+					isFirst = false;
 					this->p = g;
+				}
 				else
-					this->p = p0;
+				{
+					BaseT::AdvanceP();  // solve SLE
+					if (Dot(this->p, g) < 0)
+						this->p = g;  // fall back to antigradient
+				}
 			}
 
-			void Initialize(std::tuple<Scalar<From>, From, OneDimApprox>const& epsDirApp) noexcept
+			void Initialize(std::tuple<Scalar<From>, OneDimApprox>const& epsApp) noexcept
 			{
-				NewtonOnedimTraits<From, To, OneDimApprox, FDec>::NewtonState::Initialize(
-						std::get<0>(epsDirApp),
-						std::get<2>(epsDirApp));
-				p0 = std::get<1>(epsDirApp);
-				p0 /= Len(p0);
+				NewtonOnedimTraits<From, To, OneDimApprox, FDec>::NewtonState::Initialize(epsApp);
+				isFirst = true;
 			}
 		};
 	};
@@ -44,4 +48,4 @@ namespace impl
 
 
 template<typename From, typename To, Approximator<To, To> OneDimApprox>
-using NewtonDirection = BaseNewton<From, To, impl::NewtonDirectionTraitsBound<OneDimApprox>::template type, std::tuple<Scalar<From>, From, OneDimApprox>, impl::NewtonDirectionTraitsName>;
+using NewtonDirection = BaseNewton<From, To, impl::NewtonDirectionTraitsBound<OneDimApprox>::template type, std::tuple<Scalar<From>, OneDimApprox>, impl::NewtonDirectionTraitsName>;
