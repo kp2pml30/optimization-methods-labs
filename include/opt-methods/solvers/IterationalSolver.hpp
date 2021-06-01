@@ -27,7 +27,7 @@ public:
 
 private:
 	template<Function<P, V> F, typename Checker>
-	BoundsEval solveWhile(F&& func, Bounds bounds, Checker&& checker, SolveData& data) requires
+	BoundsEval solveWhile(F&& func, Bounds bounds, Checker&& checker, SolveData& data) const requires
 		requires(BoundsEval b, std::size_t iter) {
 			{ checker(b, iter) } -> std::convertible_to<bool>;
 		}
@@ -48,7 +48,7 @@ public:
 	 * @param iterations -- solve while possible && i=0.. < iterations
 	 */
 	template<Function<P, V> F>
-	BoundsEval solveIteration(F&& func, std::size_t iterations, Bounds bounds, SolveData& data)
+	BoundsEval solveIteration(F&& func, std::size_t iterations, Bounds bounds, SolveData& data) const
 	{
 		return solveWhile(
 				std::forward<F>(func), std::move(bounds), [&](auto&&, std::size_t iter) { return iter < iterations; }, data);
@@ -57,7 +57,7 @@ public:
 	 * @param diff -- solve while possible && distance between ends > diff
 	 */
 	template<Function<P, V> F>
-	BoundsEval solveDiff(F&& func, double diff, Bounds bounds, SolveData& data)
+	BoundsEval solveDiff(F&& func, double diff, Bounds bounds, SolveData& data) const
 	{
 		return solveWhile(
 				std::forward<F>(func),
@@ -69,7 +69,7 @@ public:
 	}
 
 	template<Function<P, V> F>
-	BoundsEval solveUntilEnd(F&& func, Bounds bounds, SolveData& data) {
+	BoundsEval solveUntilEnd(F&& func, Bounds bounds, SolveData& data) const {
 		return solveWhile(
 				std::forward<F>(func),
 				std::move(bounds), [](...) { return true; },
@@ -77,7 +77,7 @@ public:
 	}
 
 	template<Function<P, V> F>
-	BoundsEval solveUntilEnd(F&& func, BoundsEval bounds, SolveData& data) {
+	BoundsEval solveUntilEnd(F&& func, BoundsEval bounds, SolveData& data) const {
 		return solveWhile(
 				std::forward<F>(func),
 				Bounds{bounds.p - bounds.r, bounds.p + bounds.r}, [](...) { return true; },
