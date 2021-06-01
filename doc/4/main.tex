@@ -19,6 +19,13 @@
 
 \newcommand{\mydot}[2]{\left\langle#1,#2\right\rangle}
 
+\newtoggle{aftersection}
+\preto{\section}{\filbreak\global\toggletrue{aftersection}}
+\preto{\subsection}{\iftoggle{aftersection}{\global\togglefalse{aftersection}}{\filbreak}}
+\newcommand{\clearpageafterfirst}{%
+  \gdef\clearpageafterfirst{\clearpage}%
+}
+
 \begin{document}
 
 \begin{titlepage}
@@ -53,6 +60,9 @@
 \end{itemize}
 
 \section{Теория}
+\subsection{Обозначения}
+$x\otimes y\equiv x\cdot y^T$\\
+$x^\otimes \equiv x\otimes x$\\
 \subsection{Метод Ньютона}
 Находит минимум унимодальной функции
 \begin{itemize}
@@ -74,35 +84,57 @@ p = \begin{cases}
 $$\\
 Где $p_k$ определяется как раньше. \\
 Идея метода в том, что он проверяет не идем ли мы в абсурдном направлении, и если это так, то он на этой итерации превращаетя в (градиентный) метод наискорейшего спуска.
+\subsection{Квазиньютоновские методы}
+Отличаются от классических методов тем, что не используют явную матрицу Гессе, а строят ее некоторое приближение.\\
+$\omega_k = \operatorname{grad}_f(x_k)$\\
+$p_k=G_k\cdot\omega_k$, где $G_k$ --- положительно определенная матрица ($n\times n$) специального вида.
+\subsection{Метод Бройдена-Флетчера-Шено}
+$G_1 = I$\\
+$G_{k+1}=G_k - \frac{(\Delta x_k)^\otimes}{\mydot{\Delta \omega_k}{\Delta x_k}} - \frac{G_k(\Delta\omega_k)^\otimes G_k^T}{\rho_k}+\rho_k r_k^\otimes$\\
+$r_k=\frac{G_k\Delta\omega_k}{\rho_k}-\frac{\Delta x_k}{\mydot{\Delta x_k}{\Delta\omega_k}}$\\
+$\rho_k=\mydot{G_k\Delta\omega_k}{\Delta\omega_\Delta\omega_kk}$
+\subsection{Метод Пауэлла}
+$G_{k+1}=G_k-\frac{(\Delta \widetilde{x_k})^\otimes}{\mydot{\Delta\omega_k}{\Delta\widetilde{x_k}}}$\\
+$\Delta \widetilde{x_k} = \Delta x_k + G_k\Delta\omega_k$
 
 \section{Исследование методов Ньютона}
 
 % function fancy-function prefix start [suffix/fancy]
 \newcommand{\MakePlots}[5]{
-	$#2$\\
+	$z(x, y) = #2$\\
 	$p_0 = #4$\\
 	\begin{tikzpicture}
 	\begin{axis}[
-		%view={110}{10},
 		colormap/greenyellow,
-		colorbar
+		legend style={at={(0.5,-0.1)},anchor=north},
+		xlabel = {x},
+		ylabel = {y},
+		zlabel = {z},
+		%colorbar
 	]
-		\addplot3[surf] {#1};
+		\addplot3[surf, opacity=0.8, forget plot] {#1};
+		\foreach \suff/\fancy in #5 {
+			\edef\temp{\noexpand\addlegendentry{\fancy}}
+			\addplot3 table[col sep=tab]{#3/\suff.tsv};
+			\temp
+		}
 	\end{axis}
 	\end{tikzpicture}
 }
 
+\newcommand{\methodsList}{{}}
 \begin{itemize}
-\item \MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{}{(4;1)}{}
-\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{}{(-1.2;1)}{}
+	\renewcommand{\methodsList}{newton/{метод Ньютона},newton-with-minimization/{метод Ньютона с одномерной минимизацией}}
+	\item \MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{test}{(4;1)}{\methodsList}
+	\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{test}{(-1.2;1)}{\methodsList}
 \end{itemize}
 
 \section{Исследование методов квазиньютоновских методов}
 \begin{itemize}
-\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{}{(-1.2;1)}{}
-\item \MakePlots{(x^2+y-11)^2 + (x+y^2-7)^2}{(x^2+y-11)^2 + (x+y^2-7)^2}{}{(-1.2;1)}{}
+	\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{}{(-1.2;1)}{{}}
+	\item \MakePlots{(x^2+y-11)^2 + (x+y^2-7)^2}{(x^2+y-11)^2 + (x+y^2-7)^2}{}{(-1.2;1)}{{}}
 \item \MakePlots{100-2/(1+((x-1)/2)^2+((y-1)/3)^2)-1/(1+((x-2)/2)^2+((y-1)/3)^2)}
-	{100-\frac{2}{1+(\frac{x-1}{2})^2+(\frac{y-1}{3})^2}-\frac{1}{1+(\frac{x-2}{2})^2+(\frac{y-1}{3})^2}}{}{(-1.2;1)}{}
+	{100-\frac{2}{1+(\frac{x-1}{2})^2+(\frac{y-1}{3})^2}-\frac{1}{1+(\frac{x-2}{2})^2+(\frac{y-1}{3})^2}}{}{(-1.2;1)}{{}}
 \end{itemize}
 
 \newpage
