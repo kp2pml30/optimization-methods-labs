@@ -37,6 +37,8 @@ MainWindow::MainWindow(QWidget* parent)
 	addCheckbox("newton");
 	addCheckbox("newton with minimization");
 	addCheckbox("newton with direction");
+	addCheckbox("broyden fletcher shanno");
+	addCheckbox("powell");
 
 	auto toString = [](QuadraticFunction2d<double> const& func) {
 		[[maybe_unused]] auto [center, vx, vy] = func.shift(func.c >= -0.1 ? -2 * func.c - 1 : 0).canonicalCoordSys();

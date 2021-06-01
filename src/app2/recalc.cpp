@@ -3,6 +3,7 @@
 
 #include "opt-methods/multidim/all.hpp"
 #include "opt-methods/newton/all.hpp"
+#include "opt-methods/quasi-newton/all.hpp"
 #include "opt-methods/util/Charting.hpp"
 
 #include <QCheckBox>
@@ -89,6 +90,14 @@ void MainWindow::recalc()
 	{
 		auto desc = MApprox(typeTag<NewtonDirection<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps, Vector<double>{{1, 0.1}}, erasedProvider()));
 		addVisual(bifunc, desc, start, levels, QColor("gray"));
+	}
+	{
+		auto desc = MApprox(typeTag<QuasiNewtonBFS<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps * eps, erasedProvider()));
+		addVisual(bifunc, desc, start, levels, QColor("gainsboro"));
+	}
+	{
+		auto desc = MApprox(typeTag<QuasiNewtonPowell<Vector<double>, double, ErasedApproximator<double, double>>>, std::make_tuple(eps * eps, erasedProvider()));
+		addVisual(bifunc, desc, start, levels, QColor("orchid"));
 	}
 
 	auto addLevel = [&](Trajectory& traj, double delta, double colCoef) {

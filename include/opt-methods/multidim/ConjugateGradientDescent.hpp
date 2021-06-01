@@ -47,7 +47,8 @@ public:
 	: epsilon2(epsilon * epsilon)
 	{}
 
-	ApproxGenerator<P, V> implementQuadratic(QuadraticFunctionImpl<Scalar<P>> auto const& func, PointRegion<P> r) {
+	template<QuadraticFunctionImpl<Scalar<P>> F>
+	ApproxGenerator<P, V> implementQuadratic(F const& func, PointRegion<P> r) {
 		BEGIN_APPROX_COROUTINE(data);
 
 		auto gradf = func.grad();

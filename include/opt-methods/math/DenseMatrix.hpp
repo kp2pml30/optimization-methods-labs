@@ -29,6 +29,65 @@ public:
 		assert(n * n == this->data.size());
 	}
 
+	static DenseMatrix Identity(size_t n)
+	{
+		DenseMatrix res(n, std::valarray<T>(0.0, n * n));
+		res.data[std::slice(0, n, n + 1)] = 1;
+		return res;
+	}
+
+	DenseMatrix& operator+=(DenseMatrix const& rhs)
+	{
+		data += rhs.data;
+		return *this;
+	}
+	DenseMatrix& operator-=(DenseMatrix const& rhs)
+	{
+		data -= rhs.data;
+		return *this;
+	}
+	DenseMatrix operator+(DenseMatrix const& rhs) const
+	{
+		return DenseMatrix(n, data + rhs.data);
+	}
+	DenseMatrix operator-(DenseMatrix const& rhs) const
+	{
+		return DenseMatrix(n, data - rhs.data);
+	}
+	DenseMatrix operator-() const
+	{
+		return DenseMatrix(n, -data);
+	}
+	DenseMatrix operator/(T rhs) const
+	{
+		return DenseMatrix(n, data / rhs);
+	}
+	DenseMatrix& operator/=(T rhs)
+	{
+		data /= rhs;
+		return *this;
+	}
+	DenseMatrix operator*(T rhs) const
+	{
+		return DenseMatrix(n, data * rhs);
+	}
+	DenseMatrix& operator*=(T rhs)
+	{
+		data *= rhs;
+		return *this;
+	}
+
+	static DenseMatrix TensorProduct(Vector<T> lhs, Vector<T> rhs)
+	{
+		assert(lhs.size() == rhs.size());
+		size_t n = lhs.size();
+		DenseMatrix res(n, std::valarray<T>(0.0, n * n));
+		for (int i = 0; i < (int)n; i++)
+			for (int j = 0; j < (int)n; j++)
+				res.data[i * n + j] = lhs[i] * rhs[j];
+		return res;
+	}
+
 	size_t Dims() const { return n; }
 	std::slice RowSlice(size_t i, size_t j = 0) { return std::slice(n * i + j, n - j, 1); }
 	std::slice ColSlice(size_t j, size_t i = 0) { return std::slice(n * i + j, n - i, n); }
@@ -90,7 +149,7 @@ public:
 				T t = At(pi[i], k) / At(pi[k], k);
 
 				std::transform(IteratorAt(pi[i], k + 1),
-				               IteratorAt(pi[i] + 1, k + 1),
+				               IteratorAt(pi[i] + 1, 0),
 				               IteratorAt(pi[k], k + 1),
 				               IteratorAt(pi[i], k + 1),
 				               [&t](T const& lhs, T const& rhs) { return lhs - t * rhs; });
