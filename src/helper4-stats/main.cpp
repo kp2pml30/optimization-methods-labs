@@ -229,8 +229,12 @@ int main(int argc, char* argv[])
 
 				typename std::decay_t<decltype(approx)>::SolveData info;
 				approx.solveUntilEnd(func, PointRegion<P>{pt, 10}, info);
-				for (auto const& i : info)
+				const auto nth = std::max((std::size_t)1, info.size() / 1000);
+				for (std::size_t ii = 0; ii < info.size(); ii += nth)
+				{
+					auto const& i = info[ii];
 					cout << i.second.p[0] << '\t' << i.second.p[1] << '\t' << func(i.second.p) << '\n';
+				}
 
 				iterations[index][name] = (int)info.size();
 				index++;

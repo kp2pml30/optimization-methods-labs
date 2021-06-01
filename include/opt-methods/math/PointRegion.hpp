@@ -23,6 +23,6 @@ public:
 
 	PointRegion(V l, V r, bound_tag_t)
 	: p((l + r) / 2)
-	, r(Len(r - l) / 2)
+	, r(Len(V(r - l)) / 2)
 	{}
 };

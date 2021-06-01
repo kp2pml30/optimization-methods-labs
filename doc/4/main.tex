@@ -64,7 +64,7 @@
 $x\otimes y\equiv x\cdot y^T$\\
 $x^\otimes \equiv x\otimes x$\\
 \subsection{Метод Ньютона}
-Находит минимум унимодальной функции
+Находит минимум функции
 \begin{itemize}
 	\item[цикл] $x_{k+1} = x_{k} - \alpha p_{k}$
 	\item[$\alpha$] пока $f(x - \alpha p) > f(x)$ делаем $\alpha\leftarrow \frac{\alpha}{2}$ (как в градиентном спуске)
@@ -74,9 +74,11 @@ $x^\otimes \equiv x\otimes x$\\
 Для ускорения работы лучше не искать обратную матрицу, а решать СЛАУ $H_f(x)\cdot p=\operatorname{grad}_f(x)$
 \subsection{С исчерпывающим спуском}
 Вместо наивной аппроксимации $\alpha$ делает минимизацию одномерной функции от $\alpha$
+
 \subsection{С направлением}
 Не использует гессиан, вместо этого выбирается начальное направление $p_0$, на каждой итерации делается проверка:\\
-$$
+$$\\
+p_0 = \operatorname{grad}_f(x_0)\\
 p = \begin{cases}
 	p_k, & \mydot{p_k}{\operatorname{grad}_f(x)} > 0\\
 	\operatorname{grad}_f(x), & \text{иначе}
@@ -88,54 +90,84 @@ $$\\
 Отличаются от классических методов тем, что не используют явную матрицу Гессе, а строят ее некоторое приближение.\\
 $\omega_k = \operatorname{grad}_f(x_k)$\\
 $p_k=G_k\cdot\omega_k$, где $G_k$ --- положительно определенная матрица ($n\times n$) специального вида.
+
 \subsection{Метод Бройдена-Флетчера-Шено}
 $G_1 = I$\\
 $G_{k+1}=G_k - \frac{(\Delta x_k)^\otimes}{\mydot{\Delta \omega_k}{\Delta x_k}} - \frac{G_k(\Delta\omega_k)^\otimes G_k^T}{\rho_k}+\rho_k r_k^\otimes$\\
 $r_k=\frac{G_k\Delta\omega_k}{\rho_k}-\frac{\Delta x_k}{\mydot{\Delta x_k}{\Delta\omega_k}}$\\
 $\rho_k=\mydot{G_k\Delta\omega_k}{\Delta\omega_\Delta\omega_kk}$
+
 \subsection{Метод Пауэлла}
 $G_{k+1}=G_k-\frac{(\Delta \widetilde{x_k})^\otimes}{\mydot{\Delta\omega_k}{\Delta\widetilde{x_k}}}$\\
 $\Delta \widetilde{x_k} = \Delta x_k + G_k\Delta\omega_k$
 
+\subsection{Метод Марквардта}
+$(H_f(x) + \tau I)p_k=\operatorname{grad}_f(x)$
+Если $\tau$ велико, то это наискорейший спуск, если же принебрежительно мало, то метод Ньютона.
+\subsubsection{1 вариант}
+$\tau_0 \gg 1$\\
+$\tau_k = \tau_0\cdot \beta^k, \text{ где } 0 < \beta < 1$\\
+Если после возможного шага текущее значение функции увелиится, то необходимо увеличить часть отвечающую за антиградиент (например, делением $\tau$ на $\beta$).\\
+Решает проблему плохой обусловленности матрицы Гессе вдали от минимума, т.к. там $(H+\tau I)\approx\tau I$ и $\operatorname{cond}(\tau I) = 1$.
+\subsubsection{2 вариант}
+$\tau_0 = 0$\\
+Если $H_f(x) + \tau I$ не положительно определенная, то $\tau \leftarrow \operatorname{max}(1, 2\tau)$\\
+Для проверки можно использовать условие Холецкого: $H_f(x)+\tau I = LL^T$ ($L$ --- нижнетреугольная). Если подобное разложение возможно, то матрица $H_f(x)$ положительно определенная.
+
 \section{Исследование методов Ньютона}
 
-% function fancy-function prefix start [suffix/fancy]
-\newcommand{\MakePlots}[5]{
+% function fancy-function prefix start [suffix/fancy] axopts 3dopts
+\newcommand{\MakePlots}[7]{
 	$z(x, y) = #2$\\
 	$p_0 = #4$\\
 	\begin{tikzpicture}
 	\begin{axis}[
-		colormap/greenyellow,
 		legend style={at={(0.5,-0.1)},anchor=north},
 		xlabel = {x},
 		ylabel = {y},
 		zlabel = {z},
+		#6
+		%colormap/greenyellow,
 		%colorbar
 	]
-		\addplot3[surf, opacity=0.8, forget plot] {#1};
+		\addplot3[surf, opacity=0.8, forget plot, #7] {#1};
 		\foreach \suff/\fancy in #5 {
 			\edef\temp{\noexpand\addlegendentry{\fancy}}
-			\addplot3 table[col sep=tab]{#3/\suff.tsv};
+			\addplot3 table[col sep=tab]{#3/\suff%
+Traj.tsv};
 			\temp
 		}
 	\end{axis}
-	\end{tikzpicture}
+	\end{tikzpicture}\\
+	\begingroup
+		\toks0={#3}%
+		\edef\param{\the\toks0}%
+	\expandafter\endgroup
+	\ifx\param\empty
+	\else
+		\csvautotabular[separator=tab]{#3/iters.tsv}\\
+	\fi
 }
 
 \newcommand{\methodsList}{{}}
 \begin{itemize}
-	\renewcommand{\methodsList}{newton/{метод Ньютона},newton-with-minimization/{метод Ньютона с одномерной минимизацией}}
-	\item \MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{test}{(4;1)}{\methodsList}
-	\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{test}{(-1.2;1)}{\methodsList}
+	\renewcommand{\methodsList}{newton/{метод Ньютона},newton-with-minimization/{метод Ньютона с одномерной минимизацией},newton-with-direction/{метод Ньютона с направлением},steepest-descent/{метод наискорейшего спуска}}
+	\item \MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{1.2/0/}{(4;1)}{\methodsList}{view={-10}{45}}{domain=-4.0:4.0, y domain=-1.0:2.1}
+		Можно заметить, что метод с наискорейшим спуском находит минимум за 1 шаг, т.к. функция квадратичная. Обычный метод Ньютона ``прыгает'' через этот минимум.
+	\item \MakePlots{100*(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{1.2/1/}{(-1.2;1)}{\methodsList}{view={10}{45}}{domain=-1.6:1.5, y domain=-0.1:2.2}
+		Метод с направлением делает первый шаг по антиградиенту, вследствие чего ему везет: он оказывается ближе к минимуму.\\
+		Для метода наискорейшего спуска изображена примерно каждая седьмая точка.
 \end{itemize}
 
 \section{Исследование методов квазиньютоновских методов}
 \begin{itemize}
-	\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{}{(-1.2;1)}{{}}
-	\item \MakePlots{(x^2+y-11)^2 + (x+y^2-7)^2}{(x^2+y-11)^2 + (x+y^2-7)^2}{}{(-1.2;1)}{{}}
-\item \MakePlots{100-2/(1+((x-1)/2)^2+((y-1)/3)^2)-1/(1+((x-2)/2)^2+((y-1)/3)^2)}
-	{100-\frac{2}{1+(\frac{x-1}{2})^2+(\frac{y-1}{3})^2}-\frac{1}{1+(\frac{x-2}{2})^2+(\frac{y-1}{3})^2}}{}{(-1.2;1)}{{}}
+	\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{}{(-1.2;1)}{{}}{}{}
+	\item \MakePlots{(x^2+y-11)^2 + (x+y^2-7)^2}{(x^2+y-11)^2 + (x+y^2-7)^2}{}{(-1.2;1)}{{}}{}{}
+	\item \MakePlots{100-2/(1+((x-1)/2)^2+((y-1)/3)^2)-1/(1+((x-2)/2)^2+((y-1)/3)^2)}
+		{100-\frac{2}{1+(\frac{x-1}{2})^2+(\frac{y-1}{3})^2}-\frac{1}{1+(\frac{x-2}{2})^2+(\frac{y-1}{3})^2}}{}{(-1.2;1)}{{}}{}{}
 \end{itemize}
+
+\section{Вывод}
 
 \newpage
 \appendix
