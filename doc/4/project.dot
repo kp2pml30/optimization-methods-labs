@@ -42,9 +42,9 @@ digraph Project {
 		NewtonBase;
 		NewtonTraits [label="NewtonTraits|NewtonState|AdvanceP|FindAlpha"];
 		NewtonTraits -> NewtonBase [style=dotted];
-		NewtonBase -> Newton;
-		NewtonBase -> NewtonOnedim;
-		NewtonOnedim -> NewtonDirection;
+		NewtonBase -> Newton [label="traits"];
+		NewtonBase -> NewtonOnedim [label="traits"];
+		NewtonOnedim -> NewtonDirection [label="traits"];
 	}
 	subgraph cluster_Coroutines {
 		label = "Корутины";

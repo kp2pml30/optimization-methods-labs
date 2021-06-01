@@ -6,6 +6,7 @@
 \usepackage[russian]{babel}
 \usepackage{amsmath}
 \usepackage{pgfplots}
+\pgfplotsset{compat=1.9}
 \usepackage{graphicx}
 \usepackage{csvsimple}
 \usepackage{hyperref}
@@ -67,11 +68,42 @@
 Не использует гессиан, вместо этого выбирается начальное направление $p_0$, на каждой итерации делается проверка:\\
 $$
 p = \begin{cases}
-	p_0, & \mydot{p_0}{\operatorname{grad}_f(x)} > 0\\
+	p_k, & \mydot{p_k}{\operatorname{grad}_f(x)} > 0\\
 	\operatorname{grad}_f(x), & \text{иначе}
 \end{cases}
 $$\\
-Этот метод абсурден: это на самом деле градиентны спуск, а не метод Ньютона. Если производить исчерпывающий спуск, то после первой же итерации антиградиент окажется перпендикулярен вектору $p_0$.
+Где $p_k$ определяется как раньше. \\
+Идея метода в том, что он проверяет не идем ли мы в абсурдном направлении, и если это так, то он на этой итерации превращаетя в (градиентный) метод наискорейшего спуска.
+
+\section{Исследование методов Ньютона}
+
+% function fancy-function prefix start [suffix/fancy]
+\newcommand{\MakePlots}[5]{
+	$#2$\\
+	$p_0 = #4$\\
+	\begin{tikzpicture}
+	\begin{axis}[
+		%view={110}{10},
+		colormap/greenyellow,
+		colorbar
+	]
+		\addplot3[surf] {#1};
+	\end{axis}
+	\end{tikzpicture}
+}
+
+\begin{itemize}
+\item \MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{}{(4;1)}{}
+\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{}{(-1.2;1)}{}
+\end{itemize}
+
+\section{Исследование методов квазиньютоновских методов}
+\begin{itemize}
+\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{}{(-1.2;1)}{}
+\item \MakePlots{(x^2+y-11)^2 + (x+y^2-7)^2}{(x^2+y-11)^2 + (x+y^2-7)^2}{}{(-1.2;1)}{}
+\item \MakePlots{100-2/(1+((x-1)/2)^2+((y-1)/3)^2)-1/(1+((x-2)/2)^2+((y-1)/3)^2)}
+	{100-\frac{2}{1+(\frac{x-1}{2})^2+(\frac{y-1}{3})^2}-\frac{1}{1+(\frac{x-2}{2})^2+(\frac{y-1}{3})^2}}{}{(-1.2;1)}{}
+\end{itemize}
 
 \newpage
 \appendix
@@ -79,7 +111,7 @@ $$\\
 Основан на предыдущих лабораторных.
 
 \section{Диаграмма классов}
-Из-за использования концептов doxygen не сгенерирует адекватную диаграмму. Граф, сгенерированный вручную, представлен ниже. \\
+Из-за использования концептов и шаблонов (в том числе CRTP), создающих нетривиальную иерархию классов, doxygen не сгенерирует адекватную диаграмму. Граф, сгенерированный вручную, представлен ниже. \\
 \noindent\makebox[\textwidth]{\includegraphics[width=\paperwidth]{project.pdf}}
 %\setboolean{@twoside}{false}
 %\includepdf[pages=-,pagecommand={},width=\paperwidth]{project.pdf}
