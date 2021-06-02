@@ -107,7 +107,7 @@ $(H_f(x) + \tau I)p_k=\operatorname{grad}_f(x)$
 \subsubsection{1 вариант}
 $\tau_0 \gg 1$\\
 $\tau_k = \tau_0\cdot \beta^k, \text{ где } 0 < \beta < 1$\\
-Если после возможного шага текущее значение функции увелиится, то необходимо увеличить часть отвечающую за антиградиент (например, делением $\tau$ на $\beta$).\\
+Если после возможного шага текущее значение функции увеличится, то необходимо увеличить часть отвечающую за антиградиент (например, делением $\tau$ на $\beta$).\\
 Решает проблему плохой обусловленности матрицы Гессе вдали от минимума, т.к. там $(H+\tau I)\approx\tau I$ и $\operatorname{cond}(\tau I) = 1$.
 \subsubsection{2 вариант}
 $\tau_0 = 0$\\
@@ -116,22 +116,22 @@ $\tau_0 = 0$\\
 
 \section{Исследование методов Ньютона}
 
-% function fancy-function prefix start [suffix/fancy] axopts 3dopts
-\newcommand{\MakePlots}[7]{
+% function fancy-function prefix [suffix/fancy] axopts 3dopts
+\newcommand{\MakePlots}[6]{
 	$z(x, y) = #2$\\
-	$p_0 = #4$\\
+	%$p_0 = #4$\\
 	\begin{tikzpicture}
 	\begin{axis}[
-		legend style={at={(0.5,-0.1)},anchor=north},
+		legend style={at={(0.5,-0.3)},anchor=north},
 		xlabel = {x},
 		ylabel = {y},
 		zlabel = {z},
-		#6
+		#5
 		%colormap/greenyellow,
 		%colorbar
 	]
-		\addplot3[surf, opacity=0.8, forget plot, #7] {#1};
-		\foreach \suff/\fancy in #5 {
+		\addplot3[surf, opacity=0.8, forget plot, #6] {#1};
+		\foreach \suff/\fancy in #4 {
 			\edef\temp{\noexpand\addlegendentry{\fancy}}
 			\addplot3 table[col sep=tab]{#3/\suff%
 Traj.tsv};
@@ -152,19 +152,36 @@ Traj.tsv};
 \newcommand{\methodsList}{{}}
 \begin{itemize}
 	\renewcommand{\methodsList}{newton/{метод Ньютона},newton-with-minimization/{метод Ньютона с одномерной минимизацией},newton-with-direction/{метод Ньютона с направлением},steepest-descent/{метод наискорейшего спуска}}
-	\item \MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{1.2/0/}{(4;1)}{\methodsList}{view={-10}{45}}{domain=-4.0:4.0, y domain=-1.0:2.1}
+	\item \MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{1.2/0/}{\methodsList}{view={-10}{45}}{domain=-4.0:4.0, y domain=-1.0:2.1}
 		Можно заметить, что метод с наискорейшим спуском находит минимум за 1 шаг, т.к. функция квадратичная. Обычный метод Ньютона ``прыгает'' через этот минимум.
-	\item \MakePlots{100*(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{1.2/1/}{(-1.2;1)}{\methodsList}{view={10}{45}}{domain=-1.6:1.5, y domain=-0.1:2.2}
+	\item \MakePlots{100*(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{1.2/1/}{\methodsList}{view={10}{45}}{domain=-1.6:1.5, y domain=-0.1:2.2}
 		Метод с направлением делает первый шаг по антиградиенту, вследствие чего ему везет: он оказывается ближе к минимуму.\\
 		Для метода наискорейшего спуска изображена примерно каждая седьмая точка.
 \end{itemize}
 
 \section{Исследование методов квазиньютоновских методов}
 \begin{itemize}
-	\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{}{(-1.2;1)}{{}}{}{}
-	\item \MakePlots{(x^2+y-11)^2 + (x+y^2-7)^2}{(x^2+y-11)^2 + (x+y^2-7)^2}{}{(-1.2;1)}{{}}{}{}
+	\renewcommand{\methodsList}{newton-with-direction/{метод Ньютона с направлением},broyden-fletcher-shanno/{метод Бройдена-Флетчера-Шено},powell/{метод Пауэлла}}
+	\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{2/0/0/}{\methodsList}{view={-10}{45}}{domain=0.0:1.5, y domain=-1.5:2.0}
+		\csvautotabular[separator=tab]{2/0/iters.tsv}\\
+		\csvautotabular[separator=tab]{2/0/last.tsv}\\
+
+\def\secondfunc{(x^2+y-11)^2 + (x+y^2-7)^2}
+	\item \MakePlots{\secondfunc}{\secondfunc}{2/1/0/}{\methodsList}{view={10}{45}}{domain=-1:5, y domain=-2.0:3.5} \\
+		У функции есть 4 минимума равных нулю, однако минимум $x \approx 3.58443; y \approx -1.84813$ не был найден ни одним из методов.\\
+		\begin{tikzpicture}
+		\begin{axis}[view={0}{90},xlabel={$x$},ylabel={$y$}]
+		\addplot3[surf, shader=interp] {\secondfunc};
+		\end{axis}
+		\end{tikzpicture}
+		\\
+		\csvautotabular[separator=tab]{2/1/iters.tsv}\\
+		\csvautotabular[separator=tab]{2/1/last.tsv}\\
 	\item \MakePlots{100-2/(1+((x-1)/2)^2+((y-1)/3)^2)-1/(1+((x-2)/2)^2+((y-1)/3)^2)}
-		{100-\frac{2}{1+(\frac{x-1}{2})^2+(\frac{y-1}{3})^2}-\frac{1}{1+(\frac{x-2}{2})^2+(\frac{y-1}{3})^2}}{}{(-1.2;1)}{{}}{}{}
+		{100-\frac{2}{1+(\frac{x-1}{2})^2+(\frac{y-1}{3})^2}-\frac{1}{1+(\frac{x-2}{2})^2+(\frac{y-1}{3})^2}}{2/2/0/}{\methodsList}{view={80}{80}}{domain=-2:4, y domain=-2.0:4.0}
+		\csvautotabular[separator=tab]{2/2/iters.tsv}\\
+		\csvautotabular[separator=tab]{2/2/last.tsv}\\
+		Можно заметить, что все методы (кроме Ньютона с направлением) в стартовой точке $(-5; -3)$ доверелись матрице гессе, и их унесло вдаль от минимума.
 \end{itemize}
 
 \section{Вывод}

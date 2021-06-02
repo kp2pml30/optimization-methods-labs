@@ -145,19 +145,25 @@ struct Nop
 
 inline constexpr Nop nop;
 
-void SolveAndPrintTraj(std::filesystem::path const& dir, std::string const& name, auto const& approx, auto const& func, auto const& pt, auto& info)
+auto SolveAndPrintTraj(std::filesystem::path const& dir, std::string const& name, auto const& approx, auto const& func, auto const& pt, auto& info)
 {
 	namespace fs = std::filesystem;
 	fs::create_directories(dir);
 	auto cout = std::ofstream(dir / (name + "Traj.tsv"));
 
-	approx.solveIteration(func, 10'000, PointRegion{pt, 10}, info);
+	auto ret = approx.solveIteration(func, 10'000, PointRegion{pt, 10}, info);
 	const auto nth = std::max((std::size_t)1, info.size() / 1000);
 	for (std::size_t ii = 0; ii < info.size(); ii += nth)
 	{
 		auto const& i = info[ii];
 		PrintJoined(cout, '\t', i.second.p) << '\t' << func(i.second.p) << '\n';
 	}
+	decltype(ret.p) ans;
+	ans.resize(ret.p.size() + 1);
+	for (std::size_t i = 0; i < ret.p.size(); i++)
+		ans[i] = ret.p[i];
+	ans[ret.p.size()] = func(ret.p);
+	return ans;
 }
 
 template<typename Action = Nop const&>
@@ -168,6 +174,7 @@ auto TestSolversFuncsPts(
 
 	auto iterations = std::vector<std::vector<std::map<std::string, int>>>(
 	    impl::tuple_size_v<decltype(funcs)>, std::vector<std::map<std::string, int>>(impl::tuple_size_v<decltype(pts)>));
+	auto results = std::vector<std::vector<std::map<std::string, Vector<double>>>>(impl::tuple_size_v<decltype(funcs)>, std::vector<std::map<std::string, Vector<double>>>(impl::tuple_size_v<decltype(pts)>));
 	TestSolvers(
 	    solvers,
 	    [&]<class Approx, class Func, class Pt>(std::tuple<size_t, size_t> index,
@@ -177,14 +184,15 @@ auto TestSolversFuncsPts(
 	        Pt const& pt) {
 		    auto [fi, pti] = index;
 
-				auto dir = localPrefix / std::to_string(fi + fOff) / std::to_string(pti + pOff);
+		    auto dir = localPrefix / std::to_string(fi + fOff) / std::to_string(pti + pOff);
 
 		    typename std::decay_t<decltype(approx)>::SolveData info;
-		    SolveAndPrintTraj(dir, name, approx, func, pt, info);
+		    auto lastPoint = SolveAndPrintTraj(dir, name, approx, func, pt, info);
 
 		    actions(fi, pti, name, dir, approx, func, pt, info);
 
 		    iterations[fi][pti][name] = (int)info.size();
+		    results[fi][pti][name] = lastPoint;
 	    },
 	    funcs,
 	    pts);
@@ -195,11 +203,43 @@ auto TestSolversFuncsPts(
 		cout << "start\t";
 		PrintJoined(cout, '\t', std::ranges::views::transform(i[0], [](auto& p) { return p.first; })) << '\n';
 		{
+			auto const& index0 = index;
 			size_t index = 0;
 			for (auto const& ni : i)
 			{
 				TupleRuntimeVisit([&](auto const& pt) { PrintJoined(cout, ',', pt) << '\t'; }, pts, index);
 				PrintJoined(cout, '\t', std::ranges::views::transform(ni, [](auto& p) { return p.second; })) << '\n';
+
+				{
+					auto separatecout = std::ofstream(localPrefix / std::to_string(index0 + fOff) / std::to_string(index) / "iters.tsv");
+					separatecout << "start\t";
+					PrintJoined(separatecout, '\t', std::ranges::views::transform(i[0], [](auto& p) { return p.first; })) << '\n';
+					TupleRuntimeVisit([&](auto const& pt) { PrintJoined(separatecout, ',', pt) << '\t'; }, pts, index);
+					PrintJoined(separatecout, '\t', std::ranges::views::transform(i[index], [](auto& p) { return p.second; })) << '\n';
+				}
+
+				index++;
+			}
+		}
+		index++;
+	}
+	index = 0;
+	for (auto const& i : results)
+	{
+		auto cout = std::ofstream(localPrefix / std::to_string(index + fOff) / "last.tsv");
+		cout << "start\t";
+		PrintJoined(cout, '\t', std::ranges::views::transform(i[0], [](auto& p) { return p.first; })) << '\n';
+		{
+			size_t index = 0;
+			for (auto const& ni : i)
+			{
+				TupleRuntimeVisit([&](auto const& pt) { PrintJoined(cout, ',', pt); }, pts, index);
+				for (auto const& nii : ni)
+				{
+					cout << '\t';
+					PrintJoined(cout, ',', nii.second);
+				}
+				cout << '\n';
 				index++;
 			}
 		}
@@ -386,7 +426,12 @@ int main(int argc, char* argv[])
 			for (auto const& i : iterations)
 			{
 				auto cout = std::ofstream(localPrefix / std::to_string(index) / "iters.tsv");
+				cout << "start\t";
 				PrintJoined(cout, '\t', std::ranges::views::transform(i, [](auto& p) { return p.first; })) << '\n';
+				TupleRuntimeVisit([&](auto const& fpt) mutable {
+						auto const& pt = std::get<1>(fpt);
+						PrintJoined(cout, ',', pt) << '\t';
+				}, funcs, index);
 				PrintJoined(cout, '\t', std::ranges::views::transform(i, [](auto& p) { return p.second; })) << '\n';
 				index++;
 			}
@@ -487,7 +532,7 @@ int main(int argc, char* argv[])
 			        })
 			};
 
-			std::tuple pts2  = {P{0.5, 0.5}, P{1.5, 1.5}, P{3., 3.}};
+			std::tuple pts2  = {P{0.5, 0.5}, P{1.5, 1.5}, P{3., 3.}, P{-5., -3.}, P{3.6, -2.}};
 			std::tuple pts4  = {P{0.5, 0.5, 0.5, 0.5}, P{1.5, 1.5, 1.5, 1.5}, P{3., 3., 3., 3.}};
 
 			TestSolversFuncsPts(localPrefix,

@@ -28,7 +28,8 @@ struct NewtonStateBase<From, To, DecomposedFuncTypes<F, FGrad, FHes>>
 	/// use shadowing to override
 	void AdvanceP()
 	{
-		this->p = this->hess(this->x).Inverse() * this->grad(this->x);
+		// this->p = this->hess(this->x).Inverse() * this->grad(this->x);
+		this->p = this->hess(this->x).SolveSystem(this->grad(this->x));
 	}
 
 	/// use shadowing to override
