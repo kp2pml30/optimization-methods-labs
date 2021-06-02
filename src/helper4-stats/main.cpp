@@ -2,6 +2,7 @@
 #include "opt-methods/newton/all.hpp"
 #include "opt-methods/multidim/all.hpp"
 #include "opt-methods/quasi-newton/all.hpp"
+#include "opt-methods/marquardt/all.hpp"
 
 #include "opt-methods/solvers/IterationalSolver.hpp"
 #include "opt-methods/solvers/Erased.hpp"
@@ -544,6 +545,85 @@ int main(int argc, char* argv[])
 			                    funcs4,
 			                    pts4,
 			                    [](...) {}, impl::tuple_size_v<decltype(funcs2)>);
+		}
+
+		{
+			constexpr double EPSILON = 1e-6;
+
+			/* bonus */
+			auto solvers = IterationalSolverBuilder<P,
+			                                        V,
+			                                        Marquardt1<P, V>,
+			                                        Marquardt2<P, V>,
+			                                        NewtonDirection<P, V, MApprox>>(
+			    std::make_tuple(EPSILON, 1000, 0.5),
+			    std::make_tuple(EPSILON, 0.5),
+			    std::make_tuple(std::make_tuple(EPSILON, MApprox(EPSILON))));
+
+			auto localPrefix = prefix / "bonus";
+			std::tuple funcs  = {adHocFunction(
+          [](P x) -> V {
+            return std::transform_reduce(
+                std::next(std::begin(x)), std::end(x), std::begin(x), 0.0, std::plus<>(), [](S l, S r) {
+                  return 100 * square(l - square(r)) + square(1 - r);
+                });
+          },
+          [](P x) {
+            Vector<S> res(x.size());
+            int n = (int)x.size();
+            for (int i = 0; i < n; i++)
+            {
+              if (i > 0)
+                res[i] += 200 * (x[i] - square(x[i - 1]));
+              if (i < n - 1)
+                res[i] += 2 * (-1 + x[i] * (1 + 200 * (-x[i + 1] + square(x[i]))));
+            }
+            return res;
+          },
+          [](P x) {
+            int n = (int)x.size();
+            DenseMatrix<S> res(n, P(n * n));
+            for (int i = 0; i < n; i++)
+            {
+              if (i > 0)
+              {
+                res.data[i * n + i - 1] = -400 * x[i - 1];
+                res.data[i * n + i] += 200;
+              }
+              if (i < n - 1)
+              {
+                res.data[i * n + i + 1] = -400 * x[i];
+                res.data[i * n + i] += 1200 * square(x[i]) - 400 * x[i + 1] + 2;
+              }
+            }
+            return res;
+          })};
+
+			std::tuple pts = {P(-10., 100)};
+
+			TestSolversFuncsPts(localPrefix,
+			                    solvers,
+			                    funcs,
+			                    pts,
+			                    [&](size_t, size_t, std::string const& name, auto const& dir,
+			                        auto const& approx, auto const&, auto const&, auto const& info) {
+				                    using MIterationData = std::remove_cvref_t<decltype(approx)>::ApproxT::IterationData;
+				                    if constexpr (std::is_same_v<MIterationData, Marquardt1<P, V>::IterationData> ||
+				                                  std::is_same_v<MIterationData, Marquardt2<P, V>::IterationData>)
+				                    {
+					                    auto cout = std::ofstream(dir / (name + "Tau.tsv"));
+
+					                    for (auto const& i : info)
+						                    cout << static_cast<MIterationData&>(*i.first).tau << '\n';
+				                    }
+				                    if constexpr (std::is_same_v<MIterationData, Marquardt2<P, V>::IterationData>)
+				                    {
+					                    auto cout = std::ofstream(dir / (name + "nCholesky.tsv"));
+
+					                    for (auto const& i : info)
+						                    cout << static_cast<MIterationData&>(*i.first).nCholesky << '\n';
+				                    }
+			                    });
 		}
 	}
 	return 0;

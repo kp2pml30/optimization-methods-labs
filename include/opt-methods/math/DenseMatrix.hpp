@@ -200,10 +200,18 @@ public:
 		return res;
 	}
 
-	Vector<T> SolveSystem(Vector<T> b) &&
+private:
+	static std::vector<int> unitPermutation(size_t n)
 	{
 		std::vector<int> pi(n + 1);
 		std::iota(pi.begin(), pi.end(), 0);
+		return pi;
+	}
+
+public :
+	Vector<T> SolveSystem(Vector<T> b) &&
+	{
+		std::vector<int> pi = unitPermutation(n);
 
 		for (size_t k = 0; k < n - 1; k++)
 		{
@@ -228,7 +236,7 @@ public:
 		Vector<T> x(b.size());
 		for (size_t k = n; k > 0; k--)
 			x[k - 1] = (b[pi[k - 1]] - std::transform_reduce(
-			                               IteratorAt(pi[k - 1], k), IteratorAt(pi[k - 1] + 1, 0), std::begin(x) + k, T{})) /
+			                               IteratorAt(pi[k - 1], k), IteratorAt(pi[k - 1] + 1, 0), std::begin(x) + k, util::zero<T>)) /
 			           At(pi[k - 1], k - 1);
 		return x;
 	}
@@ -248,6 +256,37 @@ public:
 		DenseMatrix<T> res;
 		i >> res.n >> res.data;
 		return res;
+	}
+
+	friend bool CholeskySolveSystem(DenseMatrix&& m, Vector<T> const& b, Vector<T> &x)
+	{
+		// pre: is symmetric
+		for (size_t i = 0; i < m.n; i++)
+		{
+			for (size_t j = 0; j < i; j++)
+			{
+				m.At(i, j) -= std::transform_reduce(m.IteratorAt(i, 0), m.IteratorAt(i, j), m.IteratorAt(j, 0), util::zero<T>);
+				m.At(i, j) /= m.At(j, j);
+			}
+			m.At(i, i) -= std::transform_reduce(m.IteratorAt(i, 0), m.IteratorAt(i, i), m.IteratorAt(i, 0), util::zero<T>);
+			if (m.At(i, i) <= 0)
+				return false;
+			m.At(i, i) = sqrt(m.At(i, i));
+		}
+
+		Vector<T> y(b.size());
+		for (size_t k = 0; k < m.n; k++)
+			y[k] = (b[k] - std::transform_reduce(m.IteratorAt(k, 0), m.IteratorAt(k, k), std::begin(y), util::zero<T>)) / m.At(k, k);
+
+		x.resize(b.size());
+		for (size_t k = m.n; k > 0; k--)
+			x[k - 1] = (y[k - 1] - std::transform_reduce(std::begin(x) + k,
+			                                             std::end(x),
+			                                             util::StridedIterator(std::begin(m.data), m.n, k, k - 1, m.n),
+			                                             util::zero<T>)) /
+			           m.At(k - 1, k - 1);
+
+		return true;
 	}
 };
 

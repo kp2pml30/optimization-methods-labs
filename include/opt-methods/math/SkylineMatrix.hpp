@@ -363,7 +363,7 @@ Vector<T> operator*(SkylineMatrix<T> const& m, Vector<T> const& x)
 	for (int i = 0; i < m.Dims(); i++)
 	{
 		y[i] += m.di[i] * x[i];
-		y[i] += std::transform_reduce(m.al.begin() + m.ia[i], m.al.begin() + m.ia[i + 1], std::begin(x) + m.SkylineStart(i), T{});
+		y[i] += std::transform_reduce(m.al.begin() + m.ia[i], m.al.begin() + m.ia[i + 1], std::begin(x) + m.SkylineStart(i), util::zero<T>);
 		std::transform(m.au.begin() + m.ia[i],
 		               m.au.begin() + m.ia[i + 1],
 		               std::begin(y) + m.SkylineStart(i),

@@ -58,7 +58,7 @@ namespace impl
 			bool Quits()
 			{
 				dx = this->x - lastX, lastX = this->x;
-				return !isFirst && Len2(dx) <= epsilon2;
+				return !isFirst && Len2(dx) <= epsilon2;  /// isFirst = false
 			}
 		};
 	};
