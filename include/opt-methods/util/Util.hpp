@@ -66,6 +66,13 @@ namespace util
 			++(*this);
 			return res;
 		}
+		StridedIterator& operator+=(int a) noexcept
+		{
+			assert(a >= 0);
+			while (a-- > 0)
+				++(*this);
+			return *this;
+		}
 
 		auto* operator->() const
 		{

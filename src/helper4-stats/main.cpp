@@ -228,6 +228,7 @@ auto TestSolversFuncsPts(
 	for (auto const& i : results)
 	{
 		auto cout = std::ofstream(localPrefix / std::to_string(index + fOff) / "last.tsv");
+		cout << std::setprecision(3);
 		cout << "start\t";
 		PrintJoined(cout, '\t', std::ranges::views::transform(i[0], [](auto& p) { return p.first; })) << '\n';
 		{
@@ -513,7 +514,7 @@ int main(int argc, char* argv[])
 				                10 * (-4 * cube(x - t) + t - z)};
 			        },
 			        [](S x, S y, S z, S t) -> DenseMatrix<S> {
-				        return {3,
+				        return {4,
 				                {2 + 120 * square(-t + x),
 				                 20,
 				                 0,

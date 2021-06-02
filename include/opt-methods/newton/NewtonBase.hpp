@@ -103,7 +103,7 @@ public:
 			state.FindAlpha();
 			state.x -= state.p * state.alpha;
 
-			std::tie(data->x, data->p, data->alpha) = std::make_tuple(state.x, state.p, state.alpha);
+			std::tie(data->x, data->p, data->alpha) = std::make_tuple(state.x, state.p, state.alpha * Len(state.p));
 			co_yield {state.x, 0};
 		} while (!state.Quits());
 	}

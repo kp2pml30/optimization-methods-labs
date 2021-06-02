@@ -13,6 +13,7 @@
 \usepackage{verbatim}
 \usepackage[pdf]{graphviz}
 \usepackage[final]{pdfpages}
+\usepackage{multicol}
 
 \inputencoding{utf8}
 \def\code#1{\texttt{#1}}
@@ -32,13 +33,15 @@
 \centering
 	{\scshape\LARGE Методы оптимизации \par}
 	\vspace{1cm}
-	{\scshape\Large Лабораторная работа №4\par Изучение алгоритмов метода Ньютона и его модификаций\par}
+	{\scshape\Large Лабораторная работа №4\par Изучение алгоритмов метода Ньютона и его модификаций.\par Второй вариант.\par}
 	\vspace{2cm}
 	{\Large\itshape Дмитрий Проценко M3234 \par
 	Кирилл Прокопенко M3236 \par
 	Николай Холявин M3238 \par}
 	\vfill
-	ИТМО y2019
+	{\itshape преподаватель: Михаил Свинцов\par}
+	\vfill
+	Санкт-Петербург, ИТМО\par y2019
 	\vfill
 	{\large \today\par}
 \end{titlepage}
@@ -85,7 +88,7 @@ p = \begin{cases}
 \end{cases}
 $$\\
 Где $p_k$ определяется как раньше. \\
-Идея метода в том, что он проверяет не идем ли мы в абсурдном направлении, и если это так, то он на этой итерации превращаетя в (градиентный) метод наискорейшего спуска.
+Идея метода в том, что он проверяет не идем ли мы в абсурдном направлении, и если это так, то он на этой итерации превращается в (градиентный) метод наискорейшего спуска.
 \subsection{Квазиньютоновские методы}
 Отличаются от классических методов тем, что не используют явную матрицу Гессе, а строят ее некоторое приближение.\\
 $\omega_k = \operatorname{grad}_f(x_k)$\\
@@ -95,11 +98,11 @@ $p_k=G_k\cdot\omega_k$, где $G_k$ --- положительно определ
 $G_1 = I$\\
 $G_{k+1}=G_k - \frac{(\Delta x_k)^\otimes}{\mydot{\Delta \omega_k}{\Delta x_k}} - \frac{G_k(\Delta\omega_k)^\otimes G_k^T}{\rho_k}+\rho_k r_k^\otimes$\\
 $r_k=\frac{G_k\Delta\omega_k}{\rho_k}-\frac{\Delta x_k}{\mydot{\Delta x_k}{\Delta\omega_k}}$\\
-$\rho_k=\mydot{G_k\Delta\omega_k}{\Delta\omega_\Delta\omega_kk}$
+$\rho_k=\mydot{G_k\Delta\omega_k}{\Delta\omega_k}$
 
 \subsection{Метод Пауэлла}
-$G_{k+1}=G_k-\frac{(\Delta \widetilde{x_k})^\otimes}{\mydot{\Delta\omega_k}{\Delta\widetilde{x_k}}}$\\
-$\Delta \widetilde{x_k} = \Delta x_k + G_k\Delta\omega_k$
+$G_{k+1}=G_k-\frac{(\Delta \tilde{x_k})^\otimes}{\mydot{\Delta\omega_k}{\Delta\tilde{x_k}}}$\\
+$\Delta \tilde{x_k} = \Delta x_k + G_k\Delta\omega_k$
 
 \subsection{Метод Марквардта}
 $(H_f(x) + \tau I)p_k=\operatorname{grad}_f(x)$
@@ -112,20 +115,103 @@ $\tau_k = \tau_0\cdot \beta^k, \text{ где } 0 < \beta < 1$\\
 \subsubsection{2 вариант}
 $\tau_0 = 0$\\
 Если $H_f(x) + \tau I$ не положительно определенная, то $\tau \leftarrow \operatorname{max}(1, 2\tau)$\\
-Для проверки можно использовать условие Холецкого: $H_f(x)+\tau I = LL^T$ ($L$ --- нижнетреугольная). Если подобное разложение возможно, то матрица $H_f(x)$ положительно определенная.
+Для проверки можно использовать условие Холецкого: $H_f(x)+\tau I = LL^T$ ($L$ --- нижнетреугольная). Если подобное разложение возможно, то матрица $H_f(x)$ положительно определенная.\\
+Решение системы $Ax=b$ через разложение Холецкого:\\
+$A=LL^T$\\
+$Ly=b$\\
+$L^Tx=y$
 
-\section{Исследование методов Ньютона}
+\newcommand{\MakePlots}{}
+\newcommand{\methodsList}{{}}
+
+\newcommand{\ItersLast}[1]{
+	\noindent
+	\begin{minipage}{\textwidth}
+	\begin{center}
+	Количество итераций:\\
+	\csvautotabular[separator=tab]{#1/iters.tsv}\\
+	Последняя точка:\\
+	\csvautotabular[separator=tab]{#1/last.tsv}
+	\end{center}
+	\end{minipage}
+}
+
+\section{Исследование методов Ньютона 1}
+
+% function fancy-function prefix [suffix/fancy]
+\renewcommand{\MakePlots}[4]{
+	\subsection{$z(x, y) = #2$}
+	\foreach \suff/\fancy in #4 {
+		\subsubsection{\fancy}
+		\begin{center}
+		\begin{tikzpicture}
+		\begin{axis}[
+			legend style={at={(0.5,-0.3)},anchor=north},
+			xlabel = {x},
+			ylabel = {y},
+			zlabel = {z},
+			colormap/violet,
+			%colorbar
+		]
+			\addplot3[surf, opacity=0.8, forget plot] {#1};
+				\foreach \iter in {0,1}{
+					\addplot3 table[col sep=tab]{#3/\iter/\suff%
+Traj.tsv};
+				}
+		\end{axis}
+		\end{tikzpicture}\\
+		\begin{tikzpicture}
+		\begin{axis}[
+			legend style={at={(0.5,-0.3)},anchor=north},
+			xlabel = {x},
+			ylabel = {y},
+			zlabel = {z},
+			view={0}{90},
+			colormap/violet,
+			%colorbar
+		]
+			\addplot3[surf, shader=interp] {#1};
+				\foreach \iter in {0,1,2}{
+				\addplot3 table[col sep=tab]{#3/\iter/\suff%
+Traj.tsv};
+			}
+		\end{axis}
+		\end{tikzpicture}\\
+		\ItersLast{#3}
+		\begin{tikzpicture}
+		\begin{axis}[xlabel={итерация},ylabel={$\alpha$},ymode=log]
+			\foreach \iter in {0,1,2}{
+				\edef\temp{\noexpand\addlegendentry{\iter}}
+				\addplot table[col sep=tab, x expr=\coordindex + 1, y index=0]{#3/\iter/\suff%
+Alpha.tsv};
+				\temp
+			}
+		\end{axis}
+		\end{tikzpicture}
+		\end{center}
+	}
+}
+
+
+\renewcommand{\methodsList}{newton/{метод Ньютона},newton-with-minimization/{метод Ньютона с одномерной минимизацией},newton-with-direction/{метод Ньютона с направлением}}
+
+\MakePlots{8*x^2 + x*y + y^2 - 1}{8x^2 + xy + y^2 - 1}{1.1/0/}{\methodsList}
+\MakePlots{-e^(-x^2 - y^2) + x^2 + 2 * y^2}{-e^{-x^2 - y^2} + x^2 + 2y^2}{1.1/0/}{\methodsList}
+
+\section{Исследование методов Ньютона 2}
 
 % function fancy-function prefix [suffix/fancy] axopts 3dopts
-\newcommand{\MakePlots}[6]{
-	$z(x, y) = #2$\\
+\renewcommand{\MakePlots}[6]{
+	\subsection{$z(x, y) = #2$}
 	%$p_0 = #4$\\
+	\begin{center}
 	\begin{tikzpicture}
 	\begin{axis}[
 		legend style={at={(0.5,-0.3)},anchor=north},
 		xlabel = {x},
 		ylabel = {y},
 		zlabel = {z},
+		colormap/violet,
 		#5
 		%colormap/greenyellow,
 		%colorbar
@@ -147,44 +233,65 @@ Traj.tsv};
 	\else
 		\csvautotabular[separator=tab]{#3/iters.tsv}\\
 	\fi
+	\end{center}
 }
 
-\newcommand{\methodsList}{{}}
-\begin{itemize}
-	\renewcommand{\methodsList}{newton/{метод Ньютона},newton-with-minimization/{метод Ньютона с одномерной минимизацией},newton-with-direction/{метод Ньютона с направлением},steepest-descent/{метод наискорейшего спуска}}
-	\item \MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{1.2/0/}{\methodsList}{view={-10}{45}}{domain=-4.0:4.0, y domain=-1.0:2.1}
-		Можно заметить, что метод с наискорейшим спуском находит минимум за 1 шаг, т.к. функция квадратичная. Обычный метод Ньютона ``прыгает'' через этот минимум.
-	\item \MakePlots{100*(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{1.2/1/}{\methodsList}{view={10}{45}}{domain=-1.6:1.5, y domain=-0.1:2.2}
-		Метод с направлением делает первый шаг по антиградиенту, вследствие чего ему везет: он оказывается ближе к минимуму.\\
-		Для метода наискорейшего спуска изображена примерно каждая седьмая точка.
-\end{itemize}
+\renewcommand{\methodsList}{steepest-descent/{метод наискорейшего спуска},newton/{метод Ньютона},newton-with-minimization/{метод Ньютона с одномерной минимизацией},newton-with-direction/{метод Ньютона с направлением}}
+\MakePlots{x^2 + y^2 - 1.2*x*y}{x^2 + y^2 - \frac{6}{5}xy}{1.2/0/}{\methodsList}{view={-10}{45}}{domain=-4.0:4.0, y domain=-1.0:2.1}
+	Можно заметить, что метод с наискорейшим спуском находит минимум за 1 шаг, т.к. функция квадратичная. Обычный метод Ньютона ``прыгает'' через этот минимум.
+\MakePlots{100*(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{1.2/1/}{\methodsList}{view={10}{45}}{domain=-1.6:1.5, y domain=-0.1:2.2}
+	Метод с направлением делает первый шаг по антиградиенту, вследствие чего ему везет: он оказывается ближе к минимуму.\\
+	Для метода наискорейшего спуска изображена примерно каждая седьмая точка.
 
 \section{Исследование методов квазиньютоновских методов}
-\begin{itemize}
 	\renewcommand{\methodsList}{newton-with-direction/{метод Ньютона с направлением},broyden-fletcher-shanno/{метод Бройдена-Флетчера-Шено},powell/{метод Пауэлла}}
-	\item \MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{2/0/0/}{\methodsList}{view={-10}{45}}{domain=0.0:1.5, y domain=-1.5:2.0}
-		\csvautotabular[separator=tab]{2/0/iters.tsv}\\
-		\csvautotabular[separator=tab]{2/0/last.tsv}\\
+	\MakePlots{100(y-x^2)^2 + (1-x)^2}{100(y-x^2)^2 + (1-x)^2}{2/0/0/}{\methodsList}{view={-10}{45}}{domain=0.0:1.5, y domain=-1.5:2.0}
+	\ItersLast{2/0}
 
 \def\secondfunc{(x^2+y-11)^2 + (x+y^2-7)^2}
-	\item \MakePlots{\secondfunc}{\secondfunc}{2/1/0/}{\methodsList}{view={10}{45}}{domain=-1:5, y domain=-2.0:3.5} \\
+	\MakePlots{\secondfunc}{\secondfunc}{2/1/0/}{\methodsList}{view={10}{45}}{domain=-1:5, y domain=-2.0:3.5}
 		У функции есть 4 минимума равных нулю, однако минимум $x \approx 3.58443; y \approx -1.84813$ не был найден ни одним из методов.\\
+		\begin{center}
 		\begin{tikzpicture}
-		\begin{axis}[view={0}{90},xlabel={$x$},ylabel={$y$}]
+		\begin{axis}[view={0}{90},xlabel={$x$},ylabel={$y$},colormap/violet]
 		\addplot3[surf, shader=interp] {\secondfunc};
 		\end{axis}
 		\end{tikzpicture}
-		\\
-		\csvautotabular[separator=tab]{2/1/iters.tsv}\\
-		\csvautotabular[separator=tab]{2/1/last.tsv}\\
-	\item \MakePlots{100-2/(1+((x-1)/2)^2+((y-1)/3)^2)-1/(1+((x-2)/2)^2+((y-1)/3)^2)}
+		\end{center}
+		\ItersLast{2/1}
+	\MakePlots{100-2/(1+((x-1)/2)^2+((y-1)/3)^2)-1/(1+((x-2)/2)^2+((y-1)/3)^2)}
 		{100-\frac{2}{1+(\frac{x-1}{2})^2+(\frac{y-1}{3})^2}-\frac{1}{1+(\frac{x-2}{2})^2+(\frac{y-1}{3})^2}}{2/2/0/}{\methodsList}{view={80}{80}}{domain=-2:4, y domain=-2.0:4.0}
-		\csvautotabular[separator=tab]{2/2/iters.tsv}\\
-		\csvautotabular[separator=tab]{2/2/last.tsv}\\
+		\ItersLast{2/2}
 		Можно заметить, что все методы (кроме Ньютона с направлением) в стартовой точке $(-5; -3)$ доверелись матрице гессе, и их унесло вдаль от минимума.
-\end{itemize}
+		\subsection{$(x_1+10x_2)^2+5(x_3-x_4)^2+(x_2-2x_3)^4+10(x_1-x_4)^4$}
+		\ItersLast{2/3}
+
+\section{Методы Марквардта}
+Рассмотрим функцию $z(x)=\sum_{i=1}{n-1} 100(x_{i+1}-x_i^2)^2+(1-x_i)^2$\\
+%\ItersLast{bonus/0}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[xlabel={итерация},ylabel={$\tau$},ymode=log]
+	\addplot table[col sep=tab, x expr=\coordindex + 1, y index=0]{bonus/0/0/marquardt-1Tau.tsv};
+	\addlegendentry{1}
+	\addplot table[col sep=tab, x expr=\coordindex + 1, y index=0]{bonus/0/0/marquardt-2Tau.tsv};
+	\addlegendentry{2}
+\end{axis}
+\end{tikzpicture}\\
+
+\begin{tikzpicture}
+\begin{axis}[xlabel={итерация},ylabel={число разложений Холецкого},ymode=log]
+	\addplot table[col sep=tab, x expr=\coordindex + 1, y index=0]{bonus/0/0/marquardt-2nCholesky.tsv};
+\end{axis}
+\end{tikzpicture}
+\end{center}
 
 \section{Вывод}
+В ходе работы был разработан титульный лист с указанием организации, названия учебной дисциплины, темы работы, номера варианта (2), исполнителя и принимающего, города, года, в соответствии с ГОСТ 7.32-2017. Также была реализована библиотека методов безусловной минимизации функции многих переменных, а именно методов Ньютона и его модификаций, в том числе квазиньютоновских методов (метод Бройдена-Флетчера-Шено и метод Пауэлла) и методов Марквардта (в двух вариантах). Было проведено исследование влияния выбора начального приближения на результат. Реализованные методы были сравнены между собой, а также с методом минимизации наискорейшим спуском, были приведены иллюстрации работы методов.
+Методы Ньютона являются методами второго порядка, поскольку они используют вторую производную (гессиан) исследуемой функции. Метод Ньютона не обладает свойством глобальной сходимости, то есть если начальное приближение далеко от точки минимума, то метод не сходится. Модификации метода Ньютона, а именно метод Ньютона с одномерным поиском и направлением спуска, обладают глобальной сходимостью.
+Квазиньютоновские методы являются методами первого порядка. В реализованном виде они не обладают глобальной сходимостью, что и было проиллюстрировано.
+Методы Марквардта, как и рассмотренные модификации метода Ньютона, являются методами второго порядка и обладают глобальной сходимостью, что было продемонстрировано на нетривиальной для минимизации многомерной функции Розенброка.
+Во всех случаях выбор начального приближения влияет на результат, и прослеживается отрицательное влияние большого значения расстояния от минимума до приближения. Методы, не обладающие свойством глобальной сходимости, при неудачном выборе начальной точки могут не сойтись (например, метод Пауэлла). Такая проблема может решаться применением рестартов.
 
 \newpage
 \appendix
