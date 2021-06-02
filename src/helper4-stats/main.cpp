@@ -167,7 +167,7 @@ auto SolveAndPrintTraj(std::filesystem::path const& dir, std::string const& name
 	return ans;
 }
 
-template<typename Action = Nop const&>
+template<bool OutputPts = true, typename Action = Nop const&>
 auto TestSolversFuncsPts(
     std::filesystem::path const& localPrefix, auto&& solvers, auto&& funcs, auto&& pts, Action&& actions = nop, size_t fOff = 0, size_t pOff = 0)
 {
@@ -201,21 +201,25 @@ auto TestSolversFuncsPts(
 	for (auto const& i : iterations)
 	{
 		auto cout = std::ofstream(localPrefix / std::to_string(index + fOff) / "iters.tsv");
-		cout << "start\t";
+		if constexpr (OutputPts)
+			cout << "start\t";
 		PrintJoined(cout, '\t', std::ranges::views::transform(i[0], [](auto& p) { return p.first; })) << '\n';
 		{
 			auto const& index0 = index;
 			size_t index = 0;
 			for (auto const& ni : i)
 			{
-				TupleRuntimeVisit([&](auto const& pt) { PrintJoined(cout, ',', pt) << '\t'; }, pts, index);
+				if constexpr (OutputPts)
+					TupleRuntimeVisit([&](auto const& pt) { PrintJoined(cout, ',', pt) << '\t'; }, pts, index);
 				PrintJoined(cout, '\t', std::ranges::views::transform(ni, [](auto& p) { return p.second; })) << '\n';
 
 				{
 					auto separatecout = std::ofstream(localPrefix / std::to_string(index0 + fOff) / std::to_string(index) / "iters.tsv");
-					separatecout << "start\t";
+					if constexpr (OutputPts)
+						separatecout << "start\t";
 					PrintJoined(separatecout, '\t', std::ranges::views::transform(i[0], [](auto& p) { return p.first; })) << '\n';
-					TupleRuntimeVisit([&](auto const& pt) { PrintJoined(separatecout, ',', pt) << '\t'; }, pts, index);
+					if constexpr (OutputPts)
+						TupleRuntimeVisit([&](auto const& pt) { PrintJoined(separatecout, ',', pt) << '\t'; }, pts, index);
 					PrintJoined(separatecout, '\t', std::ranges::views::transform(i[index], [](auto& p) { return p.second; })) << '\n';
 				}
 
@@ -602,29 +606,29 @@ int main(int argc, char* argv[])
 
 			std::tuple pts = {P(-10., 100)};
 
-			TestSolversFuncsPts(localPrefix,
-			                    solvers,
-			                    funcs,
-			                    pts,
-			                    [&](size_t, size_t, std::string const& name, auto const& dir,
-			                        auto const& approx, auto const&, auto const&, auto const& info) {
-				                    using MIterationData = std::remove_cvref_t<decltype(approx)>::ApproxT::IterationData;
-				                    if constexpr (std::is_same_v<MIterationData, Marquardt1<P, V>::IterationData> ||
-				                                  std::is_same_v<MIterationData, Marquardt2<P, V>::IterationData>)
-				                    {
-					                    auto cout = std::ofstream(dir / (name + "Tau.tsv"));
+			TestSolversFuncsPts<false>(localPrefix,
+			                           solvers,
+			                           funcs,
+			                           pts,
+			                           [&](size_t, size_t, std::string const& name, auto const& dir,
+			                               auto const& approx, auto const&, auto const&, auto const& info) {
+				                           using MIterationData = std::remove_cvref_t<decltype(approx)>::ApproxT::IterationData;
+				                           if constexpr (std::is_same_v<MIterationData, Marquardt1<P, V>::IterationData> ||
+				                                         std::is_same_v<MIterationData, Marquardt2<P, V>::IterationData>)
+				                           {
+					                           auto cout = std::ofstream(dir / (name + "Tau.tsv"));
 
-					                    for (auto const& i : info)
-						                    cout << static_cast<MIterationData&>(*i.first).tau << '\n';
-				                    }
-				                    if constexpr (std::is_same_v<MIterationData, Marquardt2<P, V>::IterationData>)
-				                    {
-					                    auto cout = std::ofstream(dir / (name + "nCholesky.tsv"));
+					                           for (auto const& i : info)
+						                           cout << static_cast<MIterationData&>(*i.first).tau << '\n';
+				                           }
+				                           if constexpr (std::is_same_v<MIterationData, Marquardt2<P, V>::IterationData>)
+				                           {
+					                           auto cout = std::ofstream(dir / (name + "nCholesky.tsv"));
 
-					                    for (auto const& i : info)
-						                    cout << static_cast<MIterationData&>(*i.first).nCholesky << '\n';
-				                    }
-			                    });
+					                           for (auto const& i : info)
+						                           cout << static_cast<MIterationData&>(*i.first).nCholesky << '\n';
+				                           }
+			                           });
 		}
 	}
 	return 0;
