@@ -69,7 +69,12 @@ private:
 	Initializer initializer;
 
 public:
-	using IterationData = typename BaseT::IterationData;
+	struct IterationData : BaseT::IterationData
+	{
+		From x;
+		From p;
+		Scalar<From> alpha;
+	};
 
 	static char const* name() noexcept { return nname; }
 
@@ -97,6 +102,7 @@ public:
 			state.FindAlpha();
 			state.x -= state.p * state.alpha;
 
+			std::tie(data->x, data->p, data->alpha) = std::make_tuple(state.x, state.p, state.alpha);
 			co_yield {state.x, 0};
 		} while (!state.Quits());
 	}

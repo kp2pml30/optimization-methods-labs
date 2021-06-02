@@ -40,6 +40,7 @@ namespace impl
 				{
 					/* dGrad_{k-1}, G_{k} already calculated */
 					isFirst = false;
+					lastX = this->x;
 				}
 				else
 				{

@@ -16,6 +16,13 @@ R cube(T const& a)
 	return b * b * b;
 }
 
+template<typename T, typename R = T>
+R quad(T const& a)
+{
+	auto const& b = static_cast<R>(a);
+	return b * b * b * b;
+}
+
 // returns NaN on error
 template<typename T>
 std::pair<T, T> solveSquare(T a, T b, T c)

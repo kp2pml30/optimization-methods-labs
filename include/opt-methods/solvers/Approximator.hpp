@@ -86,8 +86,8 @@ struct ApproxPromise : Promise<PointRegion<P>, ApproxPromise<P, V>>
 {
 	using Super = Promise<PointRegion<P>, ApproxPromise<P, V>>;
 
-	std::unique_ptr<BaseIterationData<P, V>> data{};
-	std::function<std::unique_ptr<BaseIterationData<P, V>>(BaseIterationData<P, V> *)> copier;
+	std::shared_ptr<BaseIterationData<P, V>> data{};
+	std::function<std::shared_ptr<BaseIterationData<P, V>>(BaseIterationData<P, V> *)> copier;
 
 	std::suspend_never initial_suspend() noexcept { return {}; } // skip first yield resulting in data ptr
 
@@ -99,8 +99,8 @@ struct ApproxPromise : Promise<PointRegion<P>, ApproxPromise<P, V>>
 	std::suspend_always yield_value(std::unique_ptr<IterationData> data)
 	{
 		this->data = std::move(data);
-		copier     = [](BaseIterationData<P, V>* data) -> std::unique_ptr<BaseIterationData<P, V>> {
-			return std::make_unique<IterationData>(static_cast<IterationData &>(*data));
+		copier     = [](BaseIterationData<P, V>* data) -> std::shared_ptr<BaseIterationData<P, V>> {
+			return std::make_shared<IterationData>(static_cast<IterationData &>(*data));
 		};
 		return {};
 	}
@@ -117,7 +117,7 @@ struct ApproxPromise : Promise<PointRegion<P>, ApproxPromise<P, V>>
 	/**
 	 * data copy getter
 	 */
-	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() const
+	std::shared_ptr<BaseIterationData<P, V>> getIterationDataCopy() const
 	{
 		assert(data != nullptr);
 		return copier(data.get());
@@ -148,7 +148,7 @@ public:
 	/**
 	 * data copy getter
 	 */
-	std::unique_ptr<BaseIterationData<P, V>> getIterationDataCopy() const { return this->handle.promise().getIterationDataCopy(); }
+	std::shared_ptr<BaseIterationData<P, V>> getIterationDataCopy() const { return this->handle.promise().getIterationDataCopy(); }
 };
 
 /**

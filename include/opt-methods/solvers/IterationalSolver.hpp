@@ -12,7 +12,9 @@ public:
 	using Bounds = RangeBounds<P>;
 	using BoundsEval = PointRegion<P>;
 
-	using SolveData = std::vector<std::pair<std::unique_ptr<BaseIterationData<P, V>>, PointRegion<P>>>;
+	using SolveData = std::vector<std::pair<std::shared_ptr<BaseIterationData<P, V>>, PointRegion<P>>>;
+
+	using ApproxT = Approx;
 
 	Approx approximator;
 
@@ -53,6 +55,16 @@ public:
 		return solveWhile(
 				std::forward<F>(func), std::move(bounds), [&](auto&&, std::size_t iter) { return iter < iterations; }, data);
 	}
+
+	/**
+	 * @param iterations -- solve while possible && i=0.. < iterations
+	 */
+	template<Function<P, V> F>
+	BoundsEval solveIteration(F&& func, std::size_t iterations, BoundsEval bounds, SolveData& data) const
+	{
+		return solveIteration(func, iterations, Bounds{bounds.p - bounds.r, bounds.p + bounds.r}, data);
+	}
+
 	/**
 	 * @param diff -- solve while possible && distance between ends > diff
 	 */
