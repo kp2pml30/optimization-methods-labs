@@ -43,6 +43,8 @@ namespace util
 	template<typename It> requires std::forward_iterator<It>
 	struct StridedIterator : std::iterator_traits<It>
 	{
+		using iterator_category = std::forward_iterator_tag;
+
 		It cur;
 		size_t stride;
 
@@ -66,13 +68,6 @@ namespace util
 			++(*this);
 			return res;
 		}
-		StridedIterator& operator+=(int a) noexcept
-		{
-			assert(a >= 0);
-			while (a-- > 0)
-				++(*this);
-			return *this;
-		}
 
 		auto* operator->() const
 		{
@@ -91,7 +86,7 @@ namespace util
 			return cur != rhs.cur;
 		}
 
-		operator It() const
+		explicit operator It() const
 		{
 			return cur;
 		}
